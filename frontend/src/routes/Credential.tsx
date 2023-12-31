@@ -1,41 +1,18 @@
-import React, { FC, useState } from "react";
+import React, { FC, useState, useContext } from "react";
 import BackButton from "../components/BackButton";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Typography, Input, Button } from "@material-tailwind/react";
 import axios from "axios";
-
-interface NewUser {
-    email: string;
-    user_role: string;
-    password: string;
-    re_password: string;
-    first_name: string;
-    middle_name: string;
-    last_name: string;
-    date_of_birth: string;
-    sex: string;
-    relationship_status: string;
-    phone_number: number;
-    address_line_one: string;
-    address_line_two: string;
-    address_line_three: string;
-    province: string;
-    city: string;
-    barangay: string;
-    zip_code: number;
-}
+import type { NewUser, NewUserContextType } from "../@types/auth";
+import NewUserContext from "../components/AuthContext";
 
 const Credential: FC = () => {
     const navigate = useNavigate();
-    const location = useLocation();
+    const { newUser, mergeData } = useContext(NewUserContext) as NewUserContextType;
     const [emailError, setEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-        re_password: "",
-    });
+    const [formData, setFormData] = useState<NewUser>(newUser);
     const client = axios.create({
         baseURL: "http://localhost:8000/api/v1/users/"
     });
@@ -112,14 +89,15 @@ const Credential: FC = () => {
     }
 
     // Form submits
-    const onButtonPress = async (event: React.FormEvent) => {
+    const handleOnSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        const defaultProp = { user_role: "resident" }
-        const newUser: NewUser = { ...location.state, ...formData, ...defaultProp };
-        const data = await signUpUser(newUser);
+        const user: NewUser = { ...formData };
+        console.log(user);
+        const data = await signUpUser(user);
         const path = `/signup/activate`;
+        mergeData(formData);
         if (data) {
-            navigate(path, { state: data });
+            navigate(path);
         }
     }
 
@@ -156,7 +134,7 @@ const Credential: FC = () => {
             <BackButton onClick={() => navigate(-1)} />
             <div className="w-4/5 h-full grid grid-cols-1 gap-2">
                 <Typography variant="h6">Credential</Typography>
-                <form onSubmit={onButtonPress} className="grid grid-cols-1 gap-3">
+                <form onSubmit={handleOnSubmit} className="grid grid-cols-1 gap-3">
                     <Input onChange={handleInputChange} onKeyUp={handleInputValidation} name="email" type="email" label="Email" size="md" variant="outlined" color={emailError !== "" ? "red" : "green"} required />
                     {emailError !== "" ? <Typography variant="small" color="red">{emailError}</Typography> : ""}
                     <Input onChange={handleInputChange} onKeyUp={handleInputValidation} name="password" type="password" label="Password" size="md" variant="outlined" color={passwordError !== "" ? "red" : "green"} required />

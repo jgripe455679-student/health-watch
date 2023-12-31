@@ -11,6 +11,7 @@ import Address from './routes/Address'
 import Error from './routes/Error'
 import Credential from './routes/Credential'
 import Activation from './routes/Activation'
+import SignUp from './routes/SignUp'
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
           },
           {
             path: "signup",
+            element: <SignUp />,
             children: [
               {
                 path: "basic",

@@ -1,31 +1,14 @@
-import React, { FC, useState, useEffect, useReducer } from "react";
+import React, { FC, useState, useEffect, useReducer, useContext } from "react";
 import BackButton from "../components/BackButton";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Typography, Input, Select, Option, Button } from "@material-tailwind/react";
-
-type AddressState = {
-    address_line_one: string;
-    address_line_two: string;
-    address_line_three: string;
-    province: string;
-    city: string;
-    barangay: string;
-    zip_code: number;
-}
+import type { NewUser, NewUserContextType } from "../@types/auth";
+import NewUserContext from "../components/AuthContext";
+import axios from "axios";
 
 type AddressAction = {
     type: string;
     pay_load: string | any;
-}
-
-const initialState: AddressState = {
-    address_line_one: "",
-    address_line_two: "",
-    address_line_three: "",
-    province: "",
-    city: "",
-    barangay: "",
-    zip_code: 0,
 }
 
 type AddressValidityState = {
@@ -49,7 +32,7 @@ const initialValidityState: AddressValidityState = {
     zip_code_error: false,
 }
 
-const formAddressReducer = (state: AddressState, action: AddressAction): AddressState => {
+const formAddressReducer = (state: NewUser, action: AddressAction): NewUser => {
     switch (action.type) {
         case "UPDATE_ADDRESS_LINE_ONE":
             return {
@@ -61,7 +44,7 @@ const formAddressReducer = (state: AddressState, action: AddressAction): Address
             }
         case "UPDATE_ADDRESS_LINE_THREE":
             return {
-                ...state, address_line_two: action.pay_load,
+                ...state, address_line_three: action.pay_load,
             }
         case "UPDATE_PROVINCE":
             return {
@@ -129,48 +112,61 @@ const formAddressValidityReducer = (state: AddressValidityState, action: Address
 
 const Address: FC = () => {
     const navigate = useNavigate();
-    const location = useLocation();
+    const { newUser, mergeData } = useContext(NewUserContext) as NewUserContextType;
     const [provinces, setProvinces] = useState([]);
     const [cities, setCities] = useState([]);
     const [barangays, setBarangays] = useState([]);
-    const [formAddressData, setFormAddressData] = useReducer(formAddressReducer, initialState);
+    const [formAddressData, setFormAddressData] = useReducer(formAddressReducer, newUser);
     const [formAddressValidityData, setFormAddressValidityData] = useReducer(formAddressValidityReducer, initialValidityState);
+    const client = axios.create({
+        baseURL: "https://psgc.gitlab.io/api/regions/110000000/provinces/"
+    });
     useEffect(() => {
         // Fetch the data (provinces)
-        fetch("https://psgc.gitlab.io/api/regions/110000000/provinces/")
-            .then(response => response.json())
-            .then(data => setProvinces(data))
-            .catch(error => console.error(error))
+        const fetchProvinces = async () => {
+            try {
+                const response = await client.get("");
+                setProvinces(response.data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        fetchProvinces();
     }, []);
-    const handleOnSelectedProvince = (code: any) => {
+    const handleOnSelectedProvince = async (code: any) => {
         // Fetch the data (cities)
-        fetch(`https://psgc.gitlab.io/api/provinces/${code}/cities/`)
-            .then(response => response.json())
-            .then(data => setCities(data))
-            .catch(error => console.error(error));
+        try {
+            const response = await client.get(`https://psgc.gitlab.io/api/provinces/${code}/cities/`);
+            setCities(response.data);
+        } catch (e) {
+            console.error(e);
+        }
     }
-    const handleOnSelectedCity = (code: any) => {
+    const handleOnSelectedCity = async (code: any) => {
         // Fetch the data (barangays)
-        fetch(`https://psgc.gitlab.io/api/cities/${code}/barangays/`)
-            .then(response => response.json())
-            .then(data => setBarangays(data))
-            .catch(error => console.error(error));
+        try {
+            const response = await client.get(`https://psgc.gitlab.io/api/cities/${code}/barangays/`);
+            setBarangays(response.data);
+        } catch (e) {
+            console.error(e);
+        }
     }
-    const onButtonPress = (event: React.FormEvent) => {
+    const handleOnSubmit = (event: React.FormEvent) => {
         event.preventDefault();
         const path = `/signup/credential`;
-        navigate(path, { state: { ...location.state, ...formAddressData } });
+        mergeData(formAddressData);
+        navigate(path);
     }
     return (
         <>
             <BackButton onClick={() => navigate(-1)} />
             <div className="w-4/5 h-full grid grid-cols-1 gap-2">
                 <Typography className="mt-8" variant="h6">Address</Typography>
-                <form onSubmit={onButtonPress} className="grid grid-cols-1 gap-3">
-                    <Input id="address_line_one" color={formAddressValidityData.address_line_one_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_ADDRESS_LINE_ONE", pay_load: e.target.value.trim().toLowerCase() })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_ADDRESS_LINE_ONE", pay_load: formAddressData })} type="text" label="Address line 1" size="md" variant="outlined" required />
-                    <Input id="address_line_two" color="green" onChange={(e) => setFormAddressData({ type: "UPDATE_ADDRESS_LINE_TWO", pay_load: e.target.value.trim().toLowerCase() })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_ADDRESS_LINE_TWO", pay_load: formAddressData })} type="text" label="Address line 2" size="md" variant="outlined" />
-                    <Input id="address_line_three" color="green" onChange={(e) => setFormAddressData({ type: "UPDATE_ADDRESS_LINE_THREE", pay_load: e.target.value.trim().toLowerCase() })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_ADDRESS_LINE_THREE", pay_load: formAddressData })} type="text" label="Address line 3" size="md" variant="outlined" />
-                    <Select id="province" color={formAddressValidityData.province_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_PROVINCE", pay_load: e?.trim().toLowerCase() })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_PROVINCE", pay_load: formAddressData })} size="md" label="Select a province" aria-required selected={(element) => {
+                <form onSubmit={handleOnSubmit} className="grid grid-cols-1 gap-3">
+                    <Input id="address_line_one" color={formAddressValidityData.address_line_one_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_ADDRESS_LINE_ONE", pay_load: e.target.value })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_ADDRESS_LINE_ONE", pay_load: formAddressData })} value={formAddressData.address_line_one} type="text" label="Address line 1" size="md" variant="outlined" required />
+                    <Input id="address_line_two" color="green" onChange={(e) => setFormAddressData({ type: "UPDATE_ADDRESS_LINE_TWO", pay_load: e.target.value })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_ADDRESS_LINE_TWO", pay_load: formAddressData })} value={formAddressData.address_line_two} type="text" label="Address line 2" size="md" variant="outlined" />
+                    <Input id="address_line_three" color="green" onChange={(e) => setFormAddressData({ type: "UPDATE_ADDRESS_LINE_THREE", pay_load: e.target.value })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_ADDRESS_LINE_THREE", pay_load: formAddressData })} value={formAddressData.address_line_three} type="text" label="Address line 3" size="md" variant="outlined" />
+                    <Select id="province" color={formAddressValidityData.province_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_PROVINCE", pay_load: e })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_PROVINCE", pay_load: formAddressData })} value={formAddressData.province} size="md" label="Select a province" aria-required selected={(element) => {
                         if (element) {
                             const selectedValue = element.props["data-id"];
                             handleOnSelectedProvince(selectedValue);
@@ -179,9 +175,9 @@ const Address: FC = () => {
                     }}>
                         {provinces.length > 0 ? provinces.map((province: any) => {
                             return <Option key={province.code} data-id={province.code} value={province.name}>{province.name}</Option>
-                        }) : <Option disabled>Provinces not found</Option>}
+                        }) : <Option disabled>Loading...</Option>}
                     </Select>
-                    <Select id="city" color={formAddressValidityData.city_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_CITY", pay_load: e?.trim().toLowerCase() })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_CITY", pay_load: formAddressData })} size="md" label="Select a city" aria-required selected={(element) => {
+                    <Select id="city" color={formAddressValidityData.city_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_CITY", pay_load: e })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_CITY", pay_load: formAddressData })} value={formAddressData.city} size="md" label="Select a city" aria-required selected={(element) => {
                         if (element) {
                             const selectedValue = element.props["data-id"];
                             handleOnSelectedCity(selectedValue);
@@ -190,14 +186,14 @@ const Address: FC = () => {
                     }}>
                         {cities.length > 0 ? cities.map((city: any) => {
                             return <Option key={city.code} data-id={city.code} value={city.name}>{city.name}</Option>
-                        }) : <Option disabled>Cities not found</Option>}
+                        }) : <Option disabled>Loading...</Option>}
                     </Select>
-                    <Select id="barangay" color={formAddressValidityData.barangay_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_BARANGAY", pay_load: e?.trim().toLowerCase() })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_BARANGAY", pay_load: formAddressData })} size="md" label="Select a barangay" aria-required>
+                    <Select id="barangay" color={formAddressValidityData.barangay_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_BARANGAY", pay_load: e })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_BARANGAY", pay_load: formAddressData })} value={formAddressData.barangay} size="md" label="Select a barangay" aria-required>
                         {barangays.length > 0 ? barangays.map((barangay: any) => {
                             return <Option key={barangay.code} value={barangay.name}>{barangay.name}</Option>
-                        }) : <Option disabled>Barangays not found</Option>}
+                        }) : <Option disabled>Loading...</Option>}
                     </Select>
-                    <Input id="zip_code" color={formAddressValidityData.zip_code_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_ZIP_CODE", pay_load: e.target.value.trim().toLowerCase() })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_ZIP_CODE", pay_load: formAddressData })} type="text" label="Zip code" size="md" variant="outlined" required />
+                    <Input id="zip_code" color={formAddressValidityData.zip_code_error ? "red" : "green"} onChange={(e) => setFormAddressData({ type: "UPDATE_ZIP_CODE", pay_load: e.target.value })} onBlur={() => setFormAddressValidityData({ type: "VALIDATE_ZIP_CODE", pay_load: formAddressData })} value={formAddressData.zip_code} type="text" label="Zip code" size="md" variant="outlined" required />
                     <Button disabled={formAddressValidityData.address_line_one_error === true || formAddressValidityData.province_error === true || formAddressValidityData.city_error === true || formAddressValidityData.barangay_error === true || formAddressValidityData.zip_code_error === true} type="submit" className="w-1/4 place-self-end grid grid-cols-1 place-items-center rounded-full" size="sm" color="green">Next</Button>
                 </form>
             </div>

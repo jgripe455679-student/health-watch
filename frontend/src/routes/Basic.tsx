@@ -1,31 +1,12 @@
-import { FC, useReducer } from "react";
+import { FC, FormEvent, useContext, useReducer } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Input, Typography, Select, Option } from "@material-tailwind/react";
-import BackButton from "../components/BackButton";
-
-type BasicState = {
-    first_name: string;
-    middle_name: string;
-    last_name: string;
-    date_of_birth: string;
-    sex: string;
-    relationship_status: string;
-    phone_number: number;
-}
+import type { NewUser, NewUserContextType } from "../@types/auth";
+import NewUserContext from "../components/AuthContext";
 
 type BasicAction = {
     type: string;
     pay_load: string | any;
-}
-
-const initialState: BasicState = {
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    date_of_birth: "",
-    sex: "",
-    relationship_status: "",
-    phone_number: 0,
 }
 
 type BasicValidityState = {
@@ -54,7 +35,7 @@ const initialValidityState: BasicValidityState = {
     phone_number_error: false,
 }
 
-const formBasicReducer = (state: BasicState, action: BasicAction): BasicState => {
+const formBasicReducer = (state: NewUser, action: BasicAction): NewUser => {
     switch (action.type) {
         case "UPDATE_FIRST_NAME":
             return {
@@ -134,28 +115,31 @@ const formBasicValidityReducer = (state: BasicValidityState, action: BasicValidi
 
 const Basic: FC = () => {
     const navigate = useNavigate();
-    const [formBasicData, setFormBasicData] = useReducer(formBasicReducer, initialState);
+    const { newUser, mergeData } = useContext(NewUserContext) as NewUserContextType;
+    const [formBasicData, setFormBasicData] = useReducer(formBasicReducer, newUser);
     const [formBasicValidityData, setFormBasicValidityData] = useReducer(formBasicValidityReducer, initialValidityState);
-    const onButtonPress = () => {
+    const handleOnSubmit = (event: FormEvent) => {
+        event.preventDefault();
         const path = `/signup/address`;
-        navigate(path, { state: formBasicData });
+        mergeData(formBasicData);
+        navigate(path);
     }
     return (
         <>
             <Link className="!absolute top-0 left-0 mt-4 ml-3 text-green-900 hover:underline" to="/signin">Back to Sign in</Link>
             <div className="w-4/5 h-full grid grid-cols-1 gap-2">
                 <Typography className="mt-8" variant="h6">Basic Information</Typography>
-                <div className="grid grid-cols-1 gap-3">
-                    <Input id="first_name" color={formBasicValidityData.first_name_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_FIRST_NAME", pay_load: e.target.value.trim().toLowerCase() })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_FIRST_NAME", pay_load: formBasicData })} variant="outlined" label="First name" type="text" size="md" required />
-                    <Input id="middle_name" color={formBasicValidityData.middle_name_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_MIDDLE_NAME", pay_load: e.target.value.trim().toLowerCase() })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_MIDDLE_NAME", pay_load: formBasicData })} variant="outlined" label="Middle name" type="text" size="md" required />
-                    <Input id="last_name" color={formBasicValidityData.last_name_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_LAST_NAME", pay_load: e.target.value.trim().toLowerCase() })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_LAST_NAME", pay_load: formBasicData })} variant="outlined" label="Last name" type="text" size="md" required />
-                    <Input id="date_of_birth" color={formBasicValidityData.date_of_birth_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_DATE_OF_BIRTH", pay_load: e.target.value })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_DATE_OF_BIRTH", pay_load: formBasicData })} variant="outlined" label="Date of birth" type="date" size="md" required />
-                    <Select id="sex" color={formBasicValidityData.sex_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_SEX", pay_load: e })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_SEX", pay_load: formBasicData })} size="md" label="Sex" aria-required>
+                <form onSubmit={handleOnSubmit} className="grid grid-cols-1 gap-3">
+                    <Input id="first_name" color={formBasicValidityData.first_name_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_FIRST_NAME", pay_load: e.target.value })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_FIRST_NAME", pay_load: formBasicData })} value={formBasicData.first_name} variant="outlined" label="First name" type="text" size="md" required />
+                    <Input id="middle_name" color={formBasicValidityData.middle_name_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_MIDDLE_NAME", pay_load: e.target.value })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_MIDDLE_NAME", pay_load: formBasicData })} value={formBasicData.middle_name} variant="outlined" label="Middle name" type="text" size="md" required />
+                    <Input id="last_name" color={formBasicValidityData.last_name_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_LAST_NAME", pay_load: e.target.value })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_LAST_NAME", pay_load: formBasicData })} value={formBasicData.last_name} variant="outlined" label="Last name" type="text" size="md" required />
+                    <Input id="date_of_birth" color={formBasicValidityData.date_of_birth_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_DATE_OF_BIRTH", pay_load: e.target.value })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_DATE_OF_BIRTH", pay_load: formBasicData })} value={formBasicData.date_of_birth} variant="outlined" label="Date of birth" type="date" size="md" required />
+                    <Select id="sex" color={formBasicValidityData.sex_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_SEX", pay_load: e })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_SEX", pay_load: formBasicData })} value={formBasicData.sex} size="md" label="Sex" aria-required>
                         <Option value="m">Male</Option>
                         <Option value="f">Female</Option>
                         <Option value="r">Rather not say</Option>
                     </Select>
-                    <Select id="relationship_status" color={formBasicValidityData.relationship_status_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_RELATIONSHIP_STATUS", pay_load: e })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_RELATIONSHIP_STATUS", pay_load: formBasicData })} size="md" label="Relationship status" aria-required>
+                    <Select id="relationship_status" color={formBasicValidityData.relationship_status_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_RELATIONSHIP_STATUS", pay_load: e })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_RELATIONSHIP_STATUS", pay_load: formBasicData })} value={formBasicData.relationship_status} size="md" label="Relationship status" aria-required>
                         <Option value="single">Single</Option>
                         <Option value="in a relationship">In a relationship</Option>
                         <Option value="engaged">Engaged</Option>
@@ -165,9 +149,9 @@ const Basic: FC = () => {
                         <Option value="widowed">Widowed</Option>
                         <Option value="rather not say">Rather not say</Option>
                     </Select>
-                    <Input id="phone_number" color={formBasicValidityData.phone_number_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_PHONE_NUMBER", pay_load: e.target.value.trim() })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_PHONE_NUMBER", pay_load: formBasicData })} variant="outlined" label="Mobile Number (09XXXXXXXXX)" size="md" required />
-                    <Button onClick={onButtonPress} disabled={formBasicValidityData.first_name_error === true || formBasicValidityData.middle_name_error === true || formBasicValidityData.last_name_error === true || formBasicValidityData.date_of_birth_error || formBasicValidityData.sex_error || formBasicValidityData.relationship_status_error || formBasicValidityData.phone_number_error} type="button" className="w-1/4 place-self-end grid grid-cols-1 place-items-center rounded-full" size="sm" color="green">Next</Button>
-                </div>
+                    <Input id="phone_number" color={formBasicValidityData.phone_number_error ? "red" : "green"} onChange={(e) => setFormBasicData({ type: "UPDATE_PHONE_NUMBER", pay_load: e.target.value })} onBlur={() => setFormBasicValidityData({ type: "VALIDATE_PHONE_NUMBER", pay_load: formBasicData })} value={formBasicData.phone_number} variant="outlined" label="Mobile Number (09XXXXXXXXX)" size="md" required />
+                    <Button disabled={formBasicValidityData.first_name_error === true || formBasicValidityData.middle_name_error === true || formBasicValidityData.last_name_error === true || formBasicValidityData.date_of_birth_error || formBasicValidityData.sex_error || formBasicValidityData.relationship_status_error || formBasicValidityData.phone_number_error} type="submit" className="w-1/4 place-self-end grid grid-cols-1 place-items-center rounded-full" size="sm" color="green">Next</Button>
+                </form>
             </div>
         </>
     );
