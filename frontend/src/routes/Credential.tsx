@@ -91,11 +91,10 @@ const Credential: FC = () => {
     // Form submits
     const handleOnSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        const user: NewUser = { ...formData };
-        console.log(user);
-        const data = await signUpUser(user);
-        const path = `/signup/activate`;
         mergeData(formData);
+        const user: NewUser = { ...formData };
+        const path = `/signup/activate`;
+        const data = await signUpUser(user);
         if (data) {
             navigate(path);
         }
@@ -135,11 +134,11 @@ const Credential: FC = () => {
             <div className="w-4/5 h-full grid grid-cols-1 gap-2">
                 <Typography variant="h6">Credential</Typography>
                 <form onSubmit={handleOnSubmit} className="grid grid-cols-1 gap-3">
-                    <Input onChange={handleInputChange} onKeyUp={handleInputValidation} name="email" type="email" label="Email" size="md" variant="outlined" color={emailError !== "" ? "red" : "green"} required />
+                    <Input onChange={handleInputChange} onKeyUp={handleInputValidation} value={formData.email} name="email" type="email" label="Email" size="md" variant="outlined" color={emailError !== "" ? "red" : "green"} required />
                     {emailError !== "" ? <Typography variant="small" color="red">{emailError}</Typography> : ""}
-                    <Input onChange={handleInputChange} onKeyUp={handleInputValidation} name="password" type="password" label="Password" size="md" variant="outlined" color={passwordError !== "" ? "red" : "green"} required />
+                    <Input onChange={handleInputChange} onKeyUp={handleInputValidation} value={formData.password} name="password" type="password" label="Password" size="md" variant="outlined" color={passwordError !== "" ? "red" : "green"} required />
                     {passwordError !== "" ? <Typography variant="small" color="red">{passwordError}</Typography> : ""}
-                    <Input onChange={handleInputChange} onKeyUp={handleInputValidation} name="re_password" type="password" label="Confirm password" size="md" variant="outlined" color={confirmPasswordError !== "" ? "red" : "green"} required />
+                    <Input onChange={handleInputChange} onKeyUp={handleInputValidation} value={formData.re_password} name="re_password" type="password" label="Confirm password" size="md" variant="outlined" color={confirmPasswordError !== "" ? "red" : "green"} required />
                     {confirmPasswordError !== "" ? <Typography variant="small" color="red">{confirmPasswordError}</Typography> : ""}
                     <Button type="submit" className="w-1/3 place-self-end grid grid-cols-1 place-items-center rounded-full" size="sm" color="green">Sign up</Button>
                 </form>
