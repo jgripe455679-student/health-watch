@@ -1,4 +1,4 @@
-#!/home/juan/dev/projects/health-watch/backend/venv/bin/python3
+#!/home/juan/dev/projects/health-watch/backend/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

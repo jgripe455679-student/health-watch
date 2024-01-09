@@ -34,7 +34,7 @@ PROJECT_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',
     'drf_yasg',
     'djoser',
     # 'phonenumber_field',
@@ -142,22 +142,27 @@ AUTH_USER_MODEL = "accounts.UserAccount"
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.TokenAuthentication",
+        # "rest_framework.authentication.TokenAuthentication",
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
 
 # djoser configuration
+DOMAIN = "localhost:8888"
+SITE_NAME = "My Cool App"
 DJOSER = {
     "USER_CREATE_PASSWORD_RETYPE": True,
     "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
     "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
     "SEND_CONFIRMATION_EMAIL": True,
-    "SET_USERNAME_RETYPE": True,
+    # "SET_USERNAME_RETYPE": True,
     "SET_PASSWORD_RETYPE": True,
-    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
-    "USERNAME_RESET_CONFIRM_URL": "email/reset/confirm/{uid}/{token}",
+    "PASSWORD_RESET_CONFIRM_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_URL": "password-reset/{uid}/{token}",
+    "USERNAME_RESET_CONFIRM_URL": "email-reset/{uid}/{token}",
     "ACTIVATION_URL": "activate/{uid}/{token}",
     "SEND_ACTIVATION_EMAIL": True,
+    "SEND_CONFIRMATION_EMAIL": True,
     "SERIALIZERS": {
         "user_create": "accounts.serializers.UserCreateSerializer", # custom serializer
         "user": "djoser.serializers.UserSerializer",
@@ -180,4 +185,7 @@ if DEBUG:
     EMAIL_USE_TLS = False
     DEFAULT_FROM_EMAIL = "admin@dev.com"
 
-
+# django-rest-framework-simplejwt configuration
+SIMPLE_JWT = {
+   'AUTH_HEADER_TYPES': ('JWT',),
+}
