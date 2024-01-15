@@ -6,6 +6,11 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Djoser API",
@@ -27,5 +32,7 @@ urlpatterns = [
     path("api/v1/", include("accounts.urls")),
     path("api/v1/", include("djoser.urls")),
     # path("api/v1/", include("djoser.urls.authtoken")),
-    path("api/vi/", include("djoser.urls.jwt")),
+    path("api/v1/", include("djoser.urls.jwt")),
+    path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/v1/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]

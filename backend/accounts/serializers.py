@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 # from django.contrib.auth.password_validation import validate_password
 from .models import AddressDetails, UserProfile
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -44,6 +46,18 @@ class UserCreateSerializer(BaseUserCreateSerializer):
             "city",
             "zip_code",
         )
+
+class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        if user.user_role != "admin":
+            raise serializers.ValidationError("You are forbidden to access this system.")
+        
+        token = super().get_token(user)
+        return token
+
+class AdminTokenObtainPairView(TokenObtainPairView):
+    serializer_class = AdminTokenObtainPairSerializer
     
     # def create(self, validated_data):
     #     try:

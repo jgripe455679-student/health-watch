@@ -188,4 +188,5 @@ if DEBUG:
 # django-rest-framework-simplejwt configuration
 SIMPLE_JWT = {
    'AUTH_HEADER_TYPES': ('JWT',),
+   "TOKEN_OBTAIN_SERIALIZER": "accounts.serializers.AdminTokenObtainPairSerializer",
 }
