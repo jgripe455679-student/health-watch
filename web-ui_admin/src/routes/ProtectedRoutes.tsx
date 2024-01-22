@@ -1,14 +1,13 @@
 import { FC, useContext } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import { AuthContext } from "../components/AuthContext";
 import { AuthContextType } from "../@types/auth";
-import { Navigate, Outlet } from "react-router-dom";
 
-const UnprotectedRoutes: FC = () => {
+const ProtectedRoutes: FC = () => {
     const { authStatus } = useContext(AuthContext) as AuthContextType;
-    const link = `/${sessionStorage.getItem("page") ?? ""}`
     return (
-        authStatus ? <Navigate to={link} /> : <Outlet />
+        authStatus ? <Outlet /> : <Navigate to="/login" />
     );
 }
 
-export default UnprotectedRoutes;
+export default ProtectedRoutes;

@@ -21,3 +21,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.active-link {
+  color: white;
+  background-color: rgb(59, 130, 246);
+}

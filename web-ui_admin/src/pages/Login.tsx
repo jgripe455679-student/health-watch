@@ -1,15 +1,14 @@
-import React, { FC, useState } from "react";
+import React, { FC, useContext, useState } from "react";
 import { Typography, Input, Button, Card, Alert } from "@material-tailwind/react";
 import axios, { AxiosError } from "axios";
-import TriangleExclamationIcon from "../components/TriangleExclamationIcon";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
-
-type LoginCredentials = {
-    email: string;
-    password: string;
-}
+import { AuthContextType, LoginCredentials } from "../@types/auth";
+import { AuthContext } from "../components/AuthContext";
 
 const Login: FC = () => {
+    const navigate = useNavigate();
+    const { updateAuthStatus } = useContext(AuthContext) as AuthContextType;
     const [formData, setFormData] = useState<LoginCredentials>({
         email: "",
         password: "",
@@ -18,7 +17,6 @@ const Login: FC = () => {
     const client = axios.create({
         baseURL: "http://localhost:8000/api/v1/jwt/create/"
     });
-    const navigate = useNavigate();
 
     const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setErrorMessage("");
@@ -51,14 +49,17 @@ const Login: FC = () => {
             return;
         }
 
-        // login
+        // API call for jwt token / login function
         try {
             const response = await client.post("", {
                 email: formData.email,
                 password: formData.password
             });
             if (response.data) {
-                localStorage.setItem("tokens", JSON.stringify(response.data));
+                localStorage.setItem("token", JSON.stringify(response.data));
+                sessionStorage.setItem("auth", "true");
+                sessionStorage.setItem("page", "dashboard");
+                updateAuthStatus();
                 navigate("/dashboard");
             }
         } catch (error) {
@@ -77,8 +78,8 @@ const Login: FC = () => {
     }
     return (
         <>
-            {errorMessage && <Alert icon={<TriangleExclamationIcon />} className="p-3 mb-2" color="red">{errorMessage}</Alert>}
-            <Card className="flex flex-col justify-center w-full h-full bg-white shadow-lg rounded">
+            {errorMessage && <Alert icon={<ExclamationTriangleIcon className="h-6 w-6" />} className="p-3 rounded-none" color="red">{errorMessage}</Alert>}
+            <Card className="flex flex-col justify-center w-full h-full bg-white shadow-2xl rounded">
                 <div className="text-center flex flex-col gap-1 mb-2">
                     <Typography variant="h4">Health Watch</Typography>
                     <Typography variant="h6">Monitoring System</Typography>

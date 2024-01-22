@@ -1,12 +1,13 @@
-import { FC } from "react";
+import { ReactElement } from "react";
 import { Outlet } from "react-router-dom";
+import { Card } from "@material-tailwind/react";
 
-const AuthLayout: FC = () => {
+const AuthLayout = (): ReactElement => {
     return (
         <div className="min-h-screen min-w-screen grid grid-cols-1 place-items-center">
-            <div className="desktop:h-96 desktop:w-96 laptop:h-96 laptop:w-96 tablet:w-96 tablet:h-96 phone:w-full phone:h-full">
+            <Card className="w-full h-full tablet:max-w-96 tablet:max-h-96">
                 <Outlet />
-            </div>
+            </Card>
         </div>
     );
 }
