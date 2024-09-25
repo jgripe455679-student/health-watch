@@ -1,13 +1,10 @@
-import { FC, useContext } from "react";
+import { FC } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { AuthContext } from "../components/AuthContext";
-import { AuthContextType } from "../@types/auth";
+import useAuth from "../hooks/useAuth";
 
 const ProtectedRoutes: FC = () => {
-    const { authStatus } = useContext(AuthContext) as AuthContextType;
-    return (
-        authStatus ? <Outlet /> : <Navigate to="/login" />
-    );
-}
+  const { auth } = useAuth();
+  return auth.isLoggedIn ? <Outlet /> : <Navigate to="/login" />;
+};
 
 export default ProtectedRoutes;

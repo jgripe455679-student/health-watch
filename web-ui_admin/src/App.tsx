@@ -1,15 +1,16 @@
-import BackgroundColorLayout from "./components/BackgroundColorLayout";
-import AppRouter from "./routes/AppRouter";
-import AuthProvider from "../src/components/AuthContext";
+import AppRoutes from "./routes/AppRoutes";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import AuthProvider from "./context/AuthContext";
 
 function App() {
-
   return (
-    <BackgroundColorLayout>
+    <Router>
       <AuthProvider>
-        <AppRouter />
+        <Routes>
+          <Route path="/*" element={<AppRoutes />} />
+        </Routes>
       </AuthProvider>
-    </BackgroundColorLayout>
+    </Router>
   );
 }
 

@@ -4,7 +4,7 @@ import { Card } from "@material-tailwind/react";
 
 const AuthLayout = (): ReactElement => {
     return (
-        <div className="min-h-screen min-w-screen grid grid-cols-1 place-items-center">
+        <div className="bg-blue-gray-50 min-h-screen min-w-screen grid grid-cols-1 place-items-center">
             <Card className="w-full h-full tablet:max-w-96 tablet:max-h-96">
                 <Outlet />
             </Card>

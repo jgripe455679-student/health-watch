@@ -1,18 +1,7 @@
-import { FC, useContext, useEffect } from "react";
-import { AuthContext } from "../components/AuthContext";
-import { AuthContextType } from "../@types/auth";
+import { FC } from "react";
 
 const Dashboard: FC = () => {
-    const { authStatus } = useContext(AuthContext) as AuthContextType;
-    useEffect(() => {
-        sessionStorage.setItem("page", "dashboard");
-        console.log(authStatus);
-    }, [])
-    return(
-        <div>
-        Hello, world!
-        </div>
-    );
-}
+  return <div>Hello, world!</div>;
+};
 
 export default Dashboard;

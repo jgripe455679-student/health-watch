@@ -22,6 +22,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html, body {
+  height: 100%;
+}
+
 .active-link {
   color: white;
   background-color: rgb(59, 130, 246);
