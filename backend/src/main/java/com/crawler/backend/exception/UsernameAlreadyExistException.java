@@ -1,4 +1,4 @@
-package com.crawler.exception;
+package com.crawler.backend.exception;
 
 public class UsernameAlreadyExistException extends RuntimeException {
     public UsernameAlreadyExistException(String message) {

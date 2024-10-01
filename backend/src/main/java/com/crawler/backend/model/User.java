@@ -20,8 +20,13 @@ public class User {
     @GeneratedValue(strategy =  GenerationType.AUTO)
     private int userId;
 
+    @Column(nullable = false)
     private String username;
+
+    @Column(nullable = false)
     private String userPassword;
+
+    @Column(nullable = false)
     private LocalDateTime userDateCreated;
 
     @Column(nullable = false)

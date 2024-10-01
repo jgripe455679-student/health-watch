@@ -1,4 +1,4 @@
-package com.crawler.exception;
+package com.crawler.backend.exception;
 
 import org.springframework.http.HttpStatus;
 
