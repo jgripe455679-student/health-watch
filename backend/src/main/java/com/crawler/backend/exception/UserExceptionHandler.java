@@ -26,8 +26,8 @@ public class UserExceptionHandler {
     @ExceptionHandler(value = { NoUsersFoundException.class })
     public ResponseEntity<Object> handleNoUsersFoundException(NoUsersFoundException noUsersFoundException) {
         UserException userException = new UserException(noUsersFoundException.getMessage(),
-                noUsersFoundException.getCause(), HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(userException, HttpStatus.NOT_FOUND);
+                noUsersFoundException.getCause(), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(userException, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(value = { UserNotFoundException.class })

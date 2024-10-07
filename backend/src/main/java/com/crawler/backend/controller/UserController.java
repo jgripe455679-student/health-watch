@@ -38,7 +38,7 @@ public class UserController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserDetails(@PathVariable("userId") int userId) {
+    public ResponseEntity<?> getUserDetails(@PathVariable int userId) {
         if (userId < 1) {
             return ResponseEntity.badRequest().body("Invalid ID");
         }

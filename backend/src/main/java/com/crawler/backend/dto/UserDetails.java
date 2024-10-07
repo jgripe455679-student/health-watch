@@ -3,7 +3,7 @@ package com.crawler.backend.dto;
 import java.time.LocalDateTime;
 
 public class UserDetails {
-    private Integer userId;
+    private int userId;
     private String username;
     private LocalDateTime userDateCreated;
     private Boolean userIsActive;

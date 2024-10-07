@@ -13,11 +13,11 @@ import jakarta.persistence.Table;
 
 @Component
 @Entity
-@Table(name="tbl_user")
+@Table(name = "tbl_user")
 public class User {
 
     @Id
-    @GeneratedValue(strategy =  GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int userId;
 
     @Column(nullable = false)
@@ -79,11 +79,5 @@ public class User {
 
     public void setUserIsActive(boolean userIsActive) {
         this.userIsActive = userIsActive;
-    }
-
-    @Override
-    public String toString() {
-        // TODO Auto-generated method stub
-        return super.toString();
     }
 }

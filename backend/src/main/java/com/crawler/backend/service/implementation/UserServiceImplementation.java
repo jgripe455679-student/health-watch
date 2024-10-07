@@ -47,7 +47,7 @@ public class UserServiceImplementation implements UserService {
         List<User> userList = userRepository.findAll();
         List<UserDetails> userListDetails = new ArrayList<>();
         if (userList == null || userList.isEmpty()) {
-            throw new NoUsersFoundException("No Users Found");
+            throw new NoUsersFoundException("No users found");
         }
         for (int i = 0; i < userList.size(); i++) {
             UserDetails userDetails = new UserDetails(userList.get(i).getUserId(), userList.get(i).getUsername(),
@@ -63,11 +63,10 @@ public class UserServiceImplementation implements UserService {
         UserDetails userDetails = new UserDetails();
         if (user == null) {
             throw new UserNotFoundException("User not found");
-        } else {
-            userDetails = new UserDetails(user.getUserId(), user.getUsername(), user.getUserDateCreated(),
-                    user.getUserIsActive());
-            return userDetails;
         }
+        userDetails = new UserDetails(user.getUserId(), user.getUsername(), user.getUserDateCreated(),
+                user.getUserIsActive());
+        return userDetails;
     }
 
     @Override
@@ -75,6 +74,9 @@ public class UserServiceImplementation implements UserService {
         User existingUser = userRepository.findById(userId).orElse(null);
         if (existingUser == null) {
             throw new UserNotFoundException("User not found");
+        }
+        if (userRepository.findByUsername(userUpdateRequest.getUsername()).orElse(null) != null) {
+            throw new UsernameAlreadyExistException("Username already exist");
         }
         existingUser.setUsername(userUpdateRequest.getUsername());
         existingUser.setUserPassword(userUpdateRequest.getPassword());
