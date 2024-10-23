@@ -2,18 +2,22 @@ package com.crawler.backend.dto;
 
 import java.time.LocalDateTime;
 
-public class UserDetails {
+import com.crawler.backend.model.Role;
+
+public class UserDetailsDTO {
     private int userId;
     private String username;
+    private Role role;
     private LocalDateTime userDateCreated;
     private Boolean userIsActive;
 
-    public UserDetails() {
+    public UserDetailsDTO() {
     }
 
-    public UserDetails(int userId, String username, LocalDateTime userDateCreated, boolean userIsActive) {
+    public UserDetailsDTO(int userId, String username, Role role, LocalDateTime userDateCreated, boolean userIsActive) {
         this.userId = userId;
         this.username = username;
+        this.role = role;
         this.userDateCreated = userDateCreated;
         this.userIsActive = userIsActive;
     }
@@ -32,6 +36,14 @@ public class UserDetails {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public LocalDateTime getUserDateCreated() {

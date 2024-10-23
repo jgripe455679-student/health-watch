@@ -25,8 +25,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.crawler.backend.dto.UserDetails;
-import com.crawler.backend.dto.UserUpdateRequest;
+import com.crawler.backend.dto.UserDetailsDTO;
+import com.crawler.backend.dto.UserUpdateDTO;
 import com.crawler.backend.exception.NoUsersFoundException;
 import com.crawler.backend.exception.UserNotFoundException;
 import com.crawler.backend.exception.UsernameAlreadyExistException;
@@ -41,7 +41,7 @@ public class UserServiceImplementationTest {
     private UserServiceImplementation userService;
     AutoCloseable autoCloseable;
     User user;
-    UserUpdateRequest userUpdateRequest;
+    UserUpdateDTO userUpdateRequest;
     Collection<User> existingUsers;
 
     @BeforeEach
@@ -50,7 +50,7 @@ public class UserServiceImplementationTest {
         userService = new UserServiceImplementation(userRepository);
         user = new User("test", "test");
         user.setUserDateCreated(LocalDateTime.now());
-        userUpdateRequest = new UserUpdateRequest("test1", "test", "test", true);
+        userUpdateRequest = new UserUpdateDTO("test1", "test", "test", true);
         existingUsers = new ArrayList<>();
         existingUsers.add(new User("test", "test"));
         existingUsers.add(new User("test1", "test1"));
@@ -83,7 +83,7 @@ public class UserServiceImplementationTest {
     @Test
     void testUpdateUser_Success() {
         mock(UserRepository.class);
-        mock(UserUpdateRequest.class);
+        mock(UserUpdateDTO.class);
         mock(User.class);
         when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
         when(userRepository.findByUsername(userUpdateRequest.getUsername())).thenReturn(Optional.empty());
@@ -94,7 +94,7 @@ public class UserServiceImplementationTest {
     @Test
     void testUpdateUser_ThrowsException_WhenUserNotFound() {
         mock(UserRepository.class);
-        mock(UserUpdateRequest.class);
+        mock(UserUpdateDTO.class);
         mock(User.class);
         when(userRepository.findById(user.getUserId())).thenReturn(Optional.empty());
         Assertions.assertThatThrownBy(() -> userService.updateUser(user.getUserId(), userUpdateRequest))
@@ -105,7 +105,7 @@ public class UserServiceImplementationTest {
     @Test
     void testUpdateUser_ThrowsException_WhenUsernameAlreadyExist() {
         mock(UserRepository.class);
-        mock(UserUpdateRequest.class);
+        mock(UserUpdateDTO.class);
         mock(User.class);
         when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
         when(userRepository.findByUsername(userUpdateRequest.getUsername())).thenReturn(Optional.of(user));
@@ -119,7 +119,7 @@ public class UserServiceImplementationTest {
         mock(UserRepository.class);
         mock(User.class);
         when(userRepository.findById(user.getUserId())).thenReturn(Optional.ofNullable(user));
-        UserDetails existingUser = userService.getUser(user.getUserId());
+        UserDetailsDTO existingUser = userService.getUser(user.getUserId());
         Assertions.assertThat(existingUser.getUserId()).isEqualTo(user.getUserId());
         Assertions.assertThat(existingUser.getUsername()).isEqualTo(user.getUsername());
     }
@@ -138,7 +138,7 @@ public class UserServiceImplementationTest {
         mock(UserRepository.class);
         mock(User.class);
         when(userRepository.findAll()).thenReturn(new ArrayList<User>(existingUsers));
-        List<UserDetails> userList = userService.getAllUsers();
+        List<UserDetailsDTO> userList = userService.getAllUsers();
         Assertions.assertThat(userList).isNotEmpty();
         Assertions.assertThat(userList.size()).isEqualTo(existingUsers.size());
     }

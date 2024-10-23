@@ -3,10 +3,11 @@ package com.crawler.backend.service.implementation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.crawler.backend.dto.UserDetails;
-import com.crawler.backend.dto.UserUpdateRequest;
+import com.crawler.backend.dto.UserDetailsDTO;
+import com.crawler.backend.dto.UserUpdateDTO;
 import com.crawler.backend.exception.NoUsersFoundException;
 import com.crawler.backend.exception.UserNotFoundException;
 import com.crawler.backend.exception.UsernameAlreadyExistException;
@@ -23,12 +24,15 @@ public class UserServiceImplementation implements UserService {
         this.userRepository = userRepository;
     }
 
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+
     @Override
     public void createUser(User user) {
-        User existingUser = userRepository.findByUsername(user.getUsername()).orElse(null);
+        User existingUser = userRepository.findByUsername(user.getUsername());
         if (existingUser != null) {
             throw new UsernameAlreadyExistException("Username already exist");
         }
+        user.setUserPassword(encoder.encode(user.getUserPassword()));
         userRepository.save(user);
     }
 
@@ -43,14 +47,15 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public List<UserDetails> getAllUsers() {
+    public List<UserDetailsDTO> getAllUsers() {
         List<User> userList = userRepository.findAll();
-        List<UserDetails> userListDetails = new ArrayList<>();
+        List<UserDetailsDTO> userListDetails = new ArrayList<>();
         if (userList == null || userList.isEmpty()) {
             throw new NoUsersFoundException("No users found");
         }
         for (int i = 0; i < userList.size(); i++) {
-            UserDetails userDetails = new UserDetails(userList.get(i).getUserId(), userList.get(i).getUsername(),
+            UserDetailsDTO userDetails = new UserDetailsDTO(userList.get(i).getUserId(), userList.get(i).getUsername(),
+                    userList.get(i).getRole(),
                     userList.get(i).getUserDateCreated(), userList.get(i).getUserIsActive());
             userListDetails.add(userDetails);
         }
@@ -58,29 +63,32 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDetails getUser(int userId) {
+    public UserDetailsDTO getUser(int userId) {
         User user = userRepository.findById(userId).orElse(null);
-        UserDetails userDetails = new UserDetails();
+        UserDetailsDTO userDetails = new UserDetailsDTO();
         if (user == null) {
             throw new UserNotFoundException("User not found");
         }
-        userDetails = new UserDetails(user.getUserId(), user.getUsername(), user.getUserDateCreated(),
+        userDetails = new UserDetailsDTO(user.getUserId(), user.getUsername(), user.getRole(),
+                user.getUserDateCreated(),
                 user.getUserIsActive());
         return userDetails;
     }
 
     @Override
-    public void updateUser(int userId, UserUpdateRequest userUpdateRequest) {
+    public void updateUser(int userId, UserUpdateDTO userUpdateDTO) {
         User existingUser = userRepository.findById(userId).orElse(null);
         if (existingUser == null) {
             throw new UserNotFoundException("User not found");
         }
-        if (userRepository.findByUsername(userUpdateRequest.getUsername()).orElse(null) != null) {
+        if (userRepository.findByUsername(userUpdateDTO.getUsername()) != null) {
             throw new UsernameAlreadyExistException("Username already exist");
         }
-        existingUser.setUsername(userUpdateRequest.getUsername());
-        existingUser.setUserPassword(userUpdateRequest.getPassword());
-        existingUser.setUserIsActive(userUpdateRequest.getIsActive());
+        if (userUpdateDTO.getPassword() != null || userUpdateDTO.getRetypePassword() != null) {
+            existingUser.setUserPassword(encoder.encode(userUpdateDTO.getPassword()));
+        }
+        existingUser.setUsername(userUpdateDTO.getUsername());
+        existingUser.setUserIsActive(userUpdateDTO.getIsActive());
         userRepository.save(existingUser);
     }
 

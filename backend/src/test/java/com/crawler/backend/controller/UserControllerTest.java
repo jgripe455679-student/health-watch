@@ -22,12 +22,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import com.crawler.backend.dto.UserCreateRequest;
-import com.crawler.backend.dto.UserDetails;
-import com.crawler.backend.dto.UserUpdateRequest;
+import com.crawler.backend.dto.UserCreateDTO;
+import com.crawler.backend.dto.UserDetailsDTO;
+import com.crawler.backend.dto.UserUpdateDTO;
 import com.crawler.backend.exception.NoUsersFoundException;
 import com.crawler.backend.exception.UserNotFoundException;
 import com.crawler.backend.exception.UsernameAlreadyExistException;
@@ -40,29 +43,31 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @WebMvcTest(UserController.class)
 @ActiveProfiles("test")
 public class UserControllerTest {
-
+        @Autowired
+        private WebApplicationContext webApplicationContext;
         @Autowired
         private MockMvc mockMvc;
         @MockBean
         private UserService userService;
         User userOne;
         User userTwo;
-        List<UserDetails> userList = new ArrayList<>();
-        UserDetails userOneDetails;
-        UserDetails userTwoDetails;
-        UserCreateRequest userOneCreateRequest;
-        UserCreateRequest invalidCreateRequest;
-        UserUpdateRequest userOneUpdateRequest;
-        UserUpdateRequest invalidUpdateRequest;
+        List<UserDetailsDTO> userList = new ArrayList<>();
+        UserDetailsDTO userOneDetails;
+        UserDetailsDTO userTwoDetails;
+        UserCreateDTO userOneCreateRequest;
+        UserCreateDTO invalidCreateRequest;
+        UserUpdateDTO userOneUpdateRequest;
+        UserUpdateDTO invalidUpdateRequest;
 
         @BeforeEach
         void setUp() {
+                mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
                 userOne = new User("test", "test");
                 userTwo = new User("test1", "test1");
                 userOne.setUserId(1);
-                userOneDetails = new UserDetails(userOne.getUserId(), userOne.getUsername(),
+                userOneDetails = new UserDetailsDTO(userOne.getUserId(), userOne.getUsername(),
                                 userOne.getUserDateCreated(), userOne.getUserIsActive());
-                userTwoDetails = new UserDetails(userTwo.getUserId(), userTwo.getUsername(),
+                userTwoDetails = new UserDetailsDTO(userTwo.getUserId(), userTwo.getUsername(),
                                 userTwo.getUserDateCreated(),
                                 userTwo.getUserIsActive());
                 userList.add(userOneDetails);
@@ -83,19 +88,22 @@ public class UserControllerTest {
         @Test
         void testGetUserDetails_ThrowsException_WhenUserNotFound() throws Exception {
                 when(userService.getUser(0)).thenThrow(new UserNotFoundException("User not found"));
-                this.mockMvc.perform(get("/api/v1/user/0")).andDo(print()).andExpect(status().isBadRequest());
+                this.mockMvc.perform(get("/api/v1/user/0"))
+                                .andDo(print()).andExpect(status().isBadRequest());
         }
 
         @Test
         void testGetAllUsers_Success() throws Exception {
                 when(userService.getAllUsers()).thenReturn(userList);
-                this.mockMvc.perform(get("/api/v1/users")).andDo(print()).andExpect(status().isOk());
+                this.mockMvc.perform(get("/api/v1/users"))
+                                .andDo(print()).andExpect(status().isOk());
         }
 
         @Test
         void testGetAllUsers_ThrowsException_WhenNoUsersFound() throws Exception {
                 when(userService.getAllUsers()).thenThrow(new NoUsersFoundException("No users found"));
-                this.mockMvc.perform(get("/api/v1/users")).andDo(print()).andExpect(status().isInternalServerError());
+                this.mockMvc.perform(get("/api/v1/users"))
+                                .andDo(print()).andExpect(status().isInternalServerError());
         }
 
         @Test
@@ -108,12 +116,13 @@ public class UserControllerTest {
         @Test
         void testDeleteUser_ThrowsException_WhenUserNotFound() throws Exception {
                 when(userService.deleteUser(0)).thenThrow(new UserNotFoundException("User not found"));
-                this.mockMvc.perform(delete("/api/v1/user/0")).andDo(print()).andExpect(status().isNotFound());
+                this.mockMvc.perform(delete("/api/v1/user/0"))
+                                .andDo(print()).andExpect(status().isNotFound());
         }
 
         @Test
         void testCreateUser_Success() throws Exception {
-                userOneCreateRequest = new UserCreateRequest(userOne.getUsername(), userOne.getUserPassword(),
+                userOneCreateRequest = new UserCreateDTO(userOne.getUsername(), userOne.getUserPassword(),
                                 userOne.getUserPassword());
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
@@ -121,13 +130,14 @@ public class UserControllerTest {
                 String requestJson = ow.writeValueAsString(userOneCreateRequest);
 
                 doNothing().when(userService).createUser(userOne);
-                this.mockMvc.perform(post("/api/v1/user").contentType(MediaType.APPLICATION_JSON).content(requestJson))
+                this.mockMvc.perform(post("/api/v1/user").with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON).content(requestJson))
                                 .andDo(print()).andExpect(status().isOk());
         }
 
         @Test
         void testCreateUser_ThrowsException_WhenUsernameAlreadyExist() throws Exception {
-                invalidCreateRequest = new UserCreateRequest("test", "test",
+                invalidCreateRequest = new UserCreateDTO("test", "test",
                                 "test");
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
@@ -136,13 +146,14 @@ public class UserControllerTest {
 
                 doThrow(new UsernameAlreadyExistException("Username already exist")).when(userService)
                                 .createUser(any());
-                this.mockMvc.perform(post("/api/v1/user").contentType(MediaType.APPLICATION_JSON).content(requestJson))
+                this.mockMvc.perform(post("/api/v1/user")
+                                .contentType(MediaType.APPLICATION_JSON).content(requestJson))
                                 .andDo(print()).andExpect(status().isConflict());
         }
 
         @Test
         void testUpdateUser_Success() throws Exception {
-                userOneUpdateRequest = new UserUpdateRequest(userOneDetails.getUsername(), userOne.getUserPassword(),
+                userOneUpdateRequest = new UserUpdateDTO(userOneDetails.getUsername(), userOne.getUserPassword(),
                                 userOne.getUserPassword(), userOneDetails.getUserIsActive());
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
@@ -159,7 +170,7 @@ public class UserControllerTest {
 
         @Test
         void testUpdateUser_ThrowsException_WhenUserNotFound() throws Exception {
-                invalidUpdateRequest = new UserUpdateRequest("test", "test",
+                invalidUpdateRequest = new UserUpdateDTO("test", "test",
                                 "test", false);
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
@@ -169,14 +180,15 @@ public class UserControllerTest {
                 doThrow(new UserNotFoundException("User not found")).when(userService).updateUser(anyInt(),
                                 any());
                 this.mockMvc
-                                .perform(put("/api/v1/user/1").contentType(MediaType.APPLICATION_JSON)
+                                .perform(put("/api/v1/user/1")
+                                                .contentType(MediaType.APPLICATION_JSON)
                                                 .content(requestJson))
                                 .andDo(print()).andExpect(status().isNotFound());
         }
 
         @Test
         void testUpdateUser_ThrowsException_WhenUsernameAlreadyExist() throws Exception {
-                invalidUpdateRequest = new UserUpdateRequest("test", "test",
+                invalidUpdateRequest = new UserUpdateDTO("test", "test",
                                 "test", false);
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
@@ -187,7 +199,8 @@ public class UserControllerTest {
                                 anyInt(),
                                 any());
                 this.mockMvc
-                                .perform(put("/api/v1/user/1").contentType(MediaType.APPLICATION_JSON)
+                                .perform(put("/api/v1/user/1")
+                                                .contentType(MediaType.APPLICATION_JSON)
                                                 .content(requestJson))
                                 .andDo(print()).andExpect(status().isConflict());
         }

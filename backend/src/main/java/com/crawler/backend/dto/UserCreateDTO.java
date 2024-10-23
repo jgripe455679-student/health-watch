@@ -1,25 +1,30 @@
 package com.crawler.backend.dto;
 
+import com.crawler.backend.model.Role;
+
 import jakarta.validation.constraints.NotBlank;
 
-public class UserCreateRequest {
+public class UserCreateDTO {
     @NotBlank(message = "Username is required")
     private String username;
-    
+
     @NotBlank(message = "Password is required")
     private String password;
 
     @NotBlank(message = "Retype password is required")
     private String retypePassword;
 
-    public UserCreateRequest() {
+    private Role role;
+
+    public UserCreateDTO() {
 
     }
 
-    public UserCreateRequest(String username, String password, String retypePassword) {
+    public UserCreateDTO(String username, String password, String retypePassword, Role role) {
         this.username = username;
         this.password = password;
         this.retypePassword = retypePassword;
+        this.role = role;
     }
 
     public String getUsername() {
@@ -44,5 +49,13 @@ public class UserCreateRequest {
 
     public void setRetypePassword(String retypePassword) {
         this.retypePassword = retypePassword;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

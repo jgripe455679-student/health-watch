@@ -1,15 +1,15 @@
 package com.crawler.backend.dto;
 
-public class UserUpdateRequest {
+public class UserUpdateDTO {
     private String username;
     private String password;
     private String retypePassword;
     private Boolean isActive;
 
-    public UserUpdateRequest() {
+    public UserUpdateDTO() {
     }
 
-    public UserUpdateRequest(String username, String password, String retypePassword, boolean isActive) {
+    public UserUpdateDTO(String username, String password, String retypePassword, boolean isActive) {
         this.username = username;
         this.password = password;
         this.retypePassword = retypePassword;

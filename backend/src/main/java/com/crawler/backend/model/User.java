@@ -2,8 +2,6 @@ package com.crawler.backend.model;
 
 import java.time.LocalDateTime;
 
-import org.springframework.stereotype.Component;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Component
 @Entity
 @Table(name = "tbl_user")
 public class User {
@@ -27,7 +24,10 @@ public class User {
     private String userPassword;
 
     @Column(nullable = false)
-    private LocalDateTime userDateCreated;
+    private Role role;
+
+    @Column(nullable = false)
+    private LocalDateTime userDateCreated = LocalDateTime.now();
 
     @Column(nullable = false)
     private Boolean userIsActive = true;
@@ -36,9 +36,10 @@ public class User {
 
     }
 
-    public User(String username, String userPassword) {
+    public User(String username, String userPassword, Role role) {
         this.username = username;
         this.userPassword = userPassword;
+        this.role = role;
     }
 
     public int getUserId() {
@@ -63,6 +64,14 @@ public class User {
 
     public void setUserPassword(String userPassword) {
         this.userPassword = userPassword;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public LocalDateTime getUserDateCreated() {
