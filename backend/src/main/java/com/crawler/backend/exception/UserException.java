@@ -2,7 +2,10 @@ package com.crawler.backend.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class UserException {
+import lombok.Getter;
+
+@Getter
+public class UserException extends RuntimeException {
     private final String message;
     private final Throwable throwable;
     private final HttpStatus httpStatus;
@@ -11,17 +14,5 @@ public class UserException {
         this.message = message;
         this.throwable = throwable;
         this.httpStatus = httpStatus;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public Throwable getThrowable() {
-        return throwable;
-    }
-
-    public HttpStatus getHttpStatus() {
-        return httpStatus;
     }
 }

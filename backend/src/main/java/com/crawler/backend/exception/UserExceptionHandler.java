@@ -1,5 +1,6 @@
 package com.crawler.backend.exception;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,9 +10,32 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 
 @RestControllerAdvice
 public class UserExceptionHandler {
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorDetails> globalExceptionHandler(Exception e, WebRequest request) {
+        ErrorDetails error = new ErrorDetails(
+                LocalDateTime.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                e.getMessage(),
+                request.getDescription(false));
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(UserException.class)
+    public ResponseEntity<ErrorDetails> userExceptionHandler(UserException e, WebRequest request) {
+        ErrorDetails error = new ErrorDetails(
+                LocalDateTime.now(),
+                e.getHttpStatus().value(),
+                e.getHttpStatus().getReasonPhrase(),
+                e.getMessage(),
+                request.getDescription(false));
+            return new ResponseEntity<>(error, e.getHttpStatus());
+    }
 
     @ExceptionHandler(value = { UsernameAlreadyExistException.class })
     public ResponseEntity<Object> handleUsernameAlreadyExistException(

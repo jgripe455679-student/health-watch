@@ -6,15 +6,12 @@ import org.springframework.security.core.GrantedAuthority;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,27 +20,25 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Setter
 @Getter
+@Setter
 @Builder
 @Entity
-@Table(name = "tbl_roles")
-public class Role implements GrantedAuthority {
+@Table(name = "tbl_permissions", uniqueConstraints = {@UniqueConstraint(columnNames = {"resource", "operation"})})
+public class Permission implements GrantedAuthority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true, nullable = false)
-    private String name;
-    @OneToMany(mappedBy = "role")
-    private Set<User> users;
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "role_permission", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
-    private Set<Permission> permissions;
+    @Column(nullable = false)
+    private String resource;
+    @Column(nullable = false)
+    private String operation;
+    @ManyToMany(mappedBy = "permissions")
+    private Set<Role> roles;
 
     @Override
     public String getAuthority() {
-        String role = this.name.toUpperCase();
-        return String.format("ROLE_%s", role);
+        return String.format("%s:%s", resource.toUpperCase(), operation.toUpperCase());
     }
-
+    
 }

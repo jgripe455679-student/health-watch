@@ -1,95 +1,75 @@
 package com.crawler.backend.service.implementation;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.crawler.backend.dto.UserDetailsDTO;
-import com.crawler.backend.dto.UserUpdateDTO;
-import com.crawler.backend.exception.NoUsersFoundException;
-import com.crawler.backend.exception.UserNotFoundException;
-import com.crawler.backend.exception.UsernameAlreadyExistException;
+import com.crawler.backend.dto.UserDTO;
+import com.crawler.backend.exception.ResourceNotFoundException;
+import com.crawler.backend.mapper.UserMapper;
+import com.crawler.backend.model.Role;
 import com.crawler.backend.model.User;
+import com.crawler.backend.repository.RoleRepository;
 import com.crawler.backend.repository.UserRepository;
 import com.crawler.backend.service.UserService;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class UserServiceImplementation implements UserService {
-
     private final UserRepository userRepository;
-
-    public UserServiceImplementation(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     @Override
-    public void createUser(User user) {
-        User existingUser = userRepository.findByUsername(user.getUsername());
-        if (existingUser != null) {
-            throw new UsernameAlreadyExistException("Username already exist");
-        }
-        user.setUserPassword(encoder.encode(user.getUserPassword()));
-        userRepository.save(user);
-    }
+    public UserDTO createUser(UserDTO userDTO) {
+        User user = UserMapper.userDTOToUser(userDTO);
 
-    @Override
-    public boolean deleteUser(int userId) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            throw new UserNotFoundException("User not found");
-        }
-        userRepository.deleteById(userId);
-        return true;
+        Role role = roleRepository.findByName(userDTO.role()).orElseThrow(
+                () -> new ResourceNotFoundException("Role not found"));
+        user.setRole(role);
+        user.setPassword(passwordEncoder.encode(userDTO.password()));
+
+        return UserMapper.userToUserDTO(userRepository.save(user));
     }
 
     @Override
-    public List<UserDetailsDTO> getAllUsers() {
-        List<User> userList = userRepository.findAll();
-        List<UserDetailsDTO> userListDetails = new ArrayList<>();
-        if (userList == null || userList.isEmpty()) {
-            throw new NoUsersFoundException("No users found");
-        }
-        for (int i = 0; i < userList.size(); i++) {
-            UserDetailsDTO userDetails = new UserDetailsDTO(userList.get(i).getUserId(), userList.get(i).getUsername(),
-                    userList.get(i).getRole(),
-                    userList.get(i).getUserDateCreated(), userList.get(i).getUserIsActive());
-            userListDetails.add(userDetails);
-        }
-        return userListDetails;
+    public String deleteUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        userRepository.delete(user);
+
+        return String.format("User with %d deleted successfully", userId);
     }
 
     @Override
-    public UserDetailsDTO getUser(int userId) {
-        User user = userRepository.findById(userId).orElse(null);
-        UserDetailsDTO userDetails = new UserDetailsDTO();
-        if (user == null) {
-            throw new UserNotFoundException("User not found");
-        }
-        userDetails = new UserDetailsDTO(user.getUserId(), user.getUsername(), user.getRole(),
-                user.getUserDateCreated(),
-                user.getUserIsActive());
-        return userDetails;
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(UserMapper::userToUserDTO).collect(Collectors.toList());
     }
 
     @Override
-    public void updateUser(int userId, UserUpdateDTO userUpdateDTO) {
-        User existingUser = userRepository.findById(userId).orElse(null);
-        if (existingUser == null) {
-            throw new UserNotFoundException("User not found");
-        }
-        if (userRepository.findByUsername(userUpdateDTO.getUsername()) != null) {
-            throw new UsernameAlreadyExistException("Username already exist");
-        }
-        if (userUpdateDTO.getPassword() != null || userUpdateDTO.getRetypePassword() != null) {
-            existingUser.setUserPassword(encoder.encode(userUpdateDTO.getPassword()));
-        }
-        existingUser.setUsername(userUpdateDTO.getUsername());
-        existingUser.setUserIsActive(userUpdateDTO.getIsActive());
-        userRepository.save(existingUser);
+    public UserDTO getUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+        return UserMapper.userToUserDTO(user);
+    }
+
+    @Override
+    public UserDTO updateUser(Long userId, UserDTO userDTO) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        Role role = roleRepository.findByName(userDTO.role()).orElseThrow(
+                () -> new ResourceNotFoundException("Role not found"));
+
+        user.setUsername(userDTO.username());
+        user.setPassword(passwordEncoder.encode(userDTO.password()));
+        user.setRole(role);
+        return UserMapper.userToUserDTO(userRepository.save(user));
     }
 
 }

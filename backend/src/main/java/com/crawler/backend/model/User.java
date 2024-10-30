@@ -1,92 +1,89 @@
 package com.crawler.backend.model;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Builder
 @Entity
-@Table(name = "tbl_user")
-public class User {
+@Table(name = "tbl_users")
+public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private int userId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false)
     private String username;
 
     @Column(nullable = false)
-    private String userPassword;
+    private String password;
 
-    @Column(nullable = false)
+    @ManyToOne
     private Role role;
 
+    @Builder.Default
     @Column(nullable = false)
-    private LocalDateTime userDateCreated = LocalDateTime.now();
+    private LocalDateTime dateCreated = LocalDateTime.now();
 
-    @Column(nullable = false)
-    private Boolean userIsActive = true;
+    @OneToMany(mappedBy = "user")
+    private Set<Token> tokens;
 
-    public User() {
-
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<String> authorities = new HashSet<>();
+        this.role.getPermissions().forEach(permission -> authorities.add(permission.getAuthority()));
+        authorities.add(role.getAuthority());
+        return authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
     }
 
-    public User(String username, String userPassword, Role role) {
-        this.username = username;
-        this.userPassword = userPassword;
-        this.role = role;
+    @Override
+    public String getPassword() {
+        return password;
     }
 
-    public int getUserId() {
-        return userId;
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
     }
 
-    public String getUsername() {
-        return username;
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
-    public String getUserPassword() {
-        return userPassword;
-    }
-
-    public void setUserPassword(String userPassword) {
-        this.userPassword = userPassword;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public LocalDateTime getUserDateCreated() {
-        return userDateCreated;
-    }
-
-    public void setUserDateCreated(LocalDateTime userDateCreated) {
-        this.userDateCreated = userDateCreated;
-    }
-
-    public boolean getUserIsActive() {
-        return userIsActive;
-    }
-
-    public void setUserIsActive(boolean userIsActive) {
-        this.userIsActive = userIsActive;
-    }
 }

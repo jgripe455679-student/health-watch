@@ -2,14 +2,12 @@ package com.crawler.backend.service;
 
 import java.util.List;
 
-import com.crawler.backend.dto.UserDetailsDTO;
-import com.crawler.backend.dto.UserUpdateDTO;
-import com.crawler.backend.model.User;
+import com.crawler.backend.dto.UserDTO;
 
 public interface UserService {
-    public void createUser(User user);
-    public void updateUser(int userId, UserUpdateDTO userUpdateDTO);
-    public boolean deleteUser(int userId);
-    public UserDetailsDTO getUser(int userId);
-    public List<UserDetailsDTO> getAllUsers();
+    public UserDTO createUser(UserDTO userDTO);
+    public UserDTO updateUser(Long userId, UserDTO userDTO);
+    public String deleteUser(Long userId);
+    public UserDTO getUser(Long userId);
+    public List<UserDTO> getAllUsers();
 }
