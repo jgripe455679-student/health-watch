@@ -1,10 +1,17 @@
 package com.crawler.backend.service;
 
-import com.crawler.backend.dto.AuthResponseDTO;
-import com.crawler.backend.dto.RefreshTokenDTO;
-import com.crawler.backend.dto.UserLoginDTO;
+import org.springframework.http.ResponseEntity;
+
+import com.crawler.backend.dto.LoginRequest;
+import com.crawler.backend.dto.LoginResponse;
+import com.crawler.backend.dto.UserLoggedDto;
 
 public interface AuthService {
-    public AuthResponseDTO verifyUser(UserLoginDTO userLoginDTO);
-    public AuthResponseDTO refreshToken(RefreshTokenDTO refreshTokenDTO);
+    public ResponseEntity<LoginResponse> login(LoginRequest loginRequest, String accessToken, String refreshToken);
+
+    public ResponseEntity<LoginResponse> refresh(String refreshToken);
+
+    public ResponseEntity<LoginResponse> logout(String accessToken, String refreshToken);
+
+    public UserLoggedDto getUserLoggedInfo();
 }

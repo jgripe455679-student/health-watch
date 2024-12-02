@@ -1,36 +1,53 @@
 package com.crawler.backend.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.crawler.backend.dto.AuthResponseDTO;
-import com.crawler.backend.dto.RefreshTokenDTO;
-import com.crawler.backend.dto.UserLoginDTO;
+import com.crawler.backend.dto.LoginRequest;
+import com.crawler.backend.dto.LoginResponse;
+import com.crawler.backend.dto.UserLoggedDto;
 import com.crawler.backend.service.AuthService;
 
-import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
-
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid UserLoginDTO userLoginDTO) {
-        return ResponseEntity.ok(authService.verifyUser(userLoginDTO));
+    public ResponseEntity<LoginResponse> login(
+            @CookieValue(name = "access_token", required = false) String accessToken,
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
+            @RequestBody LoginRequest loginRequest) {
+        return authService.login(loginRequest, accessToken, refreshToken);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponseDTO> refresh(@RequestBody @Valid RefreshTokenDTO refreshTokenDTO) {
-        return ResponseEntity.ok(authService.refreshToken(refreshTokenDTO));
+    public ResponseEntity<LoginResponse> refresh(
+            @CookieValue(name = "refresh_token", required = true) String refreshToken) {
+        return authService.refresh(refreshToken);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<LoginResponse> logout(
+            @CookieValue(name = "access_token", required = false) String accessToken,
+            @CookieValue(name = "refresh_token", required = false) String refreshToken) {
+        return authService.logout(accessToken, refreshToken);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/info")
+    public ResponseEntity<UserLoggedDto> userLoggedInfo() {
+        return ResponseEntity.ok(authService.getUserLoggedInfo());
     }
 
 }

@@ -1,0 +1,144 @@
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+
+interface MenuItem {
+  label: string;
+  value: string;
+}
+
+const Navbar: React.FC = () => {
+  const [username, setUsername] = useState<string>("");
+  const [activeItem, setActiveItem] = useState<string>("/dashboard");
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems: MenuItem[] = [
+    { label: "Dashboard", value: "/dashboard" },
+    { label: "Electronic Health Record System", value: "/health-record" },
+    { label: "Profiling", value: "/profiling" },
+    { label: "User Management", value: "/user-management" },
+  ];
+
+  const handleMenuItemClick = (item: MenuItem) => {
+    setActiveItem(item.value);
+  };
+
+  useEffect(() => {
+    setActiveItem(location.pathname);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8080/api/v1/auth/info", { withCredentials: true })
+      .then((res) => {
+        if (res.data) {
+          setUsername(res.data.username);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [username]);
+
+  const handleLogout = () => {
+    axios
+      .post(
+        "http://localhost:8080/api/v1/auth/logout",
+        {},
+        { withCredentials: true }
+      )
+      .then((res) => {
+        if (res.status === 200) {
+          logout();
+          navigate("/login", { replace: true });
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  return (
+    <>
+      <div className="navbar bg-primary px-8">
+        <div className="navbar-start">
+          <div className="dropdown">
+            <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h8m-8 6h16"
+                />
+              </svg>
+            </div>
+            <ul
+              tabIndex={0}
+              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+            >
+              {menuItems.map((item) => (
+                <li key={item.value} onClick={() => handleMenuItemClick(item)}>
+                  <Link
+                    to={item.value}
+                    className={activeItem === item.value ? "active" : ""}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <a className="text-xl">HealthWatch Admin</a>
+        </div>
+        <div className="navbar-end">
+          <ul className="menu menu-horizontal z-[1] px-1">
+            <li>
+              <details>
+                <summary className="italic">Hello, {username}</summary>
+                <ul className="bg-base-200 rounded-t-none p-2">
+                  <li>
+                    <a>Change password</a>
+                  </li>
+                  <li>
+                    <a onClick={handleLogout}>Log Out</a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div className="navbar bg-base-100 px-8 py-0 min-h-0 border-b border-gray-300">
+        <div className="hidden lg:flex">
+          <ul className="menu menu-horizontal px-1 py-0">
+            {menuItems.map((item) => (
+              <li key={item.value} onClick={() => handleMenuItemClick(item)}>
+                <Link
+                  to={item.value}
+                  className={
+                    activeItem === item.value
+                      ? "rounded-none active"
+                      : "rounded-none"
+                  }
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Navbar;
