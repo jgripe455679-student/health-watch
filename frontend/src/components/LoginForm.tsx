@@ -61,12 +61,19 @@ const LoginForm: React.FC = () => {
           { withCredentials: true }
         )
         .then((response) => {
-          login(response.data);
-          navigate("/dashboard", { replace: true });
+          const { role } = response.data;
+          if (role === "USER") {
+            setErrorMessage(
+              "Unauthorized Access\nPlease contact your system administrator."
+            );
+          } else {
+            login(response.data);
+            navigate("/dashboard", { replace: true });
+          }
         })
         .catch((error) => {
           if (axios.isAxiosError(error) && error.status === 500) {
-            setErrorMessage(error.response?.data?.message);
+            setErrorMessage("Invalid Credentials\nPlease try again.");
           }
           console.error(error);
         });
@@ -93,7 +100,7 @@ const LoginForm: React.FC = () => {
               d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <span className="text-md">{errorMessage}</span>
+          <span className="whitespace-pre-line text-md">{errorMessage}</span>
         </div>
       )}
       <div className="card-body items-center p-0">
@@ -116,6 +123,7 @@ const LoginForm: React.FC = () => {
             }
             value={values.username}
             onChange={handleOnChange}
+            autoFocus
           />
           {errors.username && (
             <div className="label">
@@ -145,7 +153,9 @@ const LoginForm: React.FC = () => {
             </div>
           )}
           <div className="card-actions w-full">
-            <button className="btn btn-md btn-primary rounded-none w-full">Login</button>
+            <button className="btn btn-md btn-primary rounded-none w-full">
+              Login
+            </button>
           </div>
         </form>
       </div>

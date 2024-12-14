@@ -1,118 +1,122 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { deleteRequest, get } from "../api/apiClient";
 import Navbar from "../components/Navbar";
-import UserForm from "../components/UserForm";
+import ProfileForm from "../components/ProfileForm";
 import { useAppUtility } from "../hooks/useAppUtility";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
-export interface User {
+export interface Profile {
   id: number;
-  username: string;
-  password: string;
-  role: string;
-  permissions: string[];
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  suffix: string;
+  dateOfBirth: string;
+  gender: string;
+  maritalStatus: string;
+  address: string;
+  mobileNumber: string;
+  occupation: string;
+  educationalBackground: string;
+  householdSize: number;
+  incomeBracket: string;
   createdAt: string;
   createdBy: string;
   updatedAt: string;
   updatedBy: string;
-  isAccountNonExpired: boolean;
-  isAccountNonLocked: boolean;
-  isCredentialsNonExpired: boolean;
-  isEnabled: boolean;
 }
 
-const UserManagement: React.FC = () => {
-  const [currentUserManagementView, setCurrentUserManagementView] =
-    useState<string>("userManagement");
-  const [users, setUsers] = useState<User[]>([]);
-  const [userDetails, setUserDetails] = useState<User | null>(null);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+const Profiling: React.FC = () => {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [currentProfilingView, setCurrentProfilingView] =
+    useState<string>("profiling");
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const { formatLocalDateTime } = useAppUtility();
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [profileDetails, setProfileDetails] = useState<Profile | null>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [profileToDeleteId, setProfileToDeleteId] = useState<number | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(5);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [delayedSearch, setDelayedSearch] =
     useState<ReturnType<typeof setTimeout>>();
-  const { stripRolePrefix, formatLocalDateTime } = useAppUtility();
+  useDocumentTitle("Profiling");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  useDocumentTitle("User Management");
-
-  const openModal = (userId: number) => {
-    setIsOpen(true);
-    setUserToDeleteId(userId);
-  };
-
-  const deleteUser = async (userId: number | null) => {
-    try {
-      const response = await deleteRequest("/users/" + userId);
-      if (response.status === 200) {
-        setSuccessMessage("Record successfully deleted.");
-        setIsOpen(false);
-        setUserToDeleteId(null);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const closeModal = () => {
-    setIsOpen(false);
-    setUserToDeleteId(null);
-  };
 
   useEffect(() => {
-    const fetchAllUsers = async () => {
+    const fetchAllProfiles = async () => {
       setIsLoading(true);
       try {
-        const response = await get("/users");
-        setUsers(response.data as User[]);
+        const response = await get("/profiles");
+        setProfiles(response.data as Profile[]);
       } catch (error) {
         console.error("Error fetching data: ", error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchAllUsers();
-  }, [currentUserManagementView, userToDeleteId]);
-
-  const handleEditClick = async (userId: number) => {
-    resetSuccessMessage();
-    setCurrentUserManagementView("editUser");
-    setIsEditing(true);
-    if (currentPage !== 1) setCurrentPage(1);
-    try {
-      const response = await get("/users/" + userId);
-      setUserDetails(response.data as User);
-    } catch (error) {
-      console.error("Error fetching data: ", error);
-    }
-  };
+    fetchAllProfiles();
+  }, [currentProfilingView, profileToDeleteId]);
 
   const resetSuccessMessage = (): void => {
     setSuccessMessage("");
   };
 
-  const handleNewUserClick = () => {
+  const handleEditClick = async (profileId: number) => {
     resetSuccessMessage();
-    setCurrentUserManagementView("newUser");
+    setCurrentProfilingView("editProfile");
+    setIsEditing(true);
+    if (currentPage !== 1) setCurrentPage(1);
+    try {
+      const response = await get("/profiles/" + profileId);
+      setProfileDetails(response.data as Profile);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
+  };
+
+  const handleNewProfileClick = () => {
+    resetSuccessMessage();
+    setCurrentProfilingView("newProfile");
     setIsEditing(false);
-    setUserDetails(null);
+    setProfileDetails(null);
     if (currentPage !== 1) setCurrentPage(1);
   };
 
-  const handleSearch = useCallback(async (query: string) => {
-    setIsLoading(true);
+  const openModal = (profileId: number) => {
+    setIsOpen(true);
+    setProfileToDeleteId(profileId);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+    setProfileToDeleteId(null);
+  };
+
+  const deleteProfile = async (profileId: number | null) => {
     try {
-      const response = await get(`users/search?username=${query}`);
+      const response = await deleteRequest("/profiles/" + profileId);
       if (response.status === 200) {
-        setUsers(response.data as User[]);
+        setSuccessMessage("Record successfully deleted.");
+        setIsOpen(false);
+        setProfileToDeleteId(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSearch = useCallback(async (query: string) => {
+    try {
+      const response = await get(`profiles/search?lastName=${query}`);
+      if (response.status === 200) {
+        setProfiles(response.data as Profile[]);
       }
     } catch (error) {
       console.error("Error fetching search results: ", error);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -155,19 +159,19 @@ const UserManagement: React.FC = () => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = users.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = profiles.slice(indexOfFirstItem, indexOfLastItem);
 
   const paginate = (pageNumber: number) => {
     setCurrentPage(pageNumber);
     resetSuccessMessage();
   };
 
-  const UserManagementCard = () => (
+  const ProfilingCard = () => (
     <div className="px-8 py-1 my-1.5">
       <div className="card card-bordered border-gray-300 rounded-none shadow">
         <div className="card-body p-0">
           <h6 className="card-title bg-gray-100 text-sm text-primary p-1">
-            User Management
+            Profiling
           </h6>
           {successMessage && (
             <div
@@ -204,16 +208,16 @@ const UserManagement: React.FC = () => {
             <input
               type="text"
               className="input input-sm input-bordered rounded-none w-96 py-1.5 px-3 mx-1.5"
-              placeholder="Search by Username"
+              placeholder="Search by last name"
               value={searchQuery}
               onChange={handleInputChange}
               autoFocus
             />
             <button
               className="btn btn-sm rounded-none mr-1.5"
-              onClick={handleNewUserClick}
+              onClick={handleNewProfileClick}
             >
-              New User
+              New Profile
             </button>
           </div>
           <div className="overflow-x-auto">
@@ -221,14 +225,23 @@ const UserManagement: React.FC = () => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Username</th>
-                  <th>Role</th>
-                  <th>Permissions</th>
+                  <th>First Name</th>
+                  <th>Middle Name</th>
+                  <th>Last Name</th>
+                  <th>Suffix</th>
+                  <th>Date of Birth</th>
+                  <th>Gender</th>
+                  <th>Civil Status</th>
+                  <th>Address</th>
+                  <th>Mobile Number</th>
+                  <th>Occupation</th>
+                  <th>Highest Level of Education</th>
+                  <th>Household Size</th>
+                  <th>Household Income Bracket</th>
                   <th>Created At</th>
                   <th>Created By</th>
                   <th>Updated At</th>
                   <th>Updated By</th>
-                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -239,44 +252,38 @@ const UserManagement: React.FC = () => {
                       <span className="loading loading-spinner loading-xs text-primary"></span>
                     </td>
                   </tr>
-                ) : users.length === 0 ? (
+                ) : profiles.length === 0 ? (
                   <tr>
                     <td colSpan={100} className="text-center py-4">
-                      <p>No data</p>
+                      <p>No Data</p>
                     </td>
                   </tr>
                 ) : (
-                  currentItems.map((user, index) => (
+                  currentItems.map((profile, index) => (
                     <tr key={index}>
-                      <th>{user.id}</th>
-                      <td>{user.username}</td>
-                      <td>{stripRolePrefix(user.role)}</td>
-                      <td>
-                        <ul>
-                          {user.permissions.map((permission, index) => (
-                            <li key={index}>{permission}</li>
-                          ))}
-                        </ul>
-                      </td>
-                      <td>{formatLocalDateTime(user.createdAt)}</td>
-                      <td>{user.createdBy}</td>
-                      <td>{formatLocalDateTime(user.updatedAt)}</td>
-                      <td>{user.updatedBy}</td>
-                      <td>
-                        {user.isAccountNonExpired &&
-                        user.isAccountNonLocked &&
-                        user.isCredentialsNonExpired &&
-                        user.isEnabled ? (
-                          <span className="text-success">Active</span>
-                        ) : (
-                          <span className="text-error">Inactive</span>
-                        )}
-                      </td>
+                      <th>{profile.id}</th>
+                      <td>{profile.firstName}</td>
+                      <td>{profile.middleName}</td>
+                      <td>{profile.lastName}</td>
+                      <td>{profile.suffix}</td>
+                      <td>{profile.dateOfBirth}</td>
+                      <td>{profile.gender}</td>
+                      <td>{profile.maritalStatus}</td>
+                      <td>{profile.address}</td>
+                      <td>{profile.mobileNumber}</td>
+                      <td>{profile.occupation}</td>
+                      <td>{profile.educationalBackground}</td>
+                      <td>{profile.householdSize}</td>
+                      <td>{profile.incomeBracket}</td>
+                      <td>{formatLocalDateTime(profile.createdAt)}</td>
+                      <td>{profile.createdBy}</td>
+                      <td>{formatLocalDateTime(profile.updatedAt)}</td>
+                      <td>{profile.updatedBy}</td>
                       <td>
                         <div className="flex items-center gap-2.5">
                           <button
                             className="btn btn-primary btn-xs rounded-full"
-                            onClick={() => handleEditClick(user.id)}
+                            onClick={() => handleEditClick(profile.id)}
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -291,7 +298,7 @@ const UserManagement: React.FC = () => {
                           </button>
                           <button
                             className="btn btn-error btn-xs rounded-full"
-                            onClick={() => openModal(user.id)}
+                            onClick={() => openModal(profile.id)}
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -339,7 +346,7 @@ const UserManagement: React.FC = () => {
               <div className="join flex justify-end gap-x-1.5">
                 <button
                   className="btn btn-sm btn-ghost rounded-none"
-                  onClick={() => deleteUser(userToDeleteId)}
+                  onClick={() => deleteProfile(profileToDeleteId)}
                 >
                   Yes
                 </button>
@@ -354,7 +361,7 @@ const UserManagement: React.FC = () => {
           </dialog>
           <div className="join justify-center my-2.5">
             {Array.from(
-              { length: Math.ceil(users.length / itemsPerPage) },
+              { length: Math.ceil(profiles.length / itemsPerPage) },
               (_, i) => i + 1
             ).map((pageNumber) => (
               <button
@@ -375,21 +382,21 @@ const UserManagement: React.FC = () => {
     </div>
   );
 
-  const UserCard = () => (
+  const ProfileCard = () => (
     <div className="px-8 py-1 my-1.5">
       <div className="card card-bordered border-gray-300 rounded-none shadow">
         <div className="card-body p-0">
           <h6 className="card-title bg-gray-100 text-sm text-primary p-1">
-            {currentUserManagementView === "editUser" && isEditing
-              ? "Edit User"
-              : "New User"}
+            {currentProfilingView === "editProfile" && isEditing
+              ? "Edit Profile"
+              : "New Profile"}
           </h6>
-          <UserForm
-            userDetails={userDetails}
-            setCurrentUserManagementView={setCurrentUserManagementView}
-            isEditing={isEditing}
+          <ProfileForm
+            setCurrentProfilingView={setCurrentProfilingView}
             setSuccessMessage={setSuccessMessage}
-            setUserDetails={setUserDetails}
+            isEditing={isEditing}
+            profileDetails={profileDetails}
+            setProfileDetails={setProfileDetails}
             setIsEditing={setIsEditing}
           />
         </div>
@@ -399,14 +406,14 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="h-full w-full">
-      <Navbar setCurrentUserManagementView={setCurrentUserManagementView} />
-      {currentUserManagementView === "userManagement" ? (
-        <UserManagementCard />
+      <Navbar setCurrentProfilingView={setCurrentProfilingView} />
+      {currentProfilingView === "profiling" ? (
+        <ProfilingCard />
       ) : (
-        <UserCard />
+        <ProfileCard />
       )}
     </div>
   );
 };
 
-export default UserManagement;
+export default Profiling;

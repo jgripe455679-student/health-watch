@@ -3,6 +3,7 @@ package com.crawler.backend.model;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,8 +17,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,11 +51,34 @@ public class User implements UserDetails {
     @ManyToOne
     private Role role;
 
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE  )
+    @ManyToOne
+    private User createdBy;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(nullable = true)
+    private User updatedBy;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     private Set<Token> tokens;
+
+    @OneToMany(mappedBy = "createdBy")
+    private List<Profile> profiles;
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

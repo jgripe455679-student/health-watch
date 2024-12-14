@@ -37,8 +37,12 @@ public class UserServiceImplementation implements UserService {
         Role role = roleRepository.findByName(userDto.role()).orElseThrow(
                 () -> new ResourceNotFoundException("Role not found"));
 
+        User createdBy = userRepository.findByUsername(userDto.createdBy()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
         user.setRole(role);
         user.setPassword(passwordEncoder.encode(userDto.password()));
+        user.setCreatedBy(createdBy);
 
         return UserMapper.userToUserDto(userRepository.save(user));
     }
@@ -60,12 +64,21 @@ public class UserServiceImplementation implements UserService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
 
+        if (!userDto.username().equals(user.getUsername())) {
+            if (userRepository.findByUsername(userDto.username()).isPresent())
+                throw new AppException(HttpStatus.CONFLICT, "Username already exist");
+        }
+
         Role role = roleRepository.findByName(userDto.role()).orElseThrow(
                 () -> new ResourceNotFoundException("Role not found"));
+
+        User updatedBy = userRepository.findByUsername(userDto.updatedBy()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
 
         user.setUsername(userDto.username());
         user.setPassword(passwordEncoder.encode(userDto.password()));
         user.setRole(role);
+        user.setUpdatedBy(updatedBy);
 
         return UserMapper.userToUserDto(userRepository.save(user));
     }

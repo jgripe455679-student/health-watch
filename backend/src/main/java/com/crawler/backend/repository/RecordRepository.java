@@ -3,9 +3,9 @@ package com.crawler.backend.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.crawler.backend.model.Permission;
+import com.crawler.backend.model.Record;
 
 @Repository
-public interface PermissionRepository extends JpaRepository<Permission, Long> {
+public interface RecordRepository extends JpaRepository<Record, Long> {
 
 }

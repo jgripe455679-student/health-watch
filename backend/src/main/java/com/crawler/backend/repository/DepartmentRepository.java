@@ -5,9 +5,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.crawler.backend.model.Role;
+import com.crawler.backend.model.Department;
 
 @Repository
-public interface RoleRepository extends JpaRepository<Role, Long> {
-    Optional<Role> findByName(String name);
+public interface DepartmentRepository extends JpaRepository<Department, Long> {
+    Optional<Department> findByName(String name);
 }

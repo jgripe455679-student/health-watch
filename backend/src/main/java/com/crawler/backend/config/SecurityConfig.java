@@ -34,76 +34,94 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    public static final String SWAGGER_UI_URL = "/swagger-ui/**";
-    public static final String API_DOCS_URL = "/v3/api-docs/**";
-    public static final String[] ALLOWED_URLS = {
-            SWAGGER_UI_URL, API_DOCS_URL
-    };
+        public static final String SWAGGER_UI_URL = "/swagger-ui/**";
+        public static final String API_DOCS_URL = "/v3/api-docs/**";
+        public static final String[] ALLOWED_URLS = {
+                        SWAGGER_UI_URL, API_DOCS_URL
+        };
 
-    private final UserDetailsService userDetailsService;
-    private final JwtFilter jwtFilter;
-    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+        private final UserDetailsService userDetailsService;
+        private final JwtFilter jwtFilter;
+        private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(req -> {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
-                    config.setAllowedMethods(Collections.singletonList("*"));
-                    config.setAllowCredentials(true);
-                    config.setAllowedHeaders(Collections.singletonList("*"));
-                    config.setMaxAge(3600L);
-                    return config;
-                }))
-                .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers(ALLOWED_URLS).permitAll();
-                    authorize.requestMatchers("/api/v1/auth/login").permitAll();
-                    authorize.requestMatchers("/api/v1/auth/refresh").permitAll();
-                    authorize.requestMatchers(HttpMethod.GET, "/api/v1/users/**")
-                            .hasAuthority(Permissions.USER_READ.getName());
-                    authorize.requestMatchers(HttpMethod.POST, "/api/v1/users/**")
-                            .hasAuthority(Permissions.USER_CREATE.getName());
-                    authorize.requestMatchers(HttpMethod.PUT, "/api/v1/users/**")
-                            .hasAuthority(Permissions.USER_UPDATE.getName());
-                    authorize.requestMatchers(HttpMethod.DELETE, "/api/v1/users/**")
-                            .hasAuthority(Permissions.USER_DELETE.getName());
-                    authorize.anyRequest().authenticated();
-                })
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                return http
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .cors(cors -> cors.configurationSource(req -> {
+                                        CorsConfiguration config = new CorsConfiguration();
+                                        config.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
+                                        config.setAllowedMethods(Collections.singletonList("*"));
+                                        config.setAllowCredentials(true);
+                                        config.setAllowedHeaders(Collections.singletonList("*"));
+                                        config.setMaxAge(3600L);
+                                        return config;
+                                }))
+                                .authorizeHttpRequests(authorize -> {
+                                        authorize.requestMatchers(ALLOWED_URLS).permitAll();
+                                        authorize.requestMatchers("/api/v1/auth/login").permitAll();
+                                        authorize.requestMatchers("/api/v1/auth/refresh").permitAll();
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/users/**")
+                                                        .hasAuthority(Permissions.USER_READ.getName());
+                                        authorize.requestMatchers(HttpMethod.POST, "/api/v1/users/**")
+                                                        .hasAuthority(Permissions.USER_CREATE.getName());
+                                        authorize.requestMatchers(HttpMethod.PUT, "/api/v1/users/**")
+                                                        .hasAuthority(Permissions.USER_UPDATE.getName());
+                                        authorize.requestMatchers(HttpMethod.DELETE, "/api/v1/users/**")
+                                                        .hasAuthority(Permissions.USER_DELETE.getName());
+                                        authorize.requestMatchers(HttpMethod.POST, "/api/v1/profiles/**")
+                                                        .hasAuthority(Permissions.PROFILE_CREATE.getName());
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/profiles/**")
+                                                        .hasAuthority(Permissions.PROFILE_READ.getName());
+                                        authorize.requestMatchers(HttpMethod.PUT, "/api/v1/profiles/**")
+                                                        .hasAuthority(Permissions.PROFILE_UPDATE.getName());
+                                        authorize.requestMatchers(HttpMethod.DELETE, "/api/v1/profiles/**")
+                                                        .hasAuthority(Permissions.PROFILE_DELETE.getName());
+                                        authorize.requestMatchers(HttpMethod.POST, "/api/v1/records/**")
+                                                        .hasAuthority(Permissions.RECORD_CREATE.getName());
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/records/**")
+                                                        .hasAuthority(Permissions.RECORD_READ.getName());
+                                        authorize.requestMatchers(HttpMethod.PUT, "/api/v1/records/**")
+                                                        .hasAuthority(Permissions.RECORD_UPDATE.getName());
+                                        authorize.requestMatchers(HttpMethod.DELETE, "/api/v1/records/**")
+                                                        .hasAuthority(Permissions.RECORD_DELETE.getName());
+                                        authorize.anyRequest().authenticated();
+                                })
+                                .httpBasic(Customizer.withDefaults())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .exceptionHandling(exception -> exception
+                                                .authenticationEntryPoint(customAuthenticationEntryPoint))
+                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                                .build();
+        }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsService(userDetailsService);
-        return provider;
-    }
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+                provider.setPasswordEncoder(passwordEncoder());
+                provider.setUserDetailsService(userDetailsService);
+                return provider;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
 
-    @Bean
-    public static PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
-    }
+        @Bean
+        public static PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder(12);
+        }
 
-    // @Bean
-    // public UserDetailsService userDetailsService() {
-    // UserDetails user1 = User
-    // .withDefaultPasswordEncoder()
-    // .username("user")
-    // .password("password1")
-    // .roles("USER")
-    // .build();
-    // return new InMemoryUserDetailsManager(user1);
-    // }
+        // @Bean
+        // public UserDetailsService userDetailsService() {
+        // UserDetails user1 = User
+        // .withDefaultPasswordEncoder()
+        // .username("user")
+        // .password("password1")
+        // .roles("USER")
+        // .build();
+        // return new InMemoryUserDetailsManager(user1);
+        // }
 }

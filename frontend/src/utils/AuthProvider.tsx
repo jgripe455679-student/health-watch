@@ -10,6 +10,8 @@ export type AuthContextProps = {
   user: AuthUser | null;
   login: (userData: AuthUser) => void;
   logout: () => void;
+  username: string;
+  setUsername: (username: string) => void;
 };
 
 export const AuthContext = createContext<AuthContextProps | undefined>(
@@ -20,26 +22,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const verifyAuthentication = async () => {
-      try {
-        const response = await get("auth/info");
-        if (response.status === 200) {
-          console.log(response.data);
-          const userData: AuthUser = JSON.parse(storedUser || "{}");
-          login(userData);
-        }
-      } catch (error) {
-        logout();
-        console.error(error);
-      }
-    };
-    if (storedUser) {
-      verifyAuthentication();
-    }
-  }, []);
+  const [username, setUsername] = useState<string>("");
 
   const login = (userData: AuthUser) => {
     setUser(userData);
@@ -48,11 +31,36 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = () => {
     setUser(null);
+    setUsername("");
     localStorage.removeItem("user");
   };
 
+  useEffect(() => {
+    const verifyAuthentication = async () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser && storedUser !== "{}") {
+          const userData: AuthUser = JSON.parse(storedUser);
+          const response = await get("auth/info");
+          if (response.status === 200) {
+            login(userData);
+          }
+        } else {
+          logout();
+        }
+      } catch (error) {
+        logout();
+        console.error(error);
+      }
+    };
+
+    verifyAuthentication();
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, login, logout, username, setUsername }}
+    >
       {children}
     </AuthContext.Provider>
   );

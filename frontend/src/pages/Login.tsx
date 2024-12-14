@@ -1,9 +1,11 @@
 import { Navigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 import { useAuth } from "../hooks/useAuth";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 function Login() {
   const { user } = useAuth();
+  useDocumentTitle("Login");
   return user?.isLogged ? (
     <Navigate to="/dashboard" />
   ) : (

@@ -1,17 +1,31 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { get } from "../api/apiClient";
 import { useAuth } from "../hooks/useAuth";
+
+type NavbarProps = {
+  setCurrentProfilingView?: (view: string) => void;
+  setCurrentUserManagementView?: (view: string) => void;
+};
 
 interface MenuItem {
   label: string;
   value: string;
 }
 
-const Navbar: React.FC = () => {
-  const [username, setUsername] = useState<string>("");
-  const [activeItem, setActiveItem] = useState<string>("/dashboard");
-  const { logout } = useAuth();
+interface UserInfo {
+  username: string;
+  role: string;
+  permissions: string[];
+}
+
+const Navbar: React.FC<NavbarProps> = ({
+  setCurrentProfilingView,
+  setCurrentUserManagementView,
+}) => {
+  const [activeItem, setActiveItem] = useState<string>("");
+  const { logout, username, setUsername } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,6 +38,12 @@ const Navbar: React.FC = () => {
 
   const handleMenuItemClick = (item: MenuItem) => {
     setActiveItem(item.value);
+    if (setCurrentProfilingView) {
+      setCurrentProfilingView("profiling");
+    }
+    if (setCurrentUserManagementView) {
+      setCurrentUserManagementView("userManagement");
+    }
   };
 
   useEffect(() => {
@@ -31,17 +51,19 @@ const Navbar: React.FC = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/api/v1/auth/info", { withCredentials: true })
-      .then((res) => {
-        if (res.data) {
-          setUsername(res.data.username);
+    const fetchUsername = async () => {
+      try {
+        const response = await get("auth/info");
+        if (response.status === 200) {
+          const { username } = response.data as UserInfo;
+          setUsername(username);
         }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, [username]);
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    };
+    fetchUsername();
+  }, [setUsername]);
 
   const handleLogout = () => {
     axios
@@ -106,7 +128,7 @@ const Navbar: React.FC = () => {
                 <summary className="italic">Hello, {username}</summary>
                 <ul className="bg-base-200 rounded-t-none p-2">
                   <li>
-                    <a>Change password</a>
+                    <a>Reset password</a>
                   </li>
                   <li>
                     <a onClick={handleLogout}>Log Out</a>
