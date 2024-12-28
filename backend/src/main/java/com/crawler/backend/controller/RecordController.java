@@ -53,4 +53,10 @@ public class RecordController {
         String response = recordService.deleteRecord(recordId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{recordId}")
+    public ResponseEntity<RecordResponseDto> getRecord(@PathVariable Long recordId) {
+        RecordResponseDto response = recordService.getRecord(recordId);
+        return ResponseEntity.ok(response);
+    }
 }

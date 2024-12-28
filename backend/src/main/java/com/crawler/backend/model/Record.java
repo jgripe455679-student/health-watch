@@ -44,6 +44,15 @@ public class Record {
     @ManyToOne
     private Department department;
 
+    @Column(nullable = true)
+    private Integer height;
+
+    @Column(nullable = true)
+    private Integer weight;
+    
+    @Column(nullable = true)
+    private String bloodPressure;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

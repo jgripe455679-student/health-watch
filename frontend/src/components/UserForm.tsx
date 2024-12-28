@@ -10,15 +10,15 @@ type UserProps = {
   userDetails: User | null;
   isEditing: boolean;
   setSuccessMessage: (message: string) => void;
-  setUserDetails: (user: User | null) => void;
-  setIsEditing: (state: boolean) => void;
+  fetchAllUsers: () => Promise<void>;
+  isNotEditingUser: () => void;
 };
 
 interface Role {
   id: number;
   name: string;
   authority: string;
-  users?: string[];
+  users?: number[];
   permissions: string[];
 }
 
@@ -34,8 +34,8 @@ const UserForm: React.FC<UserProps> = ({
   userDetails,
   isEditing,
   setSuccessMessage,
-  setUserDetails,
-  setIsEditing,
+  fetchAllUsers,
+  isNotEditingUser,
 }) => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [values, setValues] = useState<UserFormValues>({
@@ -53,14 +53,18 @@ const UserForm: React.FC<UserProps> = ({
   const [globalError, setGlobalError] = useState<string>("");
   const { stripRolePrefix } = useAppUtility();
   const { username } = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAllRoles = async () => {
+      setIsLoading(true);
       try {
         const response = await get("/roles");
         setRoles(response.data as Role[]);
       } catch (error) {
         console.error("Error fetching data: ", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchAllRoles();
@@ -68,21 +72,31 @@ const UserForm: React.FC<UserProps> = ({
 
   const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setValues({ ...values, [name]: value });
-    setErrors({ ...errors, [name]: "" });
+    if (name === "username") {
+      setValues({ ...values, [name]: value.toLowerCase() });
+      setErrors({ ...errors, [name]: "" });
+    } else {
+      setValues({ ...values, [name]: value });
+      setErrors({ ...errors, [name]: "" });
+    }
     if (globalError) setGlobalError("");
   };
 
   const isPasswordValid = (password: string): boolean => {
+    let isValid = false;
     const hasUppercase = /[A-Z]/.test(password);
     const hasNumber = /\d/.test(password);
     const hasSymbol = /[!@#$%^&*(),.?":{}|<>_]/.test(password);
     const isLengthValid = password.length >= 8;
     if (hasUppercase && hasNumber && hasSymbol && isLengthValid) {
-      return true;
-    } else {
-      return false;
+      isValid = true;
     }
+    return isValid;
+  };
+
+  const handleGoBackClick = () => {
+    setCurrentUserManagementView("userManagement");
+    isNotEditingUser();
   };
 
   const handleOnSubmit = async (event: FormEvent) => {
@@ -107,6 +121,7 @@ const UserForm: React.FC<UserProps> = ({
             confirmPassword: "",
             role: "",
           });
+          fetchAllUsers();
           setCurrentUserManagementView("userManagement");
         }
       } catch (error) {
@@ -142,9 +157,9 @@ const UserForm: React.FC<UserProps> = ({
             confirmPassword: "",
             role: "",
           });
+          fetchAllUsers();
           setCurrentUserManagementView("userManagement");
-          setUserDetails(null);
-          setIsEditing(false);
+          isNotEditingUser();
         }
       } catch (error) {
         if (axios.isAxiosError(error) && error.status === 409) {
@@ -212,25 +227,25 @@ const UserForm: React.FC<UserProps> = ({
 
   return (
     <div className="flex flex-col items-center w-full">
+      {globalError && (
+        <div role="alert" className="alert alert-error rounded-none">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 shrink-0 stroke-current"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span className="text-sm">{globalError}</span>
+        </div>
+      )}
       <form className="p-4 w-full max-w-96" onSubmit={handleOnSubmit}>
-        {globalError && (
-          <div role="alert" className="alert alert-error rounded-none">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 shrink-0 stroke-current"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-sm">{globalError}</span>
-          </div>
-        )}
         <label className="form-control w-full">
           <div className="label">
             <span className="label-text">Username</span>
@@ -309,20 +324,24 @@ const UserForm: React.FC<UserProps> = ({
             <span className="label-text">Role</span>
           </div>
           <div className="flex items-center justify-evenly">
-            {roles.map((role) => (
-              <label key={role.id} className="label cursor-pointer">
-                <input
-                  id="role"
-                  type="radio"
-                  className="radio mx-2 radio-sm"
-                  name="role"
-                  value={role.name}
-                  checked={stripRolePrefix(values.role) === role.name}
-                  onChange={handleOnChange}
-                />
-                <span className="label-text">{role.name}</span>
-              </label>
-            ))}
+            {isLoading ? (
+              <span className="loading loading-spinner loading-xs text-primary"></span>
+            ) : (
+              roles.map((role) => (
+                <label key={role.id} className="label cursor-pointer">
+                  <input
+                    id="role"
+                    type="radio"
+                    className="radio mx-2 radio-sm"
+                    name="role"
+                    value={role.name}
+                    checked={stripRolePrefix(values.role) === role.name}
+                    onChange={handleOnChange}
+                  />
+                  <span className="label-text">{role.name}</span>
+                </label>
+              ))
+            )}
           </div>
           {errors.role && (
             <div className="label">
@@ -333,7 +352,7 @@ const UserForm: React.FC<UserProps> = ({
         <div className="flex justify-end gap-x-1.5 py-1.5">
           <button
             className="btn btn-ghost btn-sm rounded-none"
-            onClick={() => setCurrentUserManagementView("userManagement")}
+            onClick={handleGoBackClick}
           >
             Cancel
           </button>

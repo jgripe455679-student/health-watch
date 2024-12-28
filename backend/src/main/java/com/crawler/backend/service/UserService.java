@@ -2,10 +2,12 @@ package com.crawler.backend.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
+
 import com.crawler.backend.dto.UserDto;
 
 public interface UserService {
-    List<UserDto> getUsers();
+    List<UserDto> getUsers(Sort sort);
 
     UserDto create(UserDto userDto);
 
@@ -15,5 +17,5 @@ public interface UserService {
 
     String deleteUser(Long userId);
 
-    List<UserDto> searchByUsername(String username);
+    List<UserDto> searchByUsername(String username, Sort sort);
 }

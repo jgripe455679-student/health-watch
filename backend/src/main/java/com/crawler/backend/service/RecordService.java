@@ -15,4 +15,6 @@ public interface RecordService {
     RecordResponseDto updateRecord(Long recordId, RecordRequestDto recordRequestDto);
 
     String deleteRecord(Long recordId);
+
+    RecordResponseDto getRecord(Long recordId);
 }

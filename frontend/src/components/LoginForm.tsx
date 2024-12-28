@@ -104,9 +104,14 @@ const LoginForm: React.FC = () => {
         </div>
       )}
       <div className="card-body items-center p-0">
-        <h6 className="card-title flex justify-center text-md w-full bg-primary px-2.5 py-3.5">
-          HealthWatch Admin
-        </h6>
+        <div className="card-title flex items-center justify-center bg-primary w-full px-2.5 py-3.5">
+          <img
+            src="/transparent.svg"
+            alt="HealthWatch Transparent Logo"
+            className="h-12 w-12"
+          />
+          <h6 className="text-md">HealthWatch Admin</h6>
+        </div>
         <form
           className="flex flex-col gap-y-2.5 w-72 my-2.5"
           onSubmit={handleOnSubmit}
@@ -153,7 +158,7 @@ const LoginForm: React.FC = () => {
             </div>
           )}
           <div className="card-actions w-full">
-            <button className="btn btn-md btn-primary rounded-none w-full">
+            <button className="btn btn-md btn-primary text-lg rounded-none w-full">
               Login
             </button>
           </div>

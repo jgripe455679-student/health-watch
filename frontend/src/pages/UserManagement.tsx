@@ -1,8 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { deleteRequest, get } from "../api/apiClient";
 import Navbar from "../components/Navbar";
+import Pagination from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import UserForm from "../components/UserForm";
 import { useAppUtility } from "../hooks/useAppUtility";
+import useDebounce from "../hooks/useDebounce";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
 export interface User {
@@ -32,25 +35,27 @@ const UserManagement: React.FC = () => {
   const [itemsPerPage] = useState<number>(5);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [delayedSearch, setDelayedSearch] =
-    useState<ReturnType<typeof setTimeout>>();
   const { stripRolePrefix, formatLocalDateTime } = useAppUtility();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   useDocumentTitle("User Management");
+  const [searchValue, setSearchValue] = useState<string>("");
+  const debouncedSearchValue = useDebounce(searchValue);
 
   const openModal = (userId: number) => {
     setIsOpen(true);
     setUserToDeleteId(userId);
   };
 
-  const deleteUser = async (userId: number | null) => {
+  const deleteUser = async (userId: number | null): Promise<void> => {
+    resetSuccessMessage();
     try {
       const response = await deleteRequest("/users/" + userId);
       if (response.status === 200) {
         setSuccessMessage("Record successfully deleted.");
         setIsOpen(false);
         setUserToDeleteId(null);
+        fetchAllUsers();
+        if (currentPage !== 1) setCurrentPage(1);
       }
     } catch (error) {
       console.error(error);
@@ -62,20 +67,21 @@ const UserManagement: React.FC = () => {
     setUserToDeleteId(null);
   };
 
+  const fetchAllUsers: () => Promise<void> = async () => {
+    setIsLoading(true);
+    try {
+      const response = await get("/users");
+      setUsers(response.data as User[]);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAllUsers = async () => {
-      setIsLoading(true);
-      try {
-        const response = await get("/users");
-        setUsers(response.data as User[]);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchAllUsers();
-  }, [currentUserManagementView, userToDeleteId]);
+  }, []);
 
   const handleEditClick = async (userId: number) => {
     resetSuccessMessage();
@@ -90,19 +96,22 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const isNotEditingUser = () => {
+    setIsEditing(false);
+    setUserDetails(null);
+  };
+
   const resetSuccessMessage = (): void => {
-    setSuccessMessage("");
+    if (successMessage) setSuccessMessage("");
   };
 
   const handleNewUserClick = () => {
     resetSuccessMessage();
     setCurrentUserManagementView("newUser");
-    setIsEditing(false);
-    setUserDetails(null);
     if (currentPage !== 1) setCurrentPage(1);
   };
 
-  const handleSearch = useCallback(async (query: string) => {
+  const handleSearchQuery = async (query: string) => {
     setIsLoading(true);
     try {
       const response = await get(`users/search?username=${query}`);
@@ -114,44 +123,11 @@ const UserManagement: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    return () => {
-      if (delayedSearch) {
-        clearTimeout(delayedSearch);
-      }
-    };
-  }, [delayedSearch]);
-
-  const handleInputChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const input = event.target;
-      const newQuery = input.value;
-
-      if (currentPage !== 1) setCurrentPage(1);
-
-      const selectionStart = input.selectionStart;
-      const selectionEnd = input.selectionEnd;
-
-      setSearchQuery(newQuery);
-
-      if (delayedSearch) {
-        clearTimeout(delayedSearch);
-      }
-
-      const newDelayedSearch = setTimeout(() => {
-        handleSearch(newQuery);
-      }, 500);
-
-      setDelayedSearch(newDelayedSearch);
-
-      setTimeout(() => {
-        input.setSelectionRange(selectionStart, selectionEnd);
-      }, 0);
-    },
-    [delayedSearch, handleSearch, currentPage]
-  );
+    handleSearchQuery(debouncedSearchValue);
+  }, [debouncedSearchValue]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -172,12 +148,12 @@ const UserManagement: React.FC = () => {
           {successMessage && (
             <div
               role="alert"
-              className="alert alert-success py-1.5 px-2.5 rounded-none flex justify-between"
+              className="alert alert-success rounded-none flex justify-between"
             >
               <div className="flex items-center gap-1.5">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 shrink-0 stroke-current"
+                  className="h-6 w-6 shrink-0 stroke-current"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -185,7 +161,7 @@ const UserManagement: React.FC = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
                 <span className="text-sm">{successMessage}</span>
@@ -201,16 +177,16 @@ const UserManagement: React.FC = () => {
             </div>
           )}
           <div className="flex justify-between items-center">
-            <input
-              type="text"
-              className="input input-sm input-bordered rounded-none w-96 py-1.5 px-3 mx-1.5"
-              placeholder="Search by Username"
-              value={searchQuery}
-              onChange={handleInputChange}
-              autoFocus
+            <SearchInput
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              keyword={"username"}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              resetSuccessMessage={resetSuccessMessage}
             />
             <button
-              className="btn btn-sm rounded-none mr-1.5"
+              className="btn btn-sm btn-outline btn-primary rounded-none mr-1.5"
               onClick={handleNewUserClick}
             >
               New User
@@ -246,8 +222,8 @@ const UserManagement: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  currentItems.map((user, index) => (
-                    <tr key={index}>
+                  currentItems.map((user) => (
+                    <tr key={user.id}>
                       <th>{user.id}</th>
                       <td>{user.username}</td>
                       <td>{stripRolePrefix(user.role)}</td>
@@ -352,24 +328,12 @@ const UserManagement: React.FC = () => {
               </div>
             </div>
           </dialog>
-          <div className="join justify-center my-2.5">
-            {Array.from(
-              { length: Math.ceil(users.length / itemsPerPage) },
-              (_, i) => i + 1
-            ).map((pageNumber) => (
-              <button
-                className={
-                  currentPage === pageNumber
-                    ? "join-item rounded-none btn btn-sm btn-active"
-                    : "join-item rounded-none btn btn-sm"
-                }
-                key={pageNumber}
-                onClick={() => paginate(pageNumber)}
-              >
-                {pageNumber}
-              </button>
-            ))}
-          </div>
+          <Pagination
+            totalItems={users.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            paginate={paginate}
+          />
         </div>
       </div>
     </div>
@@ -389,8 +353,8 @@ const UserManagement: React.FC = () => {
             setCurrentUserManagementView={setCurrentUserManagementView}
             isEditing={isEditing}
             setSuccessMessage={setSuccessMessage}
-            setUserDetails={setUserDetails}
-            setIsEditing={setIsEditing}
+            fetchAllUsers={fetchAllUsers}
+            isNotEditingUser={isNotEditingUser}
           />
         </div>
       </div>

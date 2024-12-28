@@ -17,7 +17,11 @@ const Loader: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
+        <img
+          src="/transparent.svg"
+          alt="HealthWatch Transparent Logo"
+          className="h-24 w-24"
+        />
       </div>
     );
   }

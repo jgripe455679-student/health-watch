@@ -80,6 +80,34 @@ const Navbar: React.FC<NavbarProps> = ({
       })
       .catch((error) => {
         console.error(error);
+        if (error.response) {
+          if (error.respose.status === 401) {
+            axios
+              .get("http://localhost:8080/api/v1/auth/info")
+              .then((refreshResponse) => {
+                if (refreshResponse.status === 200) {
+                  axios
+                    .post(
+                      "http://localhost:8080/api/v1/auth/logout",
+                      {},
+                      { withCredentials: true }
+                    )
+                    .then((res) => {
+                      if (res.status === 200) {
+                        logout();
+                        navigate("/login", { replace: true });
+                      }
+                    })
+                    .catch((error) => {
+                      console.error(error);
+                    });
+                }
+              })
+              .catch((refreshError) => {
+                console.error(refreshError);
+              });
+          }
+        }
       });
   };
   return (
@@ -119,7 +147,10 @@ const Navbar: React.FC<NavbarProps> = ({
               ))}
             </ul>
           </div>
-          <a className="text-xl">HealthWatch Admin</a>
+          <Link to="/" className="text-xl flex items-center gap-x-1.5">
+            <img src="/transparent.svg" alt="HealthWatch Transparent Logo" className="h-10 w-10" />
+            HealthWatch Admin
+          </Link>
         </div>
         <div className="navbar-end">
           <ul className="menu menu-horizontal z-[1] px-1">

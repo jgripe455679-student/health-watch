@@ -43,7 +43,7 @@ public class RecordServiceImplementation implements RecordService {
                 Record record = RecordMapper.recordRequestDtoToRecord(recordRequestDto);
 
                 Profile profile = profileRepository
-                                .findByLastNameAndFirstNameOrMiddleNameOrSuffix(recordRequestDto.lastName(),
+                                .findProfile(recordRequestDto.lastName(),
                                                 recordRequestDto.firstName(),
                                                 recordRequestDto.middleName(), recordRequestDto.suffix())
                                 .orElseThrow(
@@ -68,7 +68,8 @@ public class RecordServiceImplementation implements RecordService {
                                 () -> new ResourceNotFoundException("Record not found"));
 
                 Profile profile = profileRepository
-                                .findByLastNameAndFirstNameOrMiddleNameOrSuffix(recordRequestDto.lastName(),
+                                .findProfile(
+                                                recordRequestDto.lastName(),
                                                 recordRequestDto.firstName(),
                                                 recordRequestDto.middleName(), recordRequestDto.suffix())
                                 .orElseThrow(
@@ -83,6 +84,9 @@ public class RecordServiceImplementation implements RecordService {
                 record.setProfileType(recordRequestDto.profileType());
                 record.setProfile(profile);
                 record.setDepartment(department);
+                record.setHeight(recordRequestDto.height());
+                record.setWeight(recordRequestDto.weight());
+                record.setBloodPressure(recordRequestDto.bloodPressure());
                 record.setUpdatedBy(updatedBy);
 
                 return RecordMapper.recordToRecordResponseDto(recordRepository.save(record));
@@ -94,6 +98,13 @@ public class RecordServiceImplementation implements RecordService {
                                 () -> new ResourceNotFoundException("Record not found"));
 
                 recordRepository.delete(record);
-                return String.format("Record with %r deleted successfully", recordId);
+                return String.format("Record with %s deleted successfully", recordId);
+        }
+
+        @Override
+        public RecordResponseDto getRecord(Long recordId) {
+                Record record = recordRepository.findById(recordId).orElseThrow(
+                                () -> new ResourceNotFoundException("Record not found"));
+                return RecordMapper.recordToRecordResponseDto(record);
         }
 }

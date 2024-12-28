@@ -1,50 +1,18 @@
 import axios from "axios";
 import React, { ChangeEvent, FormEvent, useState } from "react";
 import { post, put } from "../api/apiClient";
+import { useAppUtility } from "../hooks/useAppUtility";
 import { useAuth } from "../hooks/useAuth";
 import { Profile } from "../pages/Profiling";
+import getEmptyProfileFormValues, { ProfileFormValues } from "../utils/profile";
 
 type ProfileProps = {
   setCurrentProfilingView: (view: string) => void;
   setSuccessMessage: (message: string) => void;
   isEditing: boolean;
   profileDetails: Profile | null;
-  setProfileDetails: (profile: Profile | null) => void;
-  setIsEditing: (state: boolean) => void;
-};
-
-interface ProfileFormValues {
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  suffix: string;
-  dateOfBirth: string;
-  gender: string;
-  maritalStatus: string;
-  address: string;
-  mobileNumber: string;
-  occupation: string;
-  educationalBackground: string;
-  householdSize: number | null;
-  incomeBracket: string;
-}
-
-const getEmptyProfileFormValues = (): ProfileFormValues => {
-  return {
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    suffix: "",
-    dateOfBirth: "",
-    gender: "",
-    maritalStatus: "",
-    address: "",
-    mobileNumber: "",
-    occupation: "",
-    educationalBackground: "",
-    householdSize: null,
-    incomeBracket: "",
-  };
+  fetchAllProfiles: () => Promise<void>;
+  isNotEditingProfile: () => void;
 };
 
 const ProfileForm: React.FC<ProfileProps> = ({
@@ -52,8 +20,8 @@ const ProfileForm: React.FC<ProfileProps> = ({
   setSuccessMessage,
   isEditing,
   profileDetails,
-  setProfileDetails,
-  setIsEditing,
+  fetchAllProfiles,
+  isNotEditingProfile,
 }) => {
   const [values, setValues] = useState<ProfileFormValues>({
     firstName: profileDetails?.firstName || "",
@@ -75,6 +43,7 @@ const ProfileForm: React.FC<ProfileProps> = ({
   );
   const [globalError, setGlobalError] = useState<string>("");
   const { username } = useAuth();
+  const { isMobileNumberValid } = useAppUtility();
 
   const handleOnChange = (
     event: ChangeEvent<
@@ -82,16 +51,31 @@ const ProfileForm: React.FC<ProfileProps> = ({
     >
   ) => {
     const { name, value } = event.target;
-    setValues({ ...values, [name]: value });
-    setErrors({ ...errors, [name]: "" });
+
+    if (name === "mobileNumber") {
+      const mobileNumberPattern = /^(|[0-9]\d{0,10})$/;
+      if (mobileNumberPattern.test(value)) {
+        setValues({ ...values, [name]: value });
+        setErrors({ ...errors, [name]: "" });
+      }
+    } else {
+      setValues({ ...values, [name]: value.toUpperCase() });
+      setErrors({ ...errors, [name]: "" });
+    }
+
     if (globalError) setGlobalError("");
   };
 
-  const resetProfileFormValues = (values: ProfileFormValues): void => {
-    setValues(values);
+  const handleGoBackClick = () => {
+    setCurrentProfilingView("profiling");
+    isNotEditingProfile();
+  }
+
+  const resetProfileFormValues = (): void => {
+    setValues(getEmptyProfileFormValues());
   };
 
-  const handleOnSubmit = async (event: FormEvent) => {
+  const handleOnSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (validation() && !isEditing) {
       try {
@@ -101,7 +85,8 @@ const ProfileForm: React.FC<ProfileProps> = ({
         });
         if (response.status === 201) {
           setSuccessMessage("Profile created successfully.");
-          resetProfileFormValues(getEmptyProfileFormValues());
+          resetProfileFormValues();
+          fetchAllProfiles();
           setCurrentProfilingView("profiling");
         }
       } catch (error) {
@@ -109,7 +94,7 @@ const ProfileForm: React.FC<ProfileProps> = ({
           setGlobalError(
             "Oops, something went wrong. Please contact your system administrator."
           );
-          resetProfileFormValues(getEmptyProfileFormValues());
+          resetProfileFormValues();
         }
         console.error("Error submitting data: ", error);
       }
@@ -121,28 +106,20 @@ const ProfileForm: React.FC<ProfileProps> = ({
         });
         if (response.status === 200) {
           setSuccessMessage("Profile updated successfully.");
-          resetProfileFormValues(getEmptyProfileFormValues());
+          resetProfileFormValues();
+          fetchAllProfiles();
           setCurrentProfilingView("profiling");
-          setProfileDetails(null);
-          setIsEditing(false);
+          isNotEditingProfile();
         }
       } catch (error) {
         if (axios.isAxiosError(error)) {
           setGlobalError(
             "Oops, something went wrong. Please contact your system administrator."
           );
-          resetProfileFormValues(getEmptyProfileFormValues());
+          resetProfileFormValues();
         }
         console.error("Error submitting data: ", error);
       }
-    }
-  };
-
-  const isMobileNumberValid = (mobileNumber: string): boolean => {
-    if (/^\d{0,11}$/.test(mobileNumber)) {
-      return true;
-    } else {
-      return false;
     }
   };
 
@@ -253,13 +230,12 @@ const ProfileForm: React.FC<ProfileProps> = ({
               onChange={handleOnChange}
             >
               <option value="">Select suffix</option>
-              <option value="">None</option>
-              <option value="jr.">Jr.</option>
-              <option value="sr.">Sr.</option>
-              <option value="ii">II</option>
-              <option value="iii">III</option>
-              <option value="iv">IV</option>
-              <option value="v">V</option>
+              <option value="JR.">JR.</option>
+              <option value="SR.">SR.</option>
+              <option value="II">II</option>
+              <option value="III">III</option>
+              <option value="IV">IV</option>
+              <option value="V">V</option>
             </select>
           </label>
         </div>
@@ -340,10 +316,10 @@ const ProfileForm: React.FC<ProfileProps> = ({
             onChange={handleOnChange}
           >
             <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="non-binary">Non-binary</option>
-            <option value="prefer not to say">Prefer not to say</option>
+            <option value="MALE">MALE</option>
+            <option value="FEMALE">FEMALE</option>
+            <option value="NON-BINARY">NON-BINARY</option>
+            <option value="PREFER NOT TO SAY">PREFER NOT TO SAY</option>
           </select>
           {errors.gender && (
             <div className="label">
@@ -367,12 +343,12 @@ const ProfileForm: React.FC<ProfileProps> = ({
             onChange={handleOnChange}
           >
             <option value="">Select civil status</option>
-            <option value="single">Single</option>
-            <option value="married">Married</option>
-            <option value="divorced">Divorced</option>
-            <option value="widowed">Widowed</option>
-            <option value="separated">Separated</option>
-            <option value="domestic partnership">Domestic Partnership</option>
+            <option value="SINGLE">SINGLE</option>
+            <option value="MARRIED">MARRIED</option>
+            <option value="DIVORCED">DIVORCED</option>
+            <option value="WIDOWED">WIDOWED</option>
+            <option value="SEPARATED">SEPARATED</option>
+            <option value="DOMESTIC PARTNERSHIP">DOMESTIC PARTNERSHIP</option>
           </select>
           {errors.maritalStatus && (
             <div className="label">
@@ -452,14 +428,33 @@ const ProfileForm: React.FC<ProfileProps> = ({
               Highest Level of Education (Optional)
             </span>
           </div>
-          <input
+          <select
             id="educationalBackground"
             name="educationalBackground"
-            type="text"
-            className="input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+            className="input input-sm input-bordered rounded-none w-full px-3"
             value={values.educationalBackground}
             onChange={handleOnChange}
-          />
+          >
+            <option value="">Select highest level of education</option>
+            <option value="NO FORMAL EDUCATION">NO FORMAL EDUCATION</option>
+            <option value="SOME ELEMENTARY">SOME ELEMENTARY SCHOOL</option>
+            <option value="ELEMENTARY GRADUATE">ELEMENTARY GRADUATE</option>
+            <option value="SOME JUNIOR HIGH SCHOOL">
+              SOME JUNIOR HIGH SCHOOL
+            </option>
+            <option value="JUNIOR HIGH SCHOOL GRADUATE">
+              JUNIOR HIGH SCHOOL GRADUATE
+            </option>
+            <option value="SOME SENIOR HIGH SCHOOL">
+              SOME SENIOR HIGH SCHOOL
+            </option>
+            <option value="SENIOR HIGH SCHOOL GRADUATE">
+              SENIOR HIGH SCHOOL GRADUATE
+            </option>
+            <option value="SOME COLLEGE">SOME COLLEGE</option>
+            <option value="COLLEGE GRADUATE">COLLEGE GRADUATE</option>
+            <option value="POSTGRADUATE STUDIES">POSTGRADUATE STUDIES</option>
+          </select>
         </label>
         <label className="form-control w-full">
           <div className="label">
@@ -489,29 +484,29 @@ const ProfileForm: React.FC<ProfileProps> = ({
             onChange={handleOnChange}
           >
             <option value="">Select household income bracket</option>
-            <option value="poor">Below ₱10,957 monthly income</option>
-            <option value="low income (but not poor)">
+            <option value="POOR">Below ₱10,957 monthly income</option>
+            <option value="LOW INCOME (BUT NOT POOR)">
               ₱10,957 to ₱21,914 monthly income
             </option>
-            <option value="lower middle class">
+            <option value="LOWER MIDDLE CLASS">
               ₱21,914 to ₱43,828 monthly income
             </option>
-            <option value="middle class">
+            <option value="MIDDLE CLASS">
               ₱43,828 to ₱76,66 monthly income
             </option>
-            <option value="upper middle income">
+            <option value="UPPER MIDDLE INCOME">
               ₱76,669 to ₱131,484 monthly income
             </option>
-            <option value="high income (but not rich)">
+            <option value="HIGH INCOME (BUT NOT RICH)">
               ₱131,483 to ₱219,140 monthly income
             </option>
-            <option value="rich">₱ 219,140 and above monthly income</option>
+            <option value="RICH">₱ 219,140 and above monthly income</option>
           </select>
         </label>
         <div className="flex justify-end gap-x-1.5 py-1.5">
           <button
             className="btn btn-ghost btn-sm rounded-none"
-            onClick={() => setCurrentProfilingView("profiling")}
+            onClick={handleGoBackClick}
           >
             Cancel
           </button>

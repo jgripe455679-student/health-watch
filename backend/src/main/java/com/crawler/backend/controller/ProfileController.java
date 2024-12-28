@@ -3,6 +3,7 @@ package com.crawler.backend.controller;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,7 +35,7 @@ public class ProfileController {
 
     @GetMapping
     public ResponseEntity<List<ProfileDto>> getProfiles() {
-        return ResponseEntity.ok(profileService.getProfiles());
+        return ResponseEntity.ok(profileService.getProfiles(Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 
     @GetMapping("/{profileId}")
@@ -60,7 +61,29 @@ public class ProfileController {
 
     @GetMapping("/search")
     public ResponseEntity<List<ProfileDto>> searchByLastName(@RequestParam String lastName) {
-        List<ProfileDto> profiles = profileService.searchByLastName(lastName);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        List<ProfileDto> profiles = profileService.searchByLastName(lastName, sort);
         return ResponseEntity.ok(profiles);
+    }
+
+    @GetMapping("/{lastName}/{firstName}")
+    public ResponseEntity<ProfileDto> getProfileByFullName(@PathVariable String lastName,
+            @PathVariable String firstName) {
+        ProfileDto response = profileService.getProfileByFullName(lastName, firstName, "", "");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{lastName}/{firstName}/{middleName}")
+    public ResponseEntity<ProfileDto> getProfileByFullName(@PathVariable String lastName,
+            @PathVariable String firstName, @PathVariable String middleName) {
+        ProfileDto response = profileService.getProfileByFullName(lastName, firstName, middleName, "");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{lastName}/{firstName}/{middleName}/{suffix}")
+    public ResponseEntity<ProfileDto> getProfileByFullName(@PathVariable String lastName,
+            @PathVariable String firstName, @PathVariable String middleName, @PathVariable String suffix) {
+        ProfileDto response = profileService.getProfileByFullName(lastName, firstName, middleName, suffix);
+        return ResponseEntity.ok(response);
     }
 }

@@ -3,6 +3,7 @@ package com.crawler.backend.controller;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +35,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<UserDto>> getUsers() {
-        return ResponseEntity.ok(userService.getUsers());
+        return ResponseEntity.ok(userService.getUsers(Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 
     @GetMapping("/{userId}")
@@ -60,7 +61,8 @@ public class UserController {
 
     @GetMapping("/search")
     public ResponseEntity<List<UserDto>> searchByUsername(@RequestParam String username) {
-        List<UserDto> users = userService.searchByUsername(username);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        List<UserDto> users = userService.searchByUsername(username, sort);
         return ResponseEntity.ok(users);
     }
 

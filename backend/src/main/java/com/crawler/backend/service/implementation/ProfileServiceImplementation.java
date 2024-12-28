@@ -3,6 +3,7 @@ package com.crawler.backend.service.implementation;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.crawler.backend.dto.ProfileDto;
@@ -36,8 +37,8 @@ public class ProfileServiceImplementation implements ProfileService {
     }
 
     @Override
-    public List<ProfileDto> getProfiles() {
-        return profileRepository.findAll().stream().map(ProfileMapper::profileToProfileDto)
+    public List<ProfileDto> getProfiles(Sort sort) {
+        return profileRepository.findAll(sort).stream().map(ProfileMapper::profileToProfileDto)
                 .collect(Collectors.toList());
     }
 
@@ -52,21 +53,20 @@ public class ProfileServiceImplementation implements ProfileService {
     public ProfileDto updateProfile(Long profileId, ProfileDto profileDto) {
         Profile profile = profileRepository.findById(profileId).orElseThrow(
                 () -> new ResourceNotFoundException("Profile not found"));
-        
-        User updatedBy = userRepository.findByUsername(profileDto.updatedBy()).orElseThrow(
-            () -> new ResourceNotFoundException("User not found")
-        );
 
-        profile.setFirstName(profileDto.firstName().toLowerCase());
-        profile.setMiddleName(profileDto.middleName().toLowerCase());
-        profile.setLastName(profileDto.lastName().toLowerCase());
+        User updatedBy = userRepository.findByUsername(profileDto.updatedBy()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        profile.setFirstName(profileDto.firstName());
+        profile.setMiddleName(profileDto.middleName());
+        profile.setLastName(profileDto.lastName());
         profile.setSuffix(profileDto.suffix());
         profile.setDateOfBirth(profileDto.dateOfBirth());
         profile.setGender(profileDto.gender());
         profile.setMaritalStatus(profileDto.maritalStatus());
-        profile.setAddress(profileDto.address().toLowerCase());
+        profile.setAddress(profileDto.address());
         profile.setMobileNumber(profileDto.mobileNumber());
-        profile.setOccupation(profileDto.occupation().toLowerCase());
+        profile.setOccupation(profileDto.occupation());
         profile.setEducationalBackground(profileDto.educationalBackground());
         profile.setHouseholdSize(profileDto.householdSize());
         profile.setIncomeBracket(profileDto.incomeBracket());
@@ -85,9 +85,18 @@ public class ProfileServiceImplementation implements ProfileService {
     }
 
     @Override
-    public List<ProfileDto> searchByLastName(String lastName) {
-        return profileRepository.findByLastNameContaining(lastName).stream().map(ProfileMapper::profileToProfileDto)
+    public List<ProfileDto> searchByLastName(String lastName, Sort sort) {
+        return profileRepository.findByLastNameContaining(lastName, sort).stream()
+                .map(ProfileMapper::profileToProfileDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ProfileDto getProfileByFullName(String lastName, String firstName, String middleName, String suffix) {
+        Profile profile = profileRepository
+                .findProfile(lastName, firstName, middleName, suffix).orElseThrow(
+                        () -> new ResourceNotFoundException("Profile not found"));
+        return ProfileMapper.profileToProfileDto(profile);
     }
 
 }

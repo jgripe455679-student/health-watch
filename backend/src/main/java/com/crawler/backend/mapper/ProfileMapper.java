@@ -28,16 +28,16 @@ public class ProfileMapper {
 
     public static Profile profileDtoToProfile(ProfileDto profileDto) {
         Profile profile = new Profile();
-        profile.setFirstName(profileDto.firstName().toLowerCase());
-        profile.setMiddleName(profileDto.middleName().toLowerCase());
-        profile.setLastName(profileDto.lastName().toLowerCase());
+        profile.setFirstName(profileDto.firstName());
+        profile.setMiddleName(profileDto.middleName());
+        profile.setLastName(profileDto.lastName());
         profile.setSuffix(profileDto.suffix());
         profile.setDateOfBirth(profileDto.dateOfBirth());
         profile.setGender(profileDto.gender());
         profile.setMaritalStatus(profileDto.maritalStatus());
-        profile.setAddress(profileDto.address().toLowerCase());
+        profile.setAddress(profileDto.address());
         profile.setMobileNumber(profileDto.mobileNumber());
-        profile.setOccupation(profileDto.occupation().toLowerCase());
+        profile.setOccupation(profileDto.occupation());
         profile.setEducationalBackground(profileDto.educationalBackground());
         profile.setHouseholdSize(profileDto.householdSize());
         profile.setIncomeBracket(profileDto.incomeBracket());

@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { deleteRequest, get } from "../api/apiClient";
 import Navbar from "../components/Navbar";
+import Pagination from "../components/Pagination";
 import ProfileForm from "../components/ProfileForm";
+import SearchInput from "../components/SearchInput";
 import { useAppUtility } from "../hooks/useAppUtility";
+import useDebounce from "../hooks/useDebounce";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
 export interface Profile {
@@ -40,26 +43,26 @@ const Profiling: React.FC = () => {
   );
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(5);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [delayedSearch, setDelayedSearch] =
-    useState<ReturnType<typeof setTimeout>>();
   useDocumentTitle("Profiling");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [searchValue, setSearchValue] = useState<string>("");
+  const debouncedSearchValue = useDebounce(searchValue);
+
+  const fetchAllProfiles: () => Promise<void> = async () => {
+    setIsLoading(true);
+    try {
+      const response = await get("/profiles");
+      setProfiles(response.data as Profile[]);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAllProfiles = async () => {
-      setIsLoading(true);
-      try {
-        const response = await get("/profiles");
-        setProfiles(response.data as Profile[]);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchAllProfiles();
-  }, [currentProfilingView, profileToDeleteId]);
+  }, []);
 
   const resetSuccessMessage = (): void => {
     setSuccessMessage("");
@@ -78,11 +81,14 @@ const Profiling: React.FC = () => {
     }
   };
 
+  const isNotEditingProfile = () => {
+    setIsEditing(false);
+    setProfileDetails(null);
+  };
+
   const handleNewProfileClick = () => {
     resetSuccessMessage();
     setCurrentProfilingView("newProfile");
-    setIsEditing(false);
-    setProfileDetails(null);
     if (currentPage !== 1) setCurrentPage(1);
   };
 
@@ -103,13 +109,15 @@ const Profiling: React.FC = () => {
         setSuccessMessage("Record successfully deleted.");
         setIsOpen(false);
         setProfileToDeleteId(null);
+        fetchAllProfiles();
       }
     } catch (error) {
       console.error(error);
     }
   };
 
-  const handleSearch = useCallback(async (query: string) => {
+  const handleSearchQuery = async (query: string) => {
+    setIsLoading(true);
     try {
       const response = await get(`profiles/search?lastName=${query}`);
       if (response.status === 200) {
@@ -117,45 +125,14 @@ const Profiling: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching search results: ", error);
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    return () => {
-      if (delayedSearch) {
-        clearTimeout(delayedSearch);
-      }
-    };
-  }, [delayedSearch]);
-
-  const handleInputChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const input = event.target;
-      const newQuery = input.value;
-
-      if (currentPage !== 1) setCurrentPage(1);
-
-      const selectionStart = input.selectionStart;
-      const selectionEnd = input.selectionEnd;
-
-      setSearchQuery(newQuery);
-
-      if (delayedSearch) {
-        clearTimeout(delayedSearch);
-      }
-
-      const newDelayedSearch = setTimeout(() => {
-        handleSearch(newQuery);
-      }, 500);
-
-      setDelayedSearch(newDelayedSearch);
-
-      setTimeout(() => {
-        input.setSelectionRange(selectionStart, selectionEnd);
-      }, 0);
-    },
-    [delayedSearch, handleSearch, currentPage]
-  );
+    handleSearchQuery(debouncedSearchValue);
+  }, [debouncedSearchValue]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -176,12 +153,12 @@ const Profiling: React.FC = () => {
           {successMessage && (
             <div
               role="alert"
-              className="alert alert-success py-1.5 px-2.5 rounded-none flex justify-between"
+              className="alert alert-success rounded-none flex justify-between"
             >
               <div className="flex items-center gap-1.5">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 shrink-0 stroke-current"
+                  className="h-6 w-6 shrink-0 stroke-current"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -189,7 +166,7 @@ const Profiling: React.FC = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
                 <span className="text-sm">{successMessage}</span>
@@ -205,16 +182,16 @@ const Profiling: React.FC = () => {
             </div>
           )}
           <div className="flex justify-between items-center">
-            <input
-              type="text"
-              className="input input-sm input-bordered rounded-none w-96 py-1.5 px-3 mx-1.5"
-              placeholder="Search by last name"
-              value={searchQuery}
-              onChange={handleInputChange}
-              autoFocus
+            <SearchInput
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              keyword={"last name"}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              resetSuccessMessage={resetSuccessMessage}
             />
             <button
-              className="btn btn-sm rounded-none mr-1.5"
+              className="btn btn-sm btn-outline btn-primary rounded-none mr-1.5"
               onClick={handleNewProfileClick}
             >
               New Profile
@@ -259,8 +236,8 @@ const Profiling: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  currentItems.map((profile, index) => (
-                    <tr key={index}>
+                  currentItems.map((profile) => (
+                    <tr key={profile.id}>
                       <th>{profile.id}</th>
                       <td>{profile.firstName}</td>
                       <td>{profile.middleName}</td>
@@ -359,24 +336,12 @@ const Profiling: React.FC = () => {
               </div>
             </div>
           </dialog>
-          <div className="join justify-center my-2.5">
-            {Array.from(
-              { length: Math.ceil(profiles.length / itemsPerPage) },
-              (_, i) => i + 1
-            ).map((pageNumber) => (
-              <button
-                className={
-                  currentPage === pageNumber
-                    ? "join-item rounded-none btn btn-sm btn-active"
-                    : "join-item rounded-none btn btn-sm"
-                }
-                key={pageNumber}
-                onClick={() => paginate(pageNumber)}
-              >
-                {pageNumber}
-              </button>
-            ))}
-          </div>
+          <Pagination
+            totalItems={profiles.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            paginate={paginate}
+          />
         </div>
       </div>
     </div>
@@ -396,8 +361,8 @@ const Profiling: React.FC = () => {
             setSuccessMessage={setSuccessMessage}
             isEditing={isEditing}
             profileDetails={profileDetails}
-            setProfileDetails={setProfileDetails}
-            setIsEditing={setIsEditing}
+            fetchAllProfiles={fetchAllProfiles}
+            isNotEditingProfile={isNotEditingProfile}
           />
         </div>
       </div>

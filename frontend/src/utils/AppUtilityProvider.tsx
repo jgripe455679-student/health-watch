@@ -3,6 +3,7 @@ import React, { createContext } from "react";
 export type AppUtilityContextProps = {
   formatLocalDateTime: (dateString: string) => string;
   stripRolePrefix: (role: string) => string;
+  isMobileNumberValid: (mobileNumber: string) => boolean;
 };
 
 export const AppUtilityContext = createContext<
@@ -30,9 +31,13 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const stripRolePrefix = (role: string): string => {
     return role.replace("ROLE_", "");
   };
+  const isMobileNumberValid = (mobileNumber: string): boolean => {
+    const mobileNumberPattern = /^09\d{9}$/;
+    return mobileNumberPattern.test(mobileNumber);
+  };
   return (
     <AppUtilityContext.Provider
-      value={{ formatLocalDateTime, stripRolePrefix }}
+      value={{ formatLocalDateTime, stripRolePrefix, isMobileNumberValid }}
     >
       {children}
     </AppUtilityContext.Provider>

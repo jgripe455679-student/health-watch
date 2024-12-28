@@ -3,6 +3,7 @@ package com.crawler.backend.service.implementation;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,8 +49,8 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public List<UserDto> getUsers() {
-        return userRepository.findAll().stream().map(UserMapper::userToUserDto).collect(Collectors.toList());
+    public List<UserDto> getUsers(Sort sort) {
+        return userRepository.findAll(sort).stream().map(UserMapper::userToUserDto).collect(Collectors.toList());
     }
 
     @Override
@@ -93,8 +94,8 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public List<UserDto> searchByUsername(String username) {
-        return userRepository.findByUsernameContaining(username).stream().map(UserMapper::userToUserDto)
+    public List<UserDto> searchByUsername(String username, Sort sort) {
+        return userRepository.findByUsernameContaining(username, sort).stream().map(UserMapper::userToUserDto)
                 .collect(Collectors.toList());
     }
 
