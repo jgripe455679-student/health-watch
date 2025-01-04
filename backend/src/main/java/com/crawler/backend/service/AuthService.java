@@ -7,11 +7,11 @@ import com.crawler.backend.dto.LoginResponse;
 import com.crawler.backend.dto.UserLoggedDto;
 
 public interface AuthService {
-    public ResponseEntity<LoginResponse> login(LoginRequest loginRequest, String accessToken, String refreshToken);
+    ResponseEntity<LoginResponse> login(LoginRequest loginRequest, String accessToken, String refreshToken);
 
-    public ResponseEntity<LoginResponse> refresh(String refreshToken);
+    ResponseEntity<LoginResponse> refresh(String refreshToken);
 
-    public ResponseEntity<LoginResponse> logout(String accessToken, String refreshToken);
+    ResponseEntity<LoginResponse> logout(String accessToken, String refreshToken);
 
-    public UserLoggedDto getUserLoggedInfo();
+    UserLoggedDto getUserLoggedInfo();
 }

@@ -10,3 +10,9 @@ README.md
 /db/
 
 dev.env
+
+# Ignore Python bytecode cache directories
+__pycache__/
+
+# Ignore virtual environment directories
+venv/

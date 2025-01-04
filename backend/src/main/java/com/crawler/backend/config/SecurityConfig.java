@@ -36,8 +36,9 @@ public class SecurityConfig {
 
         public static final String SWAGGER_UI_URL = "/swagger-ui/**";
         public static final String API_DOCS_URL = "/v3/api-docs/**";
+        public static final String RABBITMQ_URL = "/rabbitmq/**";
         public static final String[] ALLOWED_URLS = {
-                        SWAGGER_UI_URL, API_DOCS_URL
+                        SWAGGER_UI_URL, API_DOCS_URL, RABBITMQ_URL
         };
 
         private final UserDetailsService userDetailsService;
@@ -85,6 +86,14 @@ public class SecurityConfig {
                                                         .hasAuthority(Permissions.RECORD_UPDATE.getName());
                                         authorize.requestMatchers(HttpMethod.DELETE, "/api/v1/records/**")
                                                         .hasAuthority(Permissions.RECORD_DELETE.getName());
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
+                                                        .hasAuthority(Permissions.RECORD_COUNT_READ.getName());
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
+                                                        .hasAuthority(Permissions.DEPARTMENT_USAGE_READ.getName());
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
+                                                        .hasAuthority(Permissions.HEALTH_METRICS_READ.getName());
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
+                                                        .hasAuthority(Permissions.DEMOGRAPHICS_ANALYSIS_READ.getName());
                                         authorize.anyRequest().authenticated();
                                 })
                                 .httpBasic(Customizer.withDefaults())

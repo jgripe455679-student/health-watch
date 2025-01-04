@@ -199,7 +199,6 @@ const UserManagement: React.FC = () => {
                   <th>ID</th>
                   <th>Username</th>
                   <th>Role</th>
-                  <th>Permissions</th>
                   <th>Created At</th>
                   <th>Created By</th>
                   <th>Updated At</th>
@@ -227,13 +226,6 @@ const UserManagement: React.FC = () => {
                       <th>{user.id}</th>
                       <td>{user.username}</td>
                       <td>{stripRolePrefix(user.role)}</td>
-                      <td>
-                        <ul>
-                          {user.permissions.map((permission, index) => (
-                            <li key={index}>{permission}</li>
-                          ))}
-                        </ul>
-                      </td>
                       <td>{formatLocalDateTime(user.createdAt)}</td>
                       <td>{user.createdBy}</td>
                       <td>{formatLocalDateTime(user.updatedAt)}</td>

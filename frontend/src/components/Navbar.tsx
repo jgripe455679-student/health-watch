@@ -33,6 +33,7 @@ const Navbar: React.FC<NavbarProps> = ({
     { label: "Dashboard", value: "/dashboard" },
     { label: "Electronic Health Record System", value: "/health-record" },
     { label: "Profiling", value: "/profiling" },
+    { label: "Reports", value: "/reports" },
     { label: "User Management", value: "/user-management" },
   ];
 
@@ -148,7 +149,11 @@ const Navbar: React.FC<NavbarProps> = ({
             </ul>
           </div>
           <Link to="/" className="text-xl flex items-center gap-x-1.5">
-            <img src="/transparent.svg" alt="HealthWatch Transparent Logo" className="h-10 w-10" />
+            <img
+              src="/transparent.svg"
+              alt="HealthWatch Transparent Logo"
+              className="h-10 w-10"
+            />
             HealthWatch Admin
           </Link>
         </div>

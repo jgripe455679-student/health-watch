@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import HealthRecord from "./pages/HealthRecord";
 import Login from "./pages/Login";
 import Profiling from "./pages/Profiling";
+import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
 import AppUtilityProvider from "./utils/AppUtilityProvider";
 import AuthProvider from "./utils/AuthProvider";
@@ -22,6 +23,7 @@ const App: React.FC = () => {
               <Route path="/user-management" element={<UserManagement />} />
               <Route path="/profiling" element={<Profiling />} />
               <Route path="/health-record" element={<HealthRecord />} />
+              <Route path="/reports" element={<Reports />} />
             </Route>
             <Route path="/" element={<Loader />} />
             <Route path="/login" element={<Login />} />
