@@ -12,4 +12,6 @@ public interface RecordCountService {
     void truncateAndSaveData(List<RecordCount> data);
 
     List<RecordCount> getAllRecordCount();
+
+    List<RecordCount> findByRecordDateBetween(String startDate, String endDate);
 }

@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/rabbitmq")
+@RequestMapping("/api/v1/rabbitmq")
 @RequiredArgsConstructor
 public class RabbitMQController {
 
@@ -29,17 +29,22 @@ public class RabbitMQController {
 
     private final ObjectMapper objectMapper;
 
-    @GetMapping("/send")
-    public String send() throws Exception {
+    @GetMapping("/records/send")
+    public void sendRecords() throws Exception {
         List<RecordResponseDto> records = recordService.getRecords(Sort.by(Sort.Direction.DESC, "createdAt"));
-        List<ProfileDto> profiles = profileService.getProfiles(Sort.by(Sort.Direction.DESC, "createdAt"));
 
         String recordsJson = objectMapper.writeValueAsString(records);
-        String profilesJson = objectMapper.writeValueAsString(profiles);
 
         rabbitMQProducer.sendRawRecords(recordsJson);
+    }
+
+    @GetMapping("/profiles/send")
+    public void sendProfiles() throws Exception {
+        List<ProfileDto> profiles = profileService.getProfiles(Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        String profilesJson = objectMapper.writeValueAsString(profiles);
+
         rabbitMQProducer.sendRawProfiles(profilesJson);
-        return "Data sent to RabbitMQ!";
     }
 
 }

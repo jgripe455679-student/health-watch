@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.crawler.backend.dto.RecordRequestDto;
@@ -59,4 +60,22 @@ public class RecordController {
         RecordResponseDto response = recordService.getRecord(recordId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getRecordCount() {
+        return ResponseEntity.ok(recordService.getRecordCount());
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<RecordResponseDto>> getFilteredRecordsByRecordDateBetween(@RequestParam String startDate,
+            @RequestParam String endDate) {
+        if (startDate == null || startDate.trim().isEmpty() ||
+                endDate == null || endDate.trim().isEmpty()) {
+            throw new IllegalArgumentException("startDate and endDate must not be empty.");
+        }
+        List<RecordResponseDto> response = recordService.findByRecordDateBetween(startDate, endDate,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+        return ResponseEntity.ok(response);
+    }
+
 }

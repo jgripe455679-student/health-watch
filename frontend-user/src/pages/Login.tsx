@@ -1,0 +1,18 @@
+import { Navigate } from "react-router-dom";
+import LoginForm from "../components/LoginForm";
+import { useAuth } from "../hooks/useAuth";
+import useDocumentTitle from "../hooks/useDocumentTitle";
+
+function Login() {
+  const { user } = useAuth();
+  useDocumentTitle("Login");
+  return user?.isLogged ? (
+    <Navigate to="/health-record" />
+  ) : (
+    <div className="flex items-center justify-center min-h-screen">
+      <LoginForm />
+    </div>
+  );
+}
+
+export default Login;

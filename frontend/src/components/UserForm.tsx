@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { get, post, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
 import { useAuth } from "../hooks/useAuth";
@@ -11,7 +12,9 @@ type UserProps = {
   isEditing: boolean;
   setSuccessMessage: (message: string) => void;
   fetchAllUsers: () => Promise<void>;
-  isNotEditingUser: () => void;
+  resetEditingState: () => void;
+  resetSearchState: () => void;
+  resetPageNumber: () => void;
 };
 
 interface Role {
@@ -35,7 +38,9 @@ const UserForm: React.FC<UserProps> = ({
   isEditing,
   setSuccessMessage,
   fetchAllUsers,
-  isNotEditingUser,
+  resetEditingState,
+  resetSearchState,
+  resetPageNumber,
 }) => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [values, setValues] = useState<UserFormValues>({
@@ -51,22 +56,24 @@ const UserForm: React.FC<UserProps> = ({
     role: "",
   });
   const [globalError, setGlobalError] = useState<string>("");
-  const { stripRolePrefix } = useAppUtility();
+  const { stripRolePrefix, isPasswordValid } = useAppUtility();
   const { username } = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+  const fetchAllRoles = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      const response = await get("/roles");
+      setRoles(response.data as Role[]);
+    } catch (error) {
+      console.error("Error fetching roles data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAllRoles = async () => {
-      setIsLoading(true);
-      try {
-        const response = await get("/roles");
-        setRoles(response.data as Role[]);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchAllRoles();
   }, []);
 
@@ -82,21 +89,19 @@ const UserForm: React.FC<UserProps> = ({
     if (globalError) setGlobalError("");
   };
 
-  const isPasswordValid = (password: string): boolean => {
-    let isValid = false;
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSymbol = /[!@#$%^&*(),.?":{}|<>_]/.test(password);
-    const isLengthValid = password.length >= 8;
-    if (hasUppercase && hasNumber && hasSymbol && isLengthValid) {
-      isValid = true;
-    }
-    return isValid;
+  const resetState = (view?: string): void => {
+    setValues({
+      username: "",
+      password: "",
+      confirmPassword: "",
+      role: "",
+    });
+    resetEditingState();
+    if (view) setCurrentUserManagementView(view);
   };
 
-  const handleGoBackClick = () => {
-    setCurrentUserManagementView("userManagement");
-    isNotEditingUser();
+  const handleGoBackClick = (): void => {
+    resetState("userManagement");
   };
 
   const handleOnSubmit = async (event: FormEvent) => {
@@ -115,19 +120,14 @@ const UserForm: React.FC<UserProps> = ({
         });
         if (response.status === 201) {
           setSuccessMessage("User created successfully.");
-          setValues({
-            username: "",
-            password: "",
-            confirmPassword: "",
-            role: "",
-          });
+          resetState("userManagement");
+          resetSearchState();
+          resetPageNumber();
           fetchAllUsers();
-          setCurrentUserManagementView("userManagement");
         }
       } catch (error) {
         if (axios.isAxiosError(error) && error.status === 409) {
           newErrors.username = error.response?.data?.message + ".";
-          setErrors(newErrors);
         } else {
           setGlobalError(
             "Oops, something went wrong. Please contact your system administrator."
@@ -139,8 +139,9 @@ const UserForm: React.FC<UserProps> = ({
             role: "",
           });
         }
-        console.error("Error submitting data: ", error);
+        console.error("Error submitting user data: ", error);
       }
+      setErrors(newErrors);
     } else if (initialValidation() && isEditing && userDetails !== null) {
       try {
         const response = await put("/users/" + userDetails.id, {
@@ -150,16 +151,21 @@ const UserForm: React.FC<UserProps> = ({
           updatedBy: username,
         });
         if (response.status === 200) {
+          const userResponse = await get(
+            `/users/username?username=${username}`
+          );
+          if (userResponse.status === 200) {
+            const { id } = userResponse.data as User;
+            if (userDetails.id === id) {
+              resetEditingState();
+              navigate("/", { replace: true });
+            }
+          }
           setSuccessMessage("User updated successfully.");
-          setValues({
-            username: "",
-            password: "",
-            confirmPassword: "",
-            role: "",
-          });
+          resetState("userManagement");
+          resetSearchState();
+          resetPageNumber();
           fetchAllUsers();
-          setCurrentUserManagementView("userManagement");
-          isNotEditingUser();
         }
       } catch (error) {
         if (axios.isAxiosError(error) && error.status === 409) {
@@ -176,7 +182,7 @@ const UserForm: React.FC<UserProps> = ({
             role: "",
           });
         }
-        console.error("Error submitting data: ", error);
+        console.error("Error submitting user data: ", error);
       }
     }
   };
@@ -228,21 +234,34 @@ const UserForm: React.FC<UserProps> = ({
   return (
     <div className="flex flex-col items-center w-full">
       {globalError && (
-        <div role="alert" className="alert alert-error rounded-none">
+        <div
+          role="alert"
+          className="alert alert-error rounded-none flex justify-between"
+        >
+          <div className="flex items-center gap-x-1.5">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 shrink-0 stroke-current"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-sm">{globalError}</span>
+          </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 shrink-0 stroke-current"
-            fill="none"
-            viewBox="0 0 24 24"
+            className="h-3 w-3 shrink-0 stroke-current cursor-pointer"
+            viewBox="0 0 384 512"
+            onClick={() => setGlobalError("")}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+            <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z" />
           </svg>
-          <span className="text-sm">{globalError}</span>
         </div>
       )}
       <form className="p-4 w-full max-w-96" onSubmit={handleOnSubmit}>
@@ -349,18 +368,18 @@ const UserForm: React.FC<UserProps> = ({
             </div>
           )}
         </label>
-        <div className="flex justify-end gap-x-1.5 py-1.5">
+        <div className="flex flex-row-reverse gap-x-1.5 py-1.5">
+          <input
+            type="submit"
+            className="btn btn-sm btn-primary rounded-none"
+            value={isEditing ? "Update" : "Add"}
+          />
           <button
             className="btn btn-ghost btn-sm rounded-none"
             onClick={handleGoBackClick}
           >
             Cancel
           </button>
-          <input
-            type="submit"
-            className="btn btn-sm btn-primary rounded-none"
-            value={isEditing ? "Update" : "Add"}
-          />
         </div>
       </form>
     </div>

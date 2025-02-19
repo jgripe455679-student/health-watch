@@ -1,12 +1,12 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { get } from "../api/apiClient";
+import React, { useEffect } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { get, post } from "../api/apiClient";
 import { useAuth } from "../hooks/useAuth";
 
 type NavbarProps = {
   setCurrentProfilingView?: (view: string) => void;
   setCurrentUserManagementView?: (view: string) => void;
+  setCurrentHealthRecordView?: (view: string) => void;
 };
 
 interface MenuItem {
@@ -21,13 +21,12 @@ interface UserInfo {
 }
 
 const Navbar: React.FC<NavbarProps> = ({
+  setCurrentHealthRecordView,
   setCurrentProfilingView,
   setCurrentUserManagementView,
 }) => {
-  const [activeItem, setActiveItem] = useState<string>("");
   const { logout, username, setUsername } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const menuItems: MenuItem[] = [
     { label: "Dashboard", value: "/dashboard" },
@@ -37,8 +36,10 @@ const Navbar: React.FC<NavbarProps> = ({
     { label: "User Management", value: "/user-management" },
   ];
 
-  const handleMenuItemClick = (item: MenuItem) => {
-    setActiveItem(item.value);
+  const handleMenuItemClick = () => {
+    if (setCurrentHealthRecordView) {
+      setCurrentHealthRecordView("EHRs");
+    }
     if (setCurrentProfilingView) {
       setCurrentProfilingView("profiling");
     }
@@ -46,10 +47,6 @@ const Navbar: React.FC<NavbarProps> = ({
       setCurrentUserManagementView("userManagement");
     }
   };
-
-  useEffect(() => {
-    setActiveItem(location.pathname);
-  }, [location.pathname]);
 
   useEffect(() => {
     const fetchUsername = async () => {
@@ -60,63 +57,85 @@ const Navbar: React.FC<NavbarProps> = ({
           setUsername(username);
         }
       } catch (error) {
-        console.error("Error fetching data: ", error);
+        console.error("Error fetching username: ", error);
       }
     };
     fetchUsername();
   }, [setUsername]);
 
-  const handleLogout = () => {
-    axios
-      .post(
-        "http://localhost:8080/api/v1/auth/logout",
-        {},
-        { withCredentials: true }
-      )
-      .then((res) => {
-        if (res.status === 200) {
-          logout();
-          navigate("/login", { replace: true });
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-        if (error.response) {
-          if (error.respose.status === 401) {
-            axios
-              .get("http://localhost:8080/api/v1/auth/info")
-              .then((refreshResponse) => {
-                if (refreshResponse.status === 200) {
-                  axios
-                    .post(
-                      "http://localhost:8080/api/v1/auth/logout",
-                      {},
-                      { withCredentials: true }
-                    )
-                    .then((res) => {
-                      if (res.status === 200) {
-                        logout();
-                        navigate("/login", { replace: true });
-                      }
-                    })
-                    .catch((error) => {
-                      console.error(error);
-                    });
-                }
-              })
-              .catch((refreshError) => {
-                console.error(refreshError);
-              });
-          }
-        }
-      });
+  const handleLogout = async () => {
+    try {
+      const response = await post("/auth/logout");
+      if (response.status === 200) {
+        logout();
+        navigate("/login", { replace: true });
+      }
+    } catch (error) {
+      console.error("Error logging out user ", error);
+    }
+    //   axios
+    //     .post(
+    //       "http://localhost:8080/api/v1/auth/logout",
+    //       {},
+    //       { withCredentials: true }
+    //     )
+    //     .then((res) => {
+    //       if (res.status === 200) {
+    //         logout();
+    //         navigate("/login", { replace: true });
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.error(error);
+    //       if (error.response) {
+    //         if (error.response.status === 401) {
+    //           axios
+    //             .post("http://localhost:8080/api/v1/auth/refresh")
+    //             .then((initialResponse) => {
+    //               if (initialResponse.status === 200) {
+    //                 axios
+    //                   .get("http://localhost:8080/api/v1/auth/info")
+    //                   .then((refreshResponse) => {
+    //                     if (refreshResponse.status === 200) {
+    //                       axios
+    //                         .post(
+    //                           "http://localhost:8080/api/v1/auth/logout",
+    //                           {},
+    //                           { withCredentials: true }
+    //                         )
+    //                         .then((res) => {
+    //                           if (res.status === 200) {
+    //                             logout();
+    //                             navigate("/login", { replace: true });
+    //                           }
+    //                         })
+    //                         .catch((error) => {
+    //                           console.error(error);
+    //                         });
+    //                     }
+    //                   })
+    //                   .catch((refreshError) => {
+    //                     console.error(refreshError);
+    //                   });
+    //               }
+    //             })
+    //             .catch((initialError) => {
+    //               console.error(initialError);
+    //             });
+    //         }
+    //       }
+    //     });
   };
   return (
     <>
-      <div className="navbar bg-primary px-8">
+      <div className="navbar bg-primary px-0 md:px-4 lg:px-8">
         <div className="navbar-start">
           <div className="dropdown">
-            <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost ml-0.5 px-1 lg:hidden"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -134,16 +153,11 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
             <ul
               tabIndex={0}
-              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+              className="menu menu-sm dropdown-content bg-base-200 rounded-box z-[1] mt-3 w-52 p-2 shadow"
             >
               {menuItems.map((item) => (
-                <li key={item.value} onClick={() => handleMenuItemClick(item)}>
-                  <Link
-                    to={item.value}
-                    className={activeItem === item.value ? "active" : ""}
-                  >
-                    {item.label}
-                  </Link>
+                <li key={item.value} onClick={handleMenuItemClick}>
+                  <NavLink to={item.value}>{item.label}</NavLink>
                 </li>
               ))}
             </ul>
@@ -152,19 +166,21 @@ const Navbar: React.FC<NavbarProps> = ({
             <img
               src="/transparent.svg"
               alt="HealthWatch Transparent Logo"
-              className="h-10 w-10"
+              className="h-8 w-8 md:h-10 md:w-10"
             />
-            HealthWatch Admin
+            <span className="text-xs md:text-xl">HealthWatch Admin</span>
           </Link>
         </div>
         <div className="navbar-end">
           <ul className="menu menu-horizontal z-[1] px-1">
             <li>
               <details>
-                <summary className="italic">Hello, {username}</summary>
+                <summary className="italic text-xs md:text-sm">
+                  Hello, {username}
+                </summary>
                 <ul className="bg-base-200 rounded-t-none p-2">
                   <li>
-                    <a>Reset password</a>
+                    <Link to="/reset-password">Reset Password</Link>
                   </li>
                   <li>
                     <a onClick={handleLogout}>Log Out</a>
@@ -177,19 +193,12 @@ const Navbar: React.FC<NavbarProps> = ({
       </div>
       <div className="navbar bg-base-100 px-8 py-0 min-h-0 border-b border-gray-300">
         <div className="hidden lg:flex">
-          <ul className="menu menu-horizontal px-1 py-0">
+          <ul className="menu menu-horizontal p-0">
             {menuItems.map((item) => (
-              <li key={item.value} onClick={() => handleMenuItemClick(item)}>
-                <Link
-                  to={item.value}
-                  className={
-                    activeItem === item.value
-                      ? "rounded-none active"
-                      : "rounded-none"
-                  }
-                >
+              <li key={item.value} onClick={handleMenuItemClick}>
+                <NavLink to={item.value} className="rounded-none">
                   {item.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>

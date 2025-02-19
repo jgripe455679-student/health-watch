@@ -1,11 +1,11 @@
 import React from "react";
 
-interface PaginationProps {
+type PaginationProps = {
   totalItems: number;
   itemsPerPage: number;
   currentPage: number;
   paginate: (pageNumber: number) => void;
-}
+};
 
 const Pagination: React.FC<PaginationProps> = ({
   totalItems,

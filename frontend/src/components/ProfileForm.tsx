@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { ChangeEvent, FormEvent, useState } from "react";
-import { post, put } from "../api/apiClient";
+import { get, post, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
 import { useAuth } from "../hooks/useAuth";
 import { Profile } from "../pages/Profiling";
@@ -12,7 +12,9 @@ type ProfileProps = {
   isEditing: boolean;
   profileDetails: Profile | null;
   fetchAllProfiles: () => Promise<void>;
-  isNotEditingProfile: () => void;
+  resetEditingState: () => void;
+  resetSearchState: () => void;
+  resetPageNumber: () => void;
 };
 
 const ProfileForm: React.FC<ProfileProps> = ({
@@ -21,7 +23,9 @@ const ProfileForm: React.FC<ProfileProps> = ({
   isEditing,
   profileDetails,
   fetchAllProfiles,
-  isNotEditingProfile,
+  resetEditingState,
+  resetSearchState,
+  resetPageNumber,
 }) => {
   const [values, setValues] = useState<ProfileFormValues>({
     firstName: profileDetails?.firstName || "",
@@ -45,6 +49,12 @@ const ProfileForm: React.FC<ProfileProps> = ({
   const { username } = useAuth();
   const { isMobileNumberValid } = useAppUtility();
 
+  const resetState = (view?: string): void => {
+    setValues(getEmptyProfileFormValues());
+    resetEditingState();
+    if (view) setCurrentProfilingView(view);
+  };
+
   const handleOnChange = (
     event: ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -66,59 +76,65 @@ const ProfileForm: React.FC<ProfileProps> = ({
     if (globalError) setGlobalError("");
   };
 
-  const handleGoBackClick = () => {
-    setCurrentProfilingView("profiling");
-    isNotEditingProfile();
-  }
-
-  const resetProfileFormValues = (): void => {
-    setValues(getEmptyProfileFormValues());
+  const handleGoBackClick = (): void => {
+    resetState("profiling");
   };
 
   const handleOnSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (validation() && !isEditing) {
       try {
+        const { lastName, firstName, middleName } = values;
         const response = await post("/profiles", {
           ...values,
+          lastName: lastName.trim(),
+          firstName: firstName.trim(),
+          middleName: middleName.trim(),
           createdBy: username,
         });
         if (response.status === 201) {
+          await get("/rabbitmq/profiles/send");
           setSuccessMessage("Profile created successfully.");
-          resetProfileFormValues();
+          resetState("profiling");
+          resetSearchState();
+          resetPageNumber();
           fetchAllProfiles();
-          setCurrentProfilingView("profiling");
         }
       } catch (error) {
         if (axios.isAxiosError(error)) {
+          setValues(getEmptyProfileFormValues());
           setGlobalError(
             "Oops, something went wrong. Please contact your system administrator."
           );
-          resetProfileFormValues();
         }
-        console.error("Error submitting data: ", error);
+        console.error("Error submitting profile data: ", error);
       }
     } else if (validation() && isEditing && profileDetails !== null) {
       try {
+        const { lastName, firstName, middleName } = values;
         const response = await put("/profiles/" + profileDetails.id, {
           ...values,
+          lastName: lastName.trim(),
+          firstName: firstName.trim(),
+          middleName: middleName.trim(),
           updatedBy: username,
         });
         if (response.status === 200) {
+          await get("/rabbitmq/profiles/send");
           setSuccessMessage("Profile updated successfully.");
-          resetProfileFormValues();
+          resetState("profiling");
+          resetSearchState();
+          resetPageNumber();
           fetchAllProfiles();
-          setCurrentProfilingView("profiling");
-          isNotEditingProfile();
         }
       } catch (error) {
         if (axios.isAxiosError(error)) {
+          setValues(getEmptyProfileFormValues());
           setGlobalError(
             "Oops, something went wrong. Please contact your system administrator."
           );
-          resetProfileFormValues();
         }
-        console.error("Error submitting data: ", error);
+        console.error("Error submitting profile data: ", error);
       }
     }
   };
@@ -174,21 +190,34 @@ const ProfileForm: React.FC<ProfileProps> = ({
   return (
     <div className="flex flex-col items-center w-full">
       {globalError && (
-        <div role="alert" className="alert alert-error rounded-none">
+        <div
+          role="alert"
+          className="alert alert-error rounded-none flex justify-between"
+        >
+          <div className="flex items-center gap-x-1.5">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 shrink-0 stroke-current"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-sm">{globalError}</span>
+          </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 shrink-0 stroke-current"
-            fill="none"
-            viewBox="0 0 24 24"
+            className="h-3 w-3 shrink-0 stroke-current cursor-pointer"
+            viewBox="0 0 384 512"
+            onClick={() => setGlobalError("")}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+            <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z" />
           </svg>
-          <span className="text-sm">{globalError}</span>
         </div>
       )}
       <form className="p-4 w-full max-w-96" onSubmit={handleOnSubmit}>
@@ -425,7 +454,7 @@ const ProfileForm: React.FC<ProfileProps> = ({
         <label className="form-control w-full">
           <div className="label">
             <span className="label-text">
-              Highest Level of Education (Optional)
+              Educational Attainment (Optional)
             </span>
           </div>
           <select
@@ -435,7 +464,7 @@ const ProfileForm: React.FC<ProfileProps> = ({
             value={values.educationalBackground}
             onChange={handleOnChange}
           >
-            <option value="">Select highest level of education</option>
+            <option value="">Select educational attainment</option>
             <option value="NO FORMAL EDUCATION">NO FORMAL EDUCATION</option>
             <option value="SOME ELEMENTARY">SOME ELEMENTARY SCHOOL</option>
             <option value="ELEMENTARY GRADUATE">ELEMENTARY GRADUATE</option>

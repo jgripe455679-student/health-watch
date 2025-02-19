@@ -10,13 +10,15 @@ import java.util.List;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
+import com.crawler.backend.model.BMIAnalysis;
+import com.crawler.backend.model.BPTrends;
 import com.crawler.backend.model.DemographicsAnalysis;
 import com.crawler.backend.model.DepartmentUsage;
-import com.crawler.backend.model.HealthMetrics;
 import com.crawler.backend.model.RecordCount;
+import com.crawler.backend.service.BMIAnalysisService;
+import com.crawler.backend.service.BPTrendsService;
 import com.crawler.backend.service.DemographicsAnalysisService;
 import com.crawler.backend.service.DepartmentUsageService;
-import com.crawler.backend.service.HealthMetricsService;
 import com.crawler.backend.service.RecordCountService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,18 +28,21 @@ public class RabbitMQConsumer {
 
     private final DepartmentUsageService departmentUsageService;
     private final ObjectMapper objectMapper;
-    private final HealthMetricsService healthMetricsService;
     private final RecordCountService recordCountService;
     private final DemographicsAnalysisService demographicsAnalysisService;
+    private final BPTrendsService bpTrendsService;
+    private final BMIAnalysisService bmiAnalysisService;
 
     public RabbitMQConsumer(DepartmentUsageService departmentUsageService, ObjectMapper objectMapper,
-            HealthMetricsService healthMetricsService, RecordCountService recordCountService,
-            DemographicsAnalysisService demographicsAnalysisService) {
+            RecordCountService recordCountService,
+            DemographicsAnalysisService demographicsAnalysisService, BPTrendsService bpTrendsService,
+            BMIAnalysisService bmiAnalysisService) {
         this.departmentUsageService = departmentUsageService;
         this.objectMapper = objectMapper;
-        this.healthMetricsService = healthMetricsService;
         this.recordCountService = recordCountService;
         this.demographicsAnalysisService = demographicsAnalysisService;
+        this.bpTrendsService = bpTrendsService;
+        this.bmiAnalysisService = bmiAnalysisService;
     }
 
     @RabbitListener(queues = "count_patient_visit_result_queue")
@@ -70,75 +75,6 @@ public class RabbitMQConsumer {
                 recordCountService.saveData(records);
             } else {
                 recordCountService.truncateAndSaveData(records);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @RabbitListener(queues = "aggregate_health_metrics_result_queue")
-    public void receiveAggregateHealthMetricsResult(String message) {
-        try {
-            String jsonString = objectMapper.readValue(message, String.class);
-            JsonNode rootNode = objectMapper.readTree(jsonString);
-            JsonNode recordDateNode = rootNode.get("recordDate");
-            JsonNode heightMeanNode = rootNode.get("height_mean");
-            JsonNode heightMedianNode = rootNode.get("height_median");
-            JsonNode heightStdNode = rootNode.get("height_std");
-            JsonNode weightMeanNode = rootNode.get("weight_mean");
-            JsonNode weightMedianNode = rootNode.get("weight_median");
-            JsonNode weightStdNode = rootNode.get("weight_std");
-            JsonNode systolicMeanNode = rootNode.get("systolic_mean");
-            JsonNode systolicMedianNode = rootNode.get("systolic_median");
-            JsonNode systolicStdNode = rootNode.get("systolic_std");
-            JsonNode diastolicMeanNode = rootNode.get("diastolic_mean");
-            JsonNode diastolicMedianNode = rootNode.get("diastolic_median");
-            JsonNode diastolicStdNode = rootNode.get("diastolic_std");
-
-            List<HealthMetrics> records = new ArrayList<>();
-
-            Iterator<String> fieldNames = recordDateNode.fieldNames();
-            while (fieldNames.hasNext()) {
-                String fieldName = fieldNames.next();
-                long recordDateMillis = recordDateNode.path(fieldName).asLong();
-                double heightMean = heightMeanNode.path(fieldName).asDouble();
-                double heightMedian = heightMedianNode.path(fieldName).asDouble();
-                double heightStd = heightStdNode.path(fieldName).asDouble();
-                double weightMean = weightMeanNode.path(fieldName).asDouble();
-                double weightMedian = weightMedianNode.path(fieldName).asDouble();
-                double weightStd = weightStdNode.path(fieldName).asDouble();
-                double systolicMean = systolicMeanNode.path(fieldName).asDouble();
-                double systolicMedian = systolicMedianNode.path(fieldName).asDouble();
-                double systolicStd = systolicStdNode.path(fieldName).asDouble();
-                double diastolicMean = diastolicMeanNode.path(fieldName).asDouble();
-                double diastolicMedian = diastolicMedianNode.path(fieldName).asDouble();
-                double diastolicStd = diastolicStdNode.path(fieldName).asDouble();
-
-                LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
-
-                HealthMetrics record = new HealthMetrics();
-                record.setRecordDate(recordDate);
-                record.setHeightMean(heightMean);
-                record.setHeightMedian(heightMedian);
-                record.setHeightStd(heightStd);
-                record.setWeightMean(weightMean);
-                record.setWeightMedian(weightMedian);
-                record.setWeightStd(weightStd);
-                record.setSystolicMean(systolicMean);
-                record.setSystolicMedian(systolicMedian);
-                record.setSystolicStd(systolicStd);
-                record.setDiastolicMean(diastolicMean);
-                record.setDiastolicMedian(diastolicMedian);
-                record.setDiastolicStd(diastolicStd);
-
-                records.add(record);
-            }
-            if (healthMetricsService.isTableEmpty()) {
-                healthMetricsService.saveData(records);
-            } else {
-                healthMetricsService.truncateAndSaveData(records);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -191,6 +127,7 @@ public class RabbitMQConsumer {
             JsonNode rootNode = objectMapper.readTree(jsonString);
             JsonNode socioeconomicClassNode = rootNode.get("socioeconomic_class");
             JsonNode profileCountNode = rootNode.get("profileCount");
+            JsonNode percentageNode = rootNode.get("percentage");
 
             List<DemographicsAnalysis> profiles = new ArrayList<>();
 
@@ -198,11 +135,13 @@ public class RabbitMQConsumer {
             while (fieldNames.hasNext()) {
                 String fieldName = fieldNames.next();
                 String socioeconomicClass = socioeconomicClassNode.path(fieldName).asText();
-                int profileCount = profileCountNode.path(fieldName).asInt();
+                long profileCount = profileCountNode.path(fieldName).asLong();
+                double percentage = percentageNode.path(fieldName).asDouble();
 
                 DemographicsAnalysis profile = new DemographicsAnalysis();
                 profile.setSocioeconomicClass(socioeconomicClass);
                 profile.setProfileCount(profileCount);
+                profile.setPercentage(percentage);
 
                 profiles.add(profile);
             }
@@ -210,6 +149,96 @@ public class RabbitMQConsumer {
                 demographicsAnalysisService.saveData(profiles);
             } else {
                 demographicsAnalysisService.truncateAndSaveData(profiles);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @RabbitListener(queues = "aggregate_blood_pressure_trends_result_queue")
+    public void receiveBPTrendsResult(String message) {
+        try {
+            String jsonString = objectMapper.readValue(message, String.class);
+            JsonNode rootNode = objectMapper.readTree(jsonString);
+            JsonNode recordDateNode = rootNode.get("recordDate");
+            JsonNode systolicMeanNode = rootNode.get("systolic_mean");
+            JsonNode systolicMedianNode = rootNode.get("systolic_median");
+            JsonNode systolicStdNode = rootNode.get("systolic_std");
+            JsonNode diastolicMeanNode = rootNode.get("diastolic_mean");
+            JsonNode diastolicMedianNode = rootNode.get("diastolic_median");
+            JsonNode diastolicStdNode = rootNode.get("diastolic_std");
+
+            List<BPTrends> records = new ArrayList<>();
+
+            Iterator<String> fieldNames = recordDateNode.fieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                long recordDateMillis = recordDateNode.path(fieldName).asLong();
+                double systolicMean = systolicMeanNode.path(fieldName).asDouble();
+                double systolicMedian = systolicMedianNode.path(fieldName).asDouble();
+                double systolicStd = systolicStdNode.path(fieldName).asDouble();
+                double diastolicMean = diastolicMeanNode.path(fieldName).asDouble();
+                double diastolicMedian = diastolicMedianNode.path(fieldName).asDouble();
+                double diastolicStd = diastolicStdNode.path(fieldName).asDouble();
+
+                LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+
+                BPTrends record = new BPTrends();
+                record.setRecordDate(recordDate);
+                record.setSystolicMean(systolicMean);
+                record.setSystolicMedian(systolicMedian);
+                record.setSystolicStd(systolicStd);
+                record.setDiastolicMean(diastolicMean);
+                record.setDiastolicMedian(diastolicMedian);
+                record.setDiastolicStd(diastolicStd);
+
+                records.add(record);
+            }
+            if (bpTrendsService.isTableEmpty()) {
+                bpTrendsService.saveData(records);
+            } else {
+                bpTrendsService.truncateAndSaveData(records);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @RabbitListener(queues = "bmi_analysis_result_queue")
+    public void receiveBMIAnalysisResult(String message) {
+        try {
+            String jsonString = objectMapper.readValue(message, String.class);
+            JsonNode rootNode = objectMapper.readTree(jsonString);
+            JsonNode bmiCategoryNode = rootNode.get("BMI_Category");
+            JsonNode recordDateNode = rootNode.get("recordDate");
+            JsonNode recordCountNode = rootNode.get("recordCount");
+
+            List<BMIAnalysis> records = new ArrayList<>();
+
+            Iterator<String> fieldNames = bmiCategoryNode.fieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                String bmiCategory = bmiCategoryNode.path(fieldName).asText();
+                long recordDateMillis = recordDateNode.path(fieldName).asLong();
+                int recordCount = recordCountNode.path(fieldName).asInt();
+
+                LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+
+                BMIAnalysis record = new BMIAnalysis();
+                record.setBmiCategory(bmiCategory);
+                record.setRecordDate(recordDate);
+                record.setRecordCount(recordCount);
+
+                records.add(record);
+            }
+            if (bmiAnalysisService.isTableEmpty()) {
+                bmiAnalysisService.saveData(records);
+            } else {
+                bmiAnalysisService.truncateAndSaveData(records);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -252,3 +281,72 @@ public class RabbitMQConsumer {
     }
 
 }
+
+// @RabbitListener(queues = "aggregate_health_metrics_result_queue")
+// public void receiveAggregateHealthMetricsResult(String message) {
+// try {
+// String jsonString = objectMapper.readValue(message, String.class);
+// JsonNode rootNode = objectMapper.readTree(jsonString);
+// JsonNode recordDateNode = rootNode.get("recordDate");
+// JsonNode heightMeanNode = rootNode.get("height_mean");
+// JsonNode heightMedianNode = rootNode.get("height_median");
+// JsonNode heightStdNode = rootNode.get("height_std");
+// JsonNode weightMeanNode = rootNode.get("weight_mean");
+// JsonNode weightMedianNode = rootNode.get("weight_median");
+// JsonNode weightStdNode = rootNode.get("weight_std");
+// JsonNode systolicMeanNode = rootNode.get("systolic_mean");
+// JsonNode systolicMedianNode = rootNode.get("systolic_median");
+// JsonNode systolicStdNode = rootNode.get("systolic_std");
+// JsonNode diastolicMeanNode = rootNode.get("diastolic_mean");
+// JsonNode diastolicMedianNode = rootNode.get("diastolic_median");
+// JsonNode diastolicStdNode = rootNode.get("diastolic_std");
+
+// List<HealthMetrics> records = new ArrayList<>();
+
+// Iterator<String> fieldNames = recordDateNode.fieldNames();
+// while (fieldNames.hasNext()) {
+// String fieldName = fieldNames.next();
+// long recordDateMillis = recordDateNode.path(fieldName).asLong();
+// double heightMean = heightMeanNode.path(fieldName).asDouble();
+// double heightMedian = heightMedianNode.path(fieldName).asDouble();
+// double heightStd = heightStdNode.path(fieldName).asDouble();
+// double weightMean = weightMeanNode.path(fieldName).asDouble();
+// double weightMedian = weightMedianNode.path(fieldName).asDouble();
+// double weightStd = weightStdNode.path(fieldName).asDouble();
+// double systolicMean = systolicMeanNode.path(fieldName).asDouble();
+// double systolicMedian = systolicMedianNode.path(fieldName).asDouble();
+// double systolicStd = systolicStdNode.path(fieldName).asDouble();
+// double diastolicMean = diastolicMeanNode.path(fieldName).asDouble();
+// double diastolicMedian = diastolicMedianNode.path(fieldName).asDouble();
+// double diastolicStd = diastolicStdNode.path(fieldName).asDouble();
+
+// LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
+// .atZone(ZoneId.systemDefault())
+// .toLocalDate();
+
+// HealthMetrics record = new HealthMetrics();
+// record.setRecordDate(recordDate);
+// record.setHeightMean(heightMean);
+// record.setHeightMedian(heightMedian);
+// record.setHeightStd(heightStd);
+// record.setWeightMean(weightMean);
+// record.setWeightMedian(weightMedian);
+// record.setWeightStd(weightStd);
+// record.setSystolicMean(systolicMean);
+// record.setSystolicMedian(systolicMedian);
+// record.setSystolicStd(systolicStd);
+// record.setDiastolicMean(diastolicMean);
+// record.setDiastolicMedian(diastolicMedian);
+// record.setDiastolicStd(diastolicStd);
+
+// records.add(record);
+// }
+// if (healthMetricsService.isTableEmpty()) {
+// healthMetricsService.saveData(records);
+// } else {
+// healthMetricsService.truncateAndSaveData(records);
+// }
+// } catch (Exception e) {
+// e.printStackTrace();
+// }
+// }

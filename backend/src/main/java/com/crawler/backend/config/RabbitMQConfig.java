@@ -9,6 +9,7 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
 @Configuration
 public class RabbitMQConfig {
 
@@ -27,9 +28,19 @@ public class RabbitMQConfig {
         return new Queue("count_patient_visit_queue");
     }
 
+    // @Bean
+    // public Queue aggregateHealthMetricsQueue() {
+    //     return new Queue("aggregate_health_metrics_queue");
+    // }
+
     @Bean
-    public Queue aggregateHealthMetricsQueue() {
-        return new Queue("aggregate_health_metrics_queue");
+    public Queue aggregateBloodPressureTrendsQueue() {
+        return new Queue("aggregate_blood_pressure_trends_queue");
+    }
+
+    @Bean
+    public Queue bmiAnalysisQueue() {
+        return new Queue("bmi_analysis_queue");
     }
 
     @Bean
@@ -53,9 +64,21 @@ public class RabbitMQConfig {
                 .to(rawRecordsExchange);
     }
 
+    // @Bean
+    // public Binding aggregateHealthMetricsBinding(FanoutExchange rawRecordsExchange, Queue aggregateHealthMetricsQueue) {
+    //     return BindingBuilder.bind(aggregateHealthMetricsQueue)
+    //             .to(rawRecordsExchange);
+    // }
+
     @Bean
-    public Binding aggregateHealthMetricsBinding(FanoutExchange rawRecordsExchange, Queue aggregateHealthMetricsQueue) {
-        return BindingBuilder.bind(aggregateHealthMetricsQueue)
+    public Binding aggregateBloodPressureTrendsBinding(FanoutExchange rawRecordsExchange, Queue aggregateBloodPressureTrendsQueue) {
+        return BindingBuilder.bind(aggregateBloodPressureTrendsQueue)
+                .to(rawRecordsExchange);
+    }
+
+    @Bean
+    public Binding bmiAnalysisBinding(FanoutExchange rawRecordsExchange, Queue bmiAnalysisQueue) {
+        return BindingBuilder.bind(bmiAnalysisQueue)
                 .to(rawRecordsExchange);
     }
 

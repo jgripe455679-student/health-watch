@@ -5,7 +5,6 @@ import static com.crawler.backend.util.Constants.TOKEN_PREFIX;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.crawler.backend.config.JwtProperties;
 import com.crawler.backend.service.JWTService;
 
 import jakarta.servlet.FilterChain;
@@ -29,10 +29,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Value("${JWT_ACCESS_COOKIE_NAME}")
-    private String accessTokenCookieName;
+    // @Value("${JWT_ACCESS_COOKIE_NAME}")
+    // private String accessTokenCookieName;
     private final JWTService jwtService;
     private final UserDetailsService userDetailsService;
+    private final JwtProperties jwtProperties;
 
     @Override
     protected void doFilterInternal(
@@ -78,7 +79,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         for (Cookie cookie : cookies) {
-            if (accessTokenCookieName.equals(cookie.getName())) {
+            if (jwtProperties.getAccessCookieName().equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }

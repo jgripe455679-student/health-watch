@@ -1,5 +1,6 @@
 package com.crawler.backend.service.implementation;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,10 +43,7 @@ public class RecordServiceImplementation implements RecordService {
 
                 Record record = RecordMapper.recordRequestDtoToRecord(recordRequestDto);
 
-                Profile profile = profileRepository
-                                .findProfile(recordRequestDto.lastName(),
-                                                recordRequestDto.firstName(),
-                                                recordRequestDto.middleName(), recordRequestDto.suffix())
+                Profile profile = profileRepository.findById(recordRequestDto.profileId())
                                 .orElseThrow(
                                                 () -> new ResourceNotFoundException("Profile not found"));
 
@@ -67,11 +65,7 @@ public class RecordServiceImplementation implements RecordService {
                 Record record = recordRepository.findById(recordId).orElseThrow(
                                 () -> new ResourceNotFoundException("Record not found"));
 
-                Profile profile = profileRepository
-                                .findProfile(
-                                                recordRequestDto.lastName(),
-                                                recordRequestDto.firstName(),
-                                                recordRequestDto.middleName(), recordRequestDto.suffix())
+                Profile profile = profileRepository.findById(recordRequestDto.profileId())
                                 .orElseThrow(
                                                 () -> new ResourceNotFoundException("Profile not found"));
 
@@ -106,5 +100,19 @@ public class RecordServiceImplementation implements RecordService {
                 Record record = recordRepository.findById(recordId).orElseThrow(
                                 () -> new ResourceNotFoundException("Record not found"));
                 return RecordMapper.recordToRecordResponseDto(record);
+        }
+
+        @Override
+        public Long getRecordCount() {
+                return recordRepository.count();
+        }
+
+        @Override
+        public List<RecordResponseDto> findByRecordDateBetween(String startDate, String endDate, Sort sort) {
+                LocalDate start = LocalDate.parse(startDate);
+                LocalDate end = LocalDate.parse(endDate);
+                return recordRepository.findByRecordDateBetween(start, end, sort).stream()
+                                .map(RecordMapper::recordToRecordResponseDto)
+                                .collect(Collectors.toList());
         }
 }

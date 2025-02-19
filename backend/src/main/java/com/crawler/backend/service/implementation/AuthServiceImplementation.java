@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.crawler.backend.config.JwtProperties;
 import com.crawler.backend.dto.LoginRequest;
 import com.crawler.backend.dto.LoginResponse;
 import com.crawler.backend.dto.UserLoggedDto;
@@ -37,14 +37,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthServiceImplementation implements AuthService {
 
-    @Value("${JWT_ACCESS_TOKEN_DURATION_MINUTE}")
-    private long accessTokenDurationMinute;
-    @Value("${JWT_ACCESS_TOKEN_DURATION_SECOND}")
-    private long accessTokenDurationSecond;
-    @Value("${JWT_REFRESH_TOKEN_DURATION_DAY}")
-    private long refreshTokenDurationDay;
-    @Value("${JWT_REFRESH_TOKEN_DURATION_SECOND}")
-    private long refreshTokenDurationSecond;
+    private final JwtProperties jwtProperties;
+
+    // @Value("${JWT_ACCESS_TOKEN_DURATION_MINUTE}")
+    // private long accessTokenDurationMinute;
+    // @Value("${JWT_ACCESS_TOKEN_DURATION_SECOND}")
+    // private long accessTokenDurationSecond;
+    // @Value("${JWT_REFRESH_TOKEN_DURATION_DAY}")
+    // private long refreshTokenDurationDay;
+    // @Value("${JWT_REFRESH_TOKEN_DURATION_SECOND}")
+    // private long refreshTokenDurationSecond;
 
     private final AuthenticationManager authManager;
     private final JWTService jwtService;
@@ -74,12 +76,12 @@ public class AuthServiceImplementation implements AuthService {
         if (!accessTokenValid && !refreshTokenValid) {
             newAccessToken = jwtService.generateAccessToken(
                     Map.of("role", user.getRole().getAuthority()),
-                    accessTokenDurationMinute,
+                    jwtProperties.getAccessTokenDurationMinute(),
                     ChronoUnit.MINUTES,
                     user);
 
             newRefreshToken = jwtService.generateRefreshToken(
-                    refreshTokenDurationDay,
+                    jwtProperties.getRefreshTokenDurationDay(),
                     ChronoUnit.DAYS,
                     user);
 
@@ -94,7 +96,7 @@ public class AuthServiceImplementation implements AuthService {
 
         if (!accessTokenValid && refreshTokenValid) {
             newAccessToken = jwtService.generateAccessToken(Map.of("role", user.getRole().getAuthority()),
-                    accessTokenDurationMinute,
+                    jwtProperties.getAccessTokenDurationMinute(),
                     ChronoUnit.MINUTES,
                     user);
 
@@ -104,11 +106,11 @@ public class AuthServiceImplementation implements AuthService {
         if (accessTokenValid && refreshTokenValid) {
             newAccessToken = jwtService.generateAccessToken(
                     Map.of("role", user.getRole().getAuthority()),
-                    accessTokenDurationMinute,
+                    jwtProperties.getAccessTokenDurationMinute(),
                     ChronoUnit.MINUTES,
                     user);
 
-            newRefreshToken = jwtService.generateRefreshToken(refreshTokenDurationDay,
+            newRefreshToken = jwtService.generateRefreshToken(jwtProperties.getRefreshTokenDurationDay(),
                     ChronoUnit.DAYS,
                     user);
 
@@ -141,7 +143,7 @@ public class AuthServiceImplementation implements AuthService {
                 () -> new ResourceNotFoundException("User not found"));
 
         Token newAccessToken = jwtService.generateAccessToken(Map.of("role", user.getRole().getAuthority()),
-                accessTokenDurationMinute, ChronoUnit.MINUTES, user);
+                jwtProperties.getAccessTokenDurationMinute(), ChronoUnit.MINUTES, user);
 
         HttpHeaders responseHeaders = new HttpHeaders();
         addAccessTokenCookie(responseHeaders, newAccessToken);
@@ -189,13 +191,13 @@ public class AuthServiceImplementation implements AuthService {
     private void addAccessTokenCookie(HttpHeaders httpHeaders, Token token) {
         httpHeaders.add(
                 HttpHeaders.SET_COOKIE,
-                cookieUtil.createAccessTokenCookie(token.getValue(), accessTokenDurationSecond).toString());
+                cookieUtil.createAccessTokenCookie(token.getValue(), jwtProperties.getAccessTokenDurationSecond()).toString());
     }
 
     private void addRefreshTokenCookie(HttpHeaders httpHeaders, Token token) {
         httpHeaders.add(
                 HttpHeaders.SET_COOKIE,
-                cookieUtil.createRefreshTokenCookie(token.getValue(), refreshTokenDurationSecond).toString());
+                cookieUtil.createRefreshTokenCookie(token.getValue(), jwtProperties.getRefreshTokenDurationSecond()).toString());
     }
 
     private void revokeAllTokenOfUser(User user) {

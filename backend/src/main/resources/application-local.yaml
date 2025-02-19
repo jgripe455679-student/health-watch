@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/db_healthwatch
+    username: root
+    password: qL301[CE
+
+# JWT
+jwt:
+  access-token-duration-minute: 5
+  access-token-duration-second: 300
+  refresh-token-duration-day: 7
+  refresh-token-duration-second: 604800
+
+  access-cookie-name: access_token
+  refresh-cookie-name: refresh_token
+
+# RABBITMQ
+rabbitmq:
+  host: localhost
+  port: 5672
+  default_user: guest
+  default_password: guest

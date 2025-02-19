@@ -33,7 +33,9 @@ public class DemographicsAnalysisServiceImplementation implements DemographicsAn
     @Override
     public void truncateAndSaveData(List<DemographicsAnalysis> data) {
         jdbcTemplate.execute("TRUNCATE TABLE demographics_analysis");
-        demographicsAnalysisRepository.saveAll(data);
+        if (demographicsAnalysisRepository.count() == 0) {
+            demographicsAnalysisRepository.saveAll(data);
+        }
     }
 
     @Override

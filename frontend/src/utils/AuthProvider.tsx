@@ -1,5 +1,6 @@
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { get } from "../api/apiClient";
+import authContext from "./authContext";
 
 type AuthUser = {
   isLogged: boolean;
@@ -13,10 +14,6 @@ export type AuthContextProps = {
   username: string;
   setUsername: (username: string) => void;
 };
-
-export const AuthContext = createContext<AuthContextProps | undefined>(
-  undefined
-);
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -50,7 +47,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } catch (error) {
         logout();
-        console.error(error);
+        console.error("Error fetching user authentication information", error);
       }
     };
 
@@ -58,11 +55,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <AuthContext.Provider
+    <authContext.Provider
       value={{ user, login, logout, username, setUsername }}
     >
       {children}
-    </AuthContext.Provider>
+    </authContext.Provider>
   );
 };
 

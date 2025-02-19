@@ -39,7 +39,9 @@ def demographics_analysis(ch, method, properties, body):
             axis=1
         )
         class_distribution = df.groupby(["socioeconomic_class"]).size().reset_index(name="profileCount")
-        return class_distribution.to_json()
+        total_profiles = len(df)
+        class_distribution["percentage"] = (class_distribution["profileCount"] / total_profiles) * 100
+        return class_distribution.to_json();
     try:
         profiles = json.loads(body)
         analyzed_data = analyze_data(profiles)

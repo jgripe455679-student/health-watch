@@ -20,14 +20,17 @@ import lombok.Setter;
 @Entity
 @Table(name = "demographics_analysis")
 public class DemographicsAnalysis {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String socioeconomicClass;
-    
+
     @Column(nullable = false)
-    private Integer profileCount;
+    private Long profileCount;
+
+    @Column(nullable = false)
+    private Double percentage;
 }

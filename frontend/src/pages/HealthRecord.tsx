@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { deleteRequest, get } from "../api/apiClient";
 import HealthRecordForm from "../components/HealthRecordForm";
+import HealthRecordView from "../components/HealthRecordView";
 import Navbar from "../components/Navbar";
 import Pagination from "../components/Pagination";
 import { useAppUtility } from "../hooks/useAppUtility";
+import useDateRange from "../hooks/useDateRange";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import { Profile } from "./Profiling";
 
@@ -24,12 +26,6 @@ export interface Record {
   updatedBy: string;
 }
 
-export type ProfileType = {
-  name: string;
-};
-
-const profileTypes: ProfileType[] = [{ name: "OLD" }, { name: "NEW" }];
-
 const HealthRecord: React.FC = () => {
   const [records, setRecords] = useState<Record[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -45,6 +41,7 @@ const HealthRecord: React.FC = () => {
   const [itemsPerPage] = useState<number>(10);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [recordToDeleteId, setRecordToDeleteId] = useState<number | null>(null);
+  const { dateRange, updateDateRange } = useDateRange();
 
   const openModal = (recordId: number) => {
     setIsOpen(true);
@@ -61,11 +58,11 @@ const HealthRecord: React.FC = () => {
     try {
       const response = await deleteRequest("/records/" + recordId);
       if (response.status === 200) {
-        setSuccessMessage("Record successfully deleted.");
+        setSuccessMessage("Health record successfully deleted.");
         setIsOpen(false);
         setRecordToDeleteId(null);
+        resetPageNumber();
         fetchAllRecords();
-        if (currentPage !== 1) setCurrentPage(1);
       }
     } catch (error) {
       console.error(error);
@@ -78,18 +75,61 @@ const HealthRecord: React.FC = () => {
       const response = await get("/records");
       setRecords(response.data as Record[]);
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching health records data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchFilteredRecords = async (
+    startDate: string,
+    endDate: string
+  ): Promise<void> => {
+    setIsLoading(true);
+    try {
+      const response = await get(
+        `/records/filter?startDate=${startDate}&endDate=${endDate}`
+      );
+      setRecords(response.data as Record[]);
+    } catch (error) {
+      console.error("Error fetching health records data: ", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAllRecords();
-  }, [currentHealthRecordView]);
+    if (dateRange.startDate && dateRange.endDate) {
+      fetchFilteredRecords(dateRange.startDate, dateRange.endDate);
+    } else {
+      fetchAllRecords();
+    }
+  }, [dateRange]);
 
   const resetSuccessMessage = (): void => {
     setSuccessMessage("");
+  };
+
+  const resetPageNumber = (): void => {
+    if (currentPage !== 1) setCurrentPage(1);
+  };
+
+  const resetEditingState = (): void => {
+    setIsEditing(false);
+    setRecordDetails(null);
+    setProfileDetails(null);
+  };
+
+  const handleStartDateOnChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    updateDateRange({ startDate: event.target.value });
+  };
+
+  const handleEndDateOnChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    updateDateRange({ endDate: event.target.value });
   };
 
   const handleNewRecordClick = () => {
@@ -97,10 +137,24 @@ const HealthRecord: React.FC = () => {
     setCurrentHealthRecordView("newRecord");
   };
 
-  const isNotEditingRecord = () => {
-    setIsEditing(false);
-    setRecordDetails(null);
-    setProfileDetails(null);
+  const handleViewClick = async (recordId: number): Promise<void> => {
+    resetSuccessMessage();
+    setCurrentHealthRecordView("viewRecord");
+    try {
+      const recordResponse = await get("/records/" + recordId);
+      if (recordResponse.status === 200) {
+        const recordDetailsResult = recordResponse.data as Record;
+        setRecordDetails(recordDetailsResult);
+        if (recordDetailsResult.profileId) {
+          const profileResponse = await get(
+            "/profiles/" + recordDetailsResult.profileId
+          );
+          setProfileDetails(profileResponse.data as Profile);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching health record data: ", error);
+    }
   };
 
   const handleEditClick = async (recordId: number): Promise<void> => {
@@ -110,17 +164,17 @@ const HealthRecord: React.FC = () => {
     try {
       const recordResponse = await get("/records/" + recordId);
       if (recordResponse.status === 200) {
-        const healthRecordDetails = recordResponse.data as Record;
-        setRecordDetails(healthRecordDetails);
-        if (healthRecordDetails.profileId) {
+        const recordDetailsResult = recordResponse.data as Record;
+        setRecordDetails(recordDetailsResult);
+        if (recordDetailsResult.profileId) {
           const profileResponse = await get(
-            "/profiles/" + healthRecordDetails.profileId
+            "/profiles/" + recordDetailsResult.profileId
           );
           setProfileDetails(profileResponse.data as Profile);
         }
       }
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching health record data: ", error);
     }
   };
 
@@ -134,18 +188,18 @@ const HealthRecord: React.FC = () => {
   };
 
   const EHRsCard = () => (
-    <div className="px-8 py-1 my-1.5">
-      <div className="card card-bordered border-gray-300 rounded-none shadow">
+    <div className="px-1.5 md:px-2.5 py-1 my-1.5">
+      <div className="card card-bordered bg-base-100 border-gray-300 rounded-none shadow">
         <div className="card-body p-0">
-          <h6 className="card-title bg-gray-100 text-sm text-primary p-1">
+          <span className="card-title bg-gray-100 text-sm text-primary p-1.5">
             Electronic Health Record System
-          </h6>
+          </span>
           {successMessage && (
             <div
               role="alert"
-              className="alert alert-success rounded-none flex justify-between"
+              className="alert alert-success rounded-none flex justify-between max-sm:px-2"
             >
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-x-1.5">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6 shrink-0 stroke-current"
@@ -171,9 +225,29 @@ const HealthRecord: React.FC = () => {
               </svg>
             </div>
           )}
-          <div className="flex justify-end items-center">
+          <div className="flex flex-col gap-4 md:gap-0 md:flex-row justify-between items-center">
+            <div className="flex flex-col gap-2 max-sm:w-3/4 md:flex-row items-center md:ml-1.5">
+              <span className="max-sm:self-start text-sm md:text-base">
+                From:
+              </span>
+              <input
+                type="date"
+                className="input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+                value={dateRange.startDate}
+                onChange={handleStartDateOnChange}
+              />
+              <span className="max-sm:self-start text-sm md:text-base">
+                To:
+              </span>
+              <input
+                type="date"
+                className="input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+                value={dateRange.endDate}
+                onChange={handleEndDateOnChange}
+              />
+            </div>
             <button
-              className="btn btn-sm btn-outline btn-primary rounded-none mr-1.5"
+              className="btn btn-sm btn-outline btn-primary rounded-none md:mr-1.5 max-sm:w-3/4"
               onClick={handleNewRecordClick}
             >
               New Record
@@ -205,6 +279,12 @@ const HealthRecord: React.FC = () => {
                       <span className="loading loading-spinner loading-xs text-primary"></span>
                     </td>
                   </tr>
+                ) : records.length === 0 ? (
+                  <tr>
+                    <td colSpan={100} className="text-center py-4">
+                      <div>No Data</div>
+                    </td>
+                  </tr>
                 ) : (
                   currentItems.map((record) => (
                     <tr key={record.id}>
@@ -222,6 +302,21 @@ const HealthRecord: React.FC = () => {
                       <td>{record.updatedBy}</td>
                       <td>
                         <div className="flex items-center gap-2.5">
+                          <button
+                            className="btn btn-primary btn-xs rounded-full"
+                            onClick={() => handleViewClick(record.id)}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              viewBox="0 0 576 512"
+                            >
+                              <path
+                                fill="#020d19"
+                                d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z"
+                              />
+                            </svg>
+                          </button>
                           <button
                             className="btn btn-primary btn-xs rounded-full"
                             onClick={() => handleEditClick(record.id)}
@@ -279,7 +374,7 @@ const HealthRecord: React.FC = () => {
                 >
                   <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z" />
                 </svg>
-                <h3 className="text-error">Confirm Delete</h3>
+                <span className="text-error">Confirm Delete</span>
               </div>
               <p className="my-2.5">
                 Are you sure you want to delete this record?
@@ -312,32 +407,43 @@ const HealthRecord: React.FC = () => {
   );
 
   const HealthRecordCard = () => (
-    <div className="px-8 py-1 my-1.5">
-      <div className="card card-bordered border-gray-300 rounded-none shadow">
+    <div className="px-1.5 md:px-2.5 py-1 my-1.5">
+      <div className="card card-bordered bg-base-100 border-gray-300 rounded-none shadow">
         <div className="card-body p-0">
-          <h6 className="card-title bg-gray-100 text-sm text-primary p-1">
+          <span className="card-title bg-gray-100 text-sm text-primary p-1">
             {currentHealthRecordView === "editRecord" && isEditing
               ? "Edit Record"
+              : currentHealthRecordView === "viewRecord" && !isEditing
+              ? "View Record"
               : "New Record"}
-          </h6>
-          <HealthRecordForm
-            setCurrentHealthRecordView={setCurrentHealthRecordView}
-            setSuccessMessage={setSuccessMessage}
-            fetchAllRecords={fetchAllRecords}
-            recordDetails={recordDetails}
-            profileDetails={profileDetails}
-            profileTypes={profileTypes}
-            isEditing={isEditing}
-            isNotEditingRecord={isNotEditingRecord}
-          />
+          </span>
+          {currentHealthRecordView === "viewRecord" ? (
+            <HealthRecordView
+              setCurrentHealthRecordView={setCurrentHealthRecordView}
+              recordDetails={recordDetails}
+              profileDetails={profileDetails}
+              resetEditingState={resetEditingState}
+            />
+          ) : (
+            <HealthRecordForm
+              setCurrentHealthRecordView={setCurrentHealthRecordView}
+              setSuccessMessage={setSuccessMessage}
+              fetchAllRecords={fetchAllRecords}
+              recordDetails={recordDetails}
+              profileDetails={profileDetails}
+              isEditing={isEditing}
+              resetEditingState={resetEditingState}
+              resetPageNumber={resetPageNumber}
+            />
+          )}
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="h-full w-full">
-      <Navbar />
+    <div className="h-full w-full min-h-screen">
+      <Navbar setCurrentHealthRecordView={setCurrentHealthRecordView} />
       {currentHealthRecordView === "EHRs" ? <EHRsCard /> : <HealthRecordCard />}
     </div>
   );

@@ -3,9 +3,15 @@ import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { get, post, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
 import { useAuth } from "../hooks/useAuth";
-import { ProfileType, Record } from "../pages/HealthRecord";
+import { Record } from "../pages/HealthRecord";
 import { Profile } from "../pages/Profiling";
 import getEmptyProfileFormValues, { ProfileFormValues } from "../utils/profile";
+
+type ProfileType = {
+  name: string;
+};
+
+const profileTypes: ProfileType[] = [{ name: "OLD" }, { name: "NEW" }];
 
 type HealthRecordProps = {
   setCurrentHealthRecordView: (view: string) => void;
@@ -13,9 +19,9 @@ type HealthRecordProps = {
   fetchAllRecords: () => Promise<void>;
   recordDetails: Record | null;
   profileDetails: Profile | null;
-  profileTypes: ProfileType[];
   isEditing: boolean;
-  isNotEditingRecord: () => void;
+  resetEditingState: () => void;
+  resetPageNumber: () => void;
 };
 
 interface Department {
@@ -30,11 +36,25 @@ interface HealthRecordFormValues {
   middleName: string;
   lastName: string;
   suffix: string;
+  dateOfBirth: string;
   department: string;
   height: string;
   weight: string;
   bloodPressure: string;
 }
+
+const initialHealthRecordFormValues: HealthRecordFormValues = {
+  profileType: "",
+  firstName: "",
+  middleName: "",
+  lastName: "",
+  suffix: "",
+  dateOfBirth: "",
+  department: "",
+  height: "",
+  weight: "",
+  bloodPressure: "",
+};
 
 const HealthRecordForm: React.FC<HealthRecordProps> = ({
   setCurrentHealthRecordView,
@@ -42,9 +62,9 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
   fetchAllRecords,
   recordDetails,
   profileDetails,
-  profileTypes,
   isEditing,
-  isNotEditingRecord,
+  resetEditingState,
+  resetPageNumber,
 }) => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [formValues, setFormValues] = useState<HealthRecordFormValues>({
@@ -53,6 +73,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
     middleName: profileDetails?.middleName || "",
     lastName: profileDetails?.lastName || "",
     suffix: profileDetails?.suffix || "",
+    dateOfBirth: profileDetails?.dateOfBirth || "",
     department: recordDetails?.department || "",
     height: recordDetails?.height || "",
     weight: recordDetails?.weight || "",
@@ -81,32 +102,23 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
     getEmptyProfileFormValues()
   );
   const [recordFormErrors, setRecordFormErrors] =
-    useState<HealthRecordFormValues>({
-      profileType: "",
-      firstName: "",
-      middleName: "",
-      lastName: "",
-      suffix: "",
-      department: "",
-      height: "",
-      weight: "",
-      bloodPressure: "",
-    });
+    useState<HealthRecordFormValues>(initialHealthRecordFormValues);
   const { username } = useAuth();
   const [globalError, setGlobalError] = useState<string>("");
 
+  const fetchAllDepartments = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      const response = await get("/departments");
+      setDepartments(response.data as Department[]);
+    } catch (error) {
+      console.error("Error fetching departments data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAllDepartments = async () => {
-      setIsLoading(true);
-      try {
-        const response = await get("/departments");
-        setDepartments(response.data as Department[]);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchAllDepartments();
   }, []);
 
@@ -187,124 +199,90 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
         });
       }
     }
+    if (globalError) setGlobalError("");
+  };
+
+  const resetRecordAndProfileFormValues = (): void => {
+    setFormValues(initialHealthRecordFormValues);
+    setProfileFormValues(getEmptyProfileFormValues());
+  };
+
+  const resetRecordAndProfileFormErrors = (): void => {
+    setRecordFormErrors(initialHealthRecordFormValues);
+    setProfileFormErrors(getEmptyProfileFormValues());
+  };
+
+  const resetState = (view?: string): void => {
+    resetRecordAndProfileFormValues();
+    resetRecordAndProfileFormErrors();
+    resetEditingState();
+    if (view) setCurrentHealthRecordView(view);
   };
 
   const handleGoBackClick = () => {
-    setCurrentHealthRecordView("EHRs");
-    isNotEditingRecord();
+    resetState("EHRs");
   };
 
   const isHeightValid = (value: string): boolean => {
-    let isValid = false;
+    let isValid = true;
     const regex = /^\d{2,3}$/;
-    if (regex.test(value)) {
-      isValid = true;
+    if (!regex.test(value)) {
+      isValid = false;
     }
     return isValid;
   };
 
   const isWeightValid = (value: string): boolean => {
-    let isValid = false;
+    let isValid = true;
     const regex = /^\d{2,3}$/;
-    if (regex.test(value)) {
-      isValid = true;
+    if (!regex.test(value)) {
+      isValid = false;
     }
     return isValid;
   };
 
   const isBloodPressureValid = (value: string): boolean => {
-    let isValid = false;
-    const regex = /^\d{3}\/\d{2,3}$/;
-    if (value === "") {
-      isValid = true;
-    }
-    if (regex.test(value)) {
-      isValid = true;
+    let isValid = true;
+    const regex = /^\d{2,3}\/\d{2,3}$/;
+    if (!value || !regex.test(value)) {
+      isValid = false;
     }
     return isValid;
-  };
-
-  const resetRecordAndProfileFormValues = (): void => {
-    setFormValues({
-      profileType: "",
-      firstName: "",
-      middleName: "",
-      lastName: "",
-      suffix: "",
-      department: "",
-      height: "",
-      weight: "",
-      bloodPressure: "",
-    });
-    setProfileFormValues(getEmptyProfileFormValues());
   };
 
   const handleOnSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (validation() && !isEditing) {
       if (formValues.profileType === "OLD") {
-        const { lastName, firstName, middleName, suffix } = profileFormValues;
-        const pathSegments = [
-          lastName.trim(),
-          firstName.trim(),
-          middleName.trim(),
-          suffix,
-        ].filter(Boolean);
-        const url = `/profiles/${pathSegments.join("/")}`;
+        const { lastName, firstName, middleName, suffix, dateOfBirth } =
+          profileFormValues;
+        const url = `/profiles/profile?lastName=${lastName.trim()}&firstName=${firstName.trim()}&middleName=${middleName.trim()}&suffix=${suffix}&dateOfBirth=${dateOfBirth}`;
         try {
           const response = await get(url);
           if (response.status === 200) {
             const { id } = response.data as Profile;
+            const { lastName, firstName, middleName } = profileFormValues;
             const profileResponse = await put("/profiles/" + id, {
               ...profileFormValues,
+              lastName: lastName.trim(),
+              firstName: firstName.trim(),
+              middleName: middleName.trim(),
               updatedBy: username,
             });
             if (profileResponse.status === 200) {
+              await get("/rabbitmq/profiles/send");
               const recordResponse = await post("/records", {
                 ...formValues,
-                firstName: firstName,
-                middleName: middleName,
-                lastName: lastName,
-                suffix: suffix,
+                profileId: id,
                 createdBy: username,
               });
               if (recordResponse.status === 201) {
-                setSuccessMessage("Record created successfully.");
-                resetRecordAndProfileFormValues();
+                await get("/rabbitmq/records/send");
+                setSuccessMessage("Health record created successfully.");
+                resetState("EHRs");
+                resetPageNumber();
                 fetchAllRecords();
-                setCurrentHealthRecordView("EHRs");
               }
-            }
-          }
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            setGlobalError(
-              "Duplicate profiles found in the database. Please try again."
-            );
-            resetRecordAndProfileFormValues();
-          }
-          console.error("Error submitting data: ", error);
-        }
-      } else if (formValues.profileType === "NEW") {
-        try {
-          const profileResponse = await post("/profiles", {
-            ...profileFormValues,
-            createdBy: username,
-          });
-          if (profileResponse.status === 201) {
-            const recordResponse = await post("/records", {
-              ...formValues,
-              firstName: profileFormValues.firstName,
-              middleName: profileFormValues.middleName,
-              lastName: profileFormValues.lastName,
-              suffix: profileFormValues.suffix,
-              createdBy: username,
-            });
-            if (recordResponse.status === 201) {
-              setSuccessMessage("Record created successfully.");
-              resetRecordAndProfileFormValues();
-              fetchAllRecords();
-              setCurrentHealthRecordView("EHRs");
             }
           }
         } catch (error) {
@@ -313,8 +291,45 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
               "Oops, something went wrong. Please contact your system administrator."
             );
             resetRecordAndProfileFormValues();
+            resetRecordAndProfileFormErrors();
           }
-          console.error("Error submitting data: ", error);
+          console.error("Error submitting health record data: ", error);
+        }
+      } else if (formValues.profileType === "NEW") {
+        try {
+          const { lastName, firstName, middleName } = profileFormValues;
+          const profileResponse = await post("/profiles", {
+            ...profileFormValues,
+            lastName: lastName.trim(),
+            firstName: firstName.trim(),
+            middleName: middleName.trim(),
+            createdBy: username,
+          });
+          if (profileResponse.status === 201) {
+            await get("/rabbitmq/profiles/send");
+            const { id } = profileResponse.data as Profile;
+            const recordResponse = await post("/records", {
+              ...formValues,
+              profileId: id,
+              createdBy: username,
+            });
+            if (recordResponse.status === 201) {
+              await get("/rabbitmq/records/send");
+              setSuccessMessage("Health record created successfully.");
+              resetState("EHRs");
+              resetPageNumber();
+              fetchAllRecords();
+            }
+          }
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            setGlobalError(
+              "Oops, something went wrong. Please contact your system administrator."
+            );
+            resetRecordAndProfileFormValues();
+            resetRecordAndProfileFormErrors();
+          }
+          console.error("Error submitting health record data: ", error);
         }
       }
     } else if (
@@ -323,39 +338,39 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
       recordDetails !== null &&
       profileDetails !== null
     ) {
-      const { lastName, firstName, middleName, suffix } = profileFormValues;
-      const pathSegments = [lastName, firstName, middleName, suffix].filter(
-        Boolean
-      );
-      const url = `/profiles/${pathSegments.join("/")}`;
+      const { lastName, firstName, middleName, suffix, dateOfBirth } =
+        profileFormValues;
+      const url = `/profiles/profile?lastName=${lastName.trim()}&firstName=${firstName.trim()}&middleName=${middleName.trim()}&suffix=${suffix}&dateOfBirth=${dateOfBirth}`;
       try {
         const response = await get(url);
         if (response.status === 200) {
           const { id } = response.data as Profile;
+          const { lastName, firstName, middleName } = profileFormValues;
           const profileResponse = await put("/profiles/" + id, {
             ...profileFormValues,
+            lastName: lastName.trim(),
+            firstName: firstName.trim(),
+            middleName: middleName.trim(),
             updatedBy: username,
           });
           if (profileResponse.status === 200) {
+            await get("/rabbitmq/profiles/send");
             const recordResponse = await put("/records/" + recordDetails.id, {
               ...formValues,
-              firstName: profileFormValues.firstName,
-              middleName: profileFormValues.middleName,
-              lastName: profileFormValues.lastName,
-              suffix: profileFormValues.suffix,
+              profileId: id,
               updatedBy: username,
             });
             if (recordResponse.status === 200) {
-              setSuccessMessage("Record updated successfully.");
-              isNotEditingRecord();
-              resetRecordAndProfileFormValues();
+              await get("/rabbitmq/records/send");
+              setSuccessMessage("Health record updated successfully.");
+              resetState("EHRs");
+              resetPageNumber();
               fetchAllRecords();
-              setCurrentHealthRecordView("EHRs");
             }
           }
         }
       } catch (error) {
-        console.error(error);
+        console.error("Error submitting health record data: ", error);
       }
     }
   };
@@ -363,17 +378,8 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
   const validation = (): boolean => {
     let isValid = true;
     const newProfileFormErrors: ProfileFormValues = getEmptyProfileFormValues();
-    const newRecordFormErrors: HealthRecordFormValues = {
-      profileType: "",
-      firstName: "",
-      middleName: "",
-      lastName: "",
-      suffix: "",
-      department: "",
-      height: "",
-      weight: "",
-      bloodPressure: "",
-    };
+    const newRecordFormErrors: HealthRecordFormValues =
+      initialHealthRecordFormValues;
 
     if (!profileFormValues.firstName) {
       newProfileFormErrors.firstName = "First name is required.";
@@ -454,25 +460,41 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
   return (
     <div className="flex flex-col items-center w-full">
       {globalError && (
-        <div role="alert" className="alert alert-error rounded-none">
+        <div
+          role="alert"
+          className="alert alert-error rounded-none flex justify-between max-sm:px-2"
+        >
+          <div className="flex items-center md:gap-x-1.5">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 shrink-0 stroke-current"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-sm">{globalError}</span>
+          </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 shrink-0 stroke-current"
-            fill="none"
-            viewBox="0 0 24 24"
+            className="h-3 w-3 shrink-0 stroke-current cursor-pointer"
+            viewBox="0 0 384 512"
+            onClick={() => setGlobalError("")}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+            <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z" />
           </svg>
-          <span className="text-sm">{globalError}</span>
         </div>
       )}
-      <form className="p-4 flex flex-col" onSubmit={handleOnSubmit}>
-        <div className="flex justify-center items-center space-x-4">
+      <form
+        className="p-4 flex flex-col max-sm:w-full"
+        onSubmit={handleOnSubmit}
+      >
+        <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
           <div className="w-72">
             <div className="flex items-center justify-evenly">
               {profileTypes.map((type, index) => (
@@ -538,8 +560,8 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
           </div>
         </div>
         <hr className="my-4" />
-        <div className="flex justify-center items-center space-x-4">
-          <div className="w-full">
+        <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+          <div className="w-72 md:w-full">
             <label className="form-control w-72">
               <div className="label">
                 <span className="label-text">First Name</span>
@@ -782,7 +804,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
             <label className="form-control w-72">
               <div className="label">
                 <span className="label-text">
-                  Highest Level of Education (Optional)
+                  Educational Attainment (Optional)
                 </span>
               </div>
               <select
@@ -792,7 +814,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
                 value={profileFormValues.educationalBackground}
                 onChange={handleOnChange}
               >
-                <option value="">Select highest level of education</option>
+                <option value="">Select educational attainment</option>
                 <option value="NO FORMAL EDUCATION">NO FORMAL EDUCATION</option>
                 <option value="SOME ELEMENTARY">SOME ELEMENTARY SCHOOL</option>
                 <option value="ELEMENTARY GRADUATE">ELEMENTARY GRADUATE</option>
@@ -868,7 +890,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
         <div className="flex flex-col justify-center items-center">
           <label className="form-control w-72">
             <div className="label">
-              <span className="label-text">Height (Optional)</span>
+              <span className="label-text">Height</span>
               <span className="label-text-alt text-gray-600">(cm)</span>
             </div>
             <input
@@ -893,7 +915,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
           </label>
           <label className="form-control w-72">
             <div className="label">
-              <span className="label-text">Weight (Optional)</span>
+              <span className="label-text">Weight</span>
               <span className="label-text-alt text-gray-600">(kg)</span>
             </div>
             <input
@@ -918,7 +940,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
           </label>
           <label className="form-control w-72">
             <div className="label">
-              <span className="label-text">Blood Pressure (Optional)</span>
+              <span className="label-text">Blood Pressure (mmHg)</span>
               <span className="label-text-alt text-gray-600">
                 (e.g. 120/80)
               </span>

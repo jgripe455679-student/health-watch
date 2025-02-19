@@ -3,6 +3,7 @@ import { deleteRequest, get } from "../api/apiClient";
 import Navbar from "../components/Navbar";
 import Pagination from "../components/Pagination";
 import ProfileForm from "../components/ProfileForm";
+import ProfileView from "../components/ProfileView";
 import SearchInput from "../components/SearchInput";
 import { useAppUtility } from "../hooks/useAppUtility";
 import useDebounce from "../hooks/useDebounce";
@@ -23,6 +24,7 @@ export interface Profile {
   educationalBackground: string;
   householdSize: number;
   incomeBracket: string;
+  records: string[];
   createdAt: string;
   createdBy: string;
   updatedAt: string;
@@ -48,48 +50,61 @@ const Profiling: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const debouncedSearchValue = useDebounce(searchValue);
 
-  const fetchAllProfiles: () => Promise<void> = async () => {
+  const fetchAllProfiles: () => Promise<void> = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await get("/profiles");
       setProfiles(response.data as Profile[]);
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching profiles data: ", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchAllProfiles();
-  }, []);
-
   const resetSuccessMessage = (): void => {
     setSuccessMessage("");
   };
 
-  const handleEditClick = async (profileId: number) => {
+  const resetEditingState = (): void => {
+    setIsEditing(false);
+    setProfileDetails(null);
+  };
+
+  const resetSearchState = (): void => {
+    if (searchValue) setSearchValue("");
+  };
+
+  const resetPageNumber = (): void => {
+    if (currentPage !== 1) setCurrentPage(1);
+  };
+
+  const handleEditClick = async (profileId: number): Promise<void> => {
     resetSuccessMessage();
     setCurrentProfilingView("editProfile");
     setIsEditing(true);
-    if (currentPage !== 1) setCurrentPage(1);
     try {
       const response = await get("/profiles/" + profileId);
       setProfileDetails(response.data as Profile);
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching profile data: ", error);
     }
   };
 
-  const isNotEditingProfile = () => {
-    setIsEditing(false);
-    setProfileDetails(null);
+  const handleViewClick = async (profileId: number): Promise<void> => {
+    resetSuccessMessage();
+    setCurrentProfilingView("viewProfile");
+    try {
+      const response = await get("/profiles/" + profileId);
+      setProfileDetails(response.data as Profile);
+    } catch (error) {
+      console.error("Error fetching profile data: ", error);
+    }
   };
 
   const handleNewProfileClick = () => {
     resetSuccessMessage();
     setCurrentProfilingView("newProfile");
-    if (currentPage !== 1) setCurrentPage(1);
   };
 
   const openModal = (profileId: number) => {
@@ -102,13 +117,15 @@ const Profiling: React.FC = () => {
     setProfileToDeleteId(null);
   };
 
-  const deleteProfile = async (profileId: number | null) => {
+  const deleteProfile = async (profileId: number | null): Promise<void> => {
     try {
       const response = await deleteRequest("/profiles/" + profileId);
       if (response.status === 200) {
-        setSuccessMessage("Record successfully deleted.");
+        setSuccessMessage("Profile successfully deleted.");
         setIsOpen(false);
         setProfileToDeleteId(null);
+        resetPageNumber();
+        resetSearchState();
         fetchAllProfiles();
       }
     } catch (error) {
@@ -116,7 +133,7 @@ const Profiling: React.FC = () => {
     }
   };
 
-  const handleSearchQuery = async (query: string) => {
+  const handleSearchQuery = async (query: string): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await get(`profiles/search?lastName=${query}`);
@@ -124,14 +141,21 @@ const Profiling: React.FC = () => {
         setProfiles(response.data as Profile[]);
       }
     } catch (error) {
-      console.error("Error fetching search results: ", error);
+      console.error("Error fetching profile search results: ", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    handleSearchQuery(debouncedSearchValue);
+    const fetchProfiles = async (query: string): Promise<void> => {
+      if (query.trim() === "") {
+        await fetchAllProfiles();
+      } else {
+        await handleSearchQuery(debouncedSearchValue);
+      }
+    };
+    fetchProfiles(debouncedSearchValue);
   }, [debouncedSearchValue]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -144,18 +168,18 @@ const Profiling: React.FC = () => {
   };
 
   const ProfilingCard = () => (
-    <div className="px-8 py-1 my-1.5">
-      <div className="card card-bordered border-gray-300 rounded-none shadow">
+    <div className="px-1.5 md:px-2.5 py-1 my-1.5">
+      <div className="card card-bordered bg-base-100 border-gray-300 rounded-none shadow">
         <div className="card-body p-0">
-          <h6 className="card-title bg-gray-100 text-sm text-primary p-1">
+          <span className="card-title bg-gray-100 text-sm text-primary p-1.5">
             Profiling
-          </h6>
+          </span>
           {successMessage && (
             <div
               role="alert"
-              className="alert alert-success rounded-none flex justify-between"
+              className="alert alert-success rounded-none flex justify-between max-sm:px-2"
             >
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-x-1.5">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6 shrink-0 stroke-current"
@@ -181,17 +205,16 @@ const Profiling: React.FC = () => {
               </svg>
             </div>
           )}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-4 md:gap-0 md:flex-row justify-between items-center">
             <SearchInput
               searchValue={searchValue}
               setSearchValue={setSearchValue}
-              keyword={"last name"}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
+              keyword="keyword"
+              resetPageNumber={resetPageNumber}
               resetSuccessMessage={resetSuccessMessage}
             />
             <button
-              className="btn btn-sm btn-outline btn-primary rounded-none mr-1.5"
+              className="btn btn-sm btn-outline btn-primary rounded-none md:mr-1.5 max-sm:w-3/4"
               onClick={handleNewProfileClick}
             >
               New Profile
@@ -211,10 +234,6 @@ const Profiling: React.FC = () => {
                   <th>Civil Status</th>
                   <th>Address</th>
                   <th>Mobile Number</th>
-                  <th>Occupation</th>
-                  <th>Highest Level of Education</th>
-                  <th>Household Size</th>
-                  <th>Household Income Bracket</th>
                   <th>Created At</th>
                   <th>Created By</th>
                   <th>Updated At</th>
@@ -232,7 +251,7 @@ const Profiling: React.FC = () => {
                 ) : profiles.length === 0 ? (
                   <tr>
                     <td colSpan={100} className="text-center py-4">
-                      <p>No Data</p>
+                      <div>No Data</div>
                     </td>
                   </tr>
                 ) : (
@@ -248,16 +267,27 @@ const Profiling: React.FC = () => {
                       <td>{profile.maritalStatus}</td>
                       <td>{profile.address}</td>
                       <td>{profile.mobileNumber}</td>
-                      <td>{profile.occupation}</td>
-                      <td>{profile.educationalBackground}</td>
-                      <td>{profile.householdSize}</td>
-                      <td>{profile.incomeBracket}</td>
                       <td>{formatLocalDateTime(profile.createdAt)}</td>
                       <td>{profile.createdBy}</td>
                       <td>{formatLocalDateTime(profile.updatedAt)}</td>
                       <td>{profile.updatedBy}</td>
                       <td>
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-x-2.5">
+                          <button
+                            className="btn btn-primary btn-xs rounded-full"
+                            onClick={() => handleViewClick(profile.id)}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              viewBox="0 0 576 512"
+                            >
+                              <path
+                                fill="#020d19"
+                                d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z"
+                              />
+                            </svg>
+                          </button>
                           <button
                             className="btn btn-primary btn-xs rounded-full"
                             onClick={() => handleEditClick(profile.id)}
@@ -315,7 +345,7 @@ const Profiling: React.FC = () => {
                 >
                   <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z" />
                 </svg>
-                <h3 className="text-error">Confirm Delete</h3>
+                <span className="text-error">Confirm Delete</span>
               </div>
               <p className="my-2.5">
                 Are you sure you want to delete this record?
@@ -348,22 +378,34 @@ const Profiling: React.FC = () => {
   );
 
   const ProfileCard = () => (
-    <div className="px-8 py-1 my-1.5">
-      <div className="card card-bordered border-gray-300 rounded-none shadow">
+    <div className="px-2.5 py-1 my-1.5">
+      <div className="card card-bordered bg-base-100 border-gray-300 rounded-none shadow">
         <div className="card-body p-0">
-          <h6 className="card-title bg-gray-100 text-sm text-primary p-1">
+          <span className="card-title bg-gray-100 text-sm text-primary p-1.5">
             {currentProfilingView === "editProfile" && isEditing
               ? "Edit Profile"
+              : currentProfilingView === "viewProfile" && !isEditing
+              ? "View Profile"
               : "New Profile"}
-          </h6>
-          <ProfileForm
-            setCurrentProfilingView={setCurrentProfilingView}
-            setSuccessMessage={setSuccessMessage}
-            isEditing={isEditing}
-            profileDetails={profileDetails}
-            fetchAllProfiles={fetchAllProfiles}
-            isNotEditingProfile={isNotEditingProfile}
-          />
+          </span>
+          {currentProfilingView === "viewProfile" ? (
+            <ProfileView
+              setCurrentProfilingView={setCurrentProfilingView}
+              profileDetails={profileDetails}
+              resetEditingState={resetEditingState}
+            />
+          ) : (
+            <ProfileForm
+              setCurrentProfilingView={setCurrentProfilingView}
+              setSuccessMessage={setSuccessMessage}
+              isEditing={isEditing}
+              profileDetails={profileDetails}
+              fetchAllProfiles={fetchAllProfiles}
+              resetEditingState={resetEditingState}
+              resetSearchState={resetSearchState}
+              resetPageNumber={resetPageNumber}
+            />
+          )}
         </div>
       </div>
     </div>

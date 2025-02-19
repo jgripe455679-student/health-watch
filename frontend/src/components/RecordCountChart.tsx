@@ -9,9 +9,9 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import React, { useEffect, useState } from "react";
-import { Line } from "react-chartjs-2";
+import { useEffect, useState } from "react";
 import { get } from "../api/apiClient";
+import LineChart from "./LineChart";
 
 ChartJS.register(
   CategoryScale,
@@ -23,36 +23,67 @@ ChartJS.register(
   Legend
 );
 
-interface RecordCount {
+export interface RecordCount {
   id: number;
   recordDate: string;
   recordCount: number;
 }
 
-const RecordCountChart: React.FC = () => {
+interface RecordCountChartProps {
+  startDate: string;
+  endDate: string;
+  titleText: string;
+}
+
+const RecordCountChart: React.FC<RecordCountChartProps> = ({
+  startDate,
+  endDate,
+  titleText,
+}) => {
   const [data, setData] = useState<RecordCount[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const fetchRecordCount = async (): Promise<void> => {
+    try {
+      const response = await get("/reports/record-count");
+      setData(response.data as RecordCount[]);
+    } catch (error) {
+      console.error("Error fetching record count data: ", error);
+    }
+  };
+
+  const fetchFilteredRecordCount = async (
+    startDate: string,
+    endDate: string
+  ): Promise<void> => {
+    try {
+      const response = await get(
+        `/reports/record-count/filter?startDate=${startDate}&endDate=${endDate}`
+      );
+      setData(response.data as RecordCount[]);
+    } catch (error) {
+      console.error("Error fetching record count data: ", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      setIsLoading(true);
-      try {
-        const response = await get("/reports/record-count");
-        setData(response.data as RecordCount[]);
-      } catch (error) {
-        console.error("Error fetching record count data: ", error);
-      } finally {
-        setIsLoading(false);
+    const fetchData = async (
+      startDate: string,
+      endDate: string
+    ): Promise<void> => {
+      if (startDate && endDate) {
+        await fetchFilteredRecordCount(startDate, endDate);
+      } else {
+        await fetchRecordCount();
       }
     };
-    fetchData();
-  }, []);
+    fetchData(startDate, endDate);
+  }, [startDate, endDate]);
 
   const chartData = {
     labels: data.map((d) => new Date(d.recordDate).toLocaleDateString()),
     datasets: [
       {
-        label: "Number of Visits",
+        label: "# of Visits",
         data: data.map((d) => d.recordCount),
         borderColor: "rgba(75,192,192,1)",
         backgroundColor: "rgba(75,192,192,0.2)",
@@ -70,17 +101,19 @@ const RecordCountChart: React.FC = () => {
       },
       title: {
         display: true,
-        text: "Patient Visits Over Time",
+        text: titleText,
+        font: {
+          size: 14,
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
       },
     },
   };
-  return isLoading ? (
-    <span className="loading loading-spinner loading-xs text-primary"></span>
-  ) : (
-    <div className="relative w-full h-96">
-      <Line data={chartData} options={options} />
-    </div>
-  );
+  return <LineChart data={chartData} options={options} />;
 };
 
 export default RecordCountChart;

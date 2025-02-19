@@ -24,4 +24,9 @@ public class DepartmentServiceImplementation implements DepartmentService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Long getDepartmentCount() {
+        return departmentRepository.count();
+    }
+
 }

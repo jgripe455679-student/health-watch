@@ -17,4 +17,8 @@ public interface RecordService {
     String deleteRecord(Long recordId);
 
     RecordResponseDto getRecord(Long recordId);
+
+    Long getRecordCount();
+
+    List<RecordResponseDto> findByRecordDateBetween(String startDate, String endDate, Sort sort);
 }

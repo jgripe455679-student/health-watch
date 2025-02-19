@@ -1,9 +1,11 @@
 package com.crawler.backend.controller;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -66,24 +68,45 @@ public class ProfileController {
         return ResponseEntity.ok(profiles);
     }
 
-    @GetMapping("/{lastName}/{firstName}")
-    public ResponseEntity<ProfileDto> getProfileByFullName(@PathVariable String lastName,
-            @PathVariable String firstName) {
-        ProfileDto response = profileService.getProfileByFullName(lastName, firstName, "", "");
+    @GetMapping("/profile")
+    public ResponseEntity<ProfileDto> findProfile(@RequestParam String lastName, @RequestParam String firstName,
+            @RequestParam(required = false) String middleName, @RequestParam(required = false) String suffix,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth) {
+        ProfileDto response = profileService.findProfile(lastName, firstName, middleName != null ? middleName : "",
+                suffix != null ? suffix : "", dateOfBirth);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{lastName}/{firstName}/{middleName}")
-    public ResponseEntity<ProfileDto> getProfileByFullName(@PathVariable String lastName,
-            @PathVariable String firstName, @PathVariable String middleName) {
-        ProfileDto response = profileService.getProfileByFullName(lastName, firstName, middleName, "");
-        return ResponseEntity.ok(response);
+    // @GetMapping("/{lastName}/{firstName}/{dateOfBirth}")
+    // public ResponseEntity<ProfileDto> findProfile(@PathVariable String lastName,
+    // @PathVariable String firstName, @PathVariable LocalDate dateOfBirth) {
+    // ProfileDto response = profileService.findProfile(lastName, firstName, "", "",
+    // dateOfBirth);
+    // return ResponseEntity.ok(response);
+    // }
+
+    // @GetMapping("/{lastName}/{firstName}/{middleName}/{dateOfBirth}")
+    // public ResponseEntity<ProfileDto> findProfile(@PathVariable String lastName,
+    // @PathVariable String firstName, @PathVariable String middleName,
+    // @PathVariable LocalDate dateOfBirth) {
+    // ProfileDto response = profileService.findProfile(lastName, firstName,
+    // middleName, "", dateOfBirth);
+    // return ResponseEntity.ok(response);
+    // }
+
+    // @GetMapping("/{lastName}/{firstName}/{middleName}/{suffix}/{dateOfBirth}")
+    // public ResponseEntity<ProfileDto> findProfile(@PathVariable String lastName,
+    // @PathVariable String firstName, @PathVariable String middleName,
+    // @PathVariable String suffix,
+    // @PathVariable LocalDate dateOfBirth) {
+    // ProfileDto response = profileService.findProfile(lastName, firstName,
+    // middleName, suffix, dateOfBirth);
+    // return ResponseEntity.ok(response);
+    // }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getProfileCount() {
+        return ResponseEntity.ok(profileService.getProfileCount());
     }
 
-    @GetMapping("/{lastName}/{firstName}/{middleName}/{suffix}")
-    public ResponseEntity<ProfileDto> getProfileByFullName(@PathVariable String lastName,
-            @PathVariable String firstName, @PathVariable String middleName, @PathVariable String suffix) {
-        ProfileDto response = profileService.getProfileByFullName(lastName, firstName, middleName, suffix);
-        return ResponseEntity.ok(response);
-    }
 }

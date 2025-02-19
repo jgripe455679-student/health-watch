@@ -6,4 +6,6 @@ import com.crawler.backend.dto.DepartmentDto;
 
 public interface DepartmentService {
     List<DepartmentDto> getDepartments();
+
+    Long getDepartmentCount();
 }

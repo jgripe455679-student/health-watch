@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -19,47 +20,60 @@ import io.swagger.v3.oas.annotations.info.Info;
 import lombok.RequiredArgsConstructor;
 
 @SpringBootApplication
+@ConfigurationPropertiesScan
 @OpenAPIDefinition(info = @Info(title = "HealthWatch API Application", version = "0.0.1", description = "HealthWatch API"))
 @RequiredArgsConstructor
 @EnableJpaRepositories
 public class BackendApplication implements CommandLineRunner {
 
-	private final UserRepository userRepository;
-	private final RoleRepository roleRepository;
-	private final PasswordEncoder passwordEncoder;
+        private final UserRepository userRepository;
+        private final RoleRepository roleRepository;
+        private final PasswordEncoder passwordEncoder;
 
-	public static void main(String[] args) {
-		SpringApplication.run(BackendApplication.class, args);
+        public static void main(String[] args) {
+                SpringApplication.run(BackendApplication.class, args);
 
-	}
+        }
 
-	@Override
-	public void run(String... args) {
-		createUsers();
-	}
-	
-	public void createUsers() {
-        if(!userRepository.findAll().isEmpty())
-            return;
+        @Override
+        public void run(String... args) {
+                createUsers();
+        }
 
-        Role roleAdmin = roleRepository.findByName(Roles.ADMIN.name()).get();
-        Role roleUser = roleRepository.findByName(Roles.USER.name()).get();
+        public void createUsers() {
+                if (!userRepository.findAll().isEmpty())
+                        return;
 
-        User admin = User.builder()
-                .id(0L)
-                .username("admin")
-                .password(passwordEncoder.encode("admin"))
-                .role(roleAdmin)
-                .build();
+                if (roleRepository.findAll().isEmpty()) {
+                        Role.builder()
+                                        .id(0L)
+                                        .name(Roles.ADMIN.name())
+                                        .build();
 
-        User user = User.builder()
-                .id(0L)
-                .username("user")
-                .password(passwordEncoder.encode("user"))
-                .role(roleUser)
-                .build();
+                        Role.builder()
+                                        .id(0L)
+                                        .name(Roles.ADMIN.name())
+                                        .build();
+                }
 
-        userRepository.saveAll(List.of(user, admin));
-    }
+                Role roleAdmin = roleRepository.findByName(Roles.ADMIN.name()).get();
+                Role roleUser = roleRepository.findByName(Roles.USER.name()).get();
+
+                User admin = User.builder()
+                                .id(0L)
+                                .username("admin")
+                                .password(passwordEncoder.encode("admin"))
+                                .role(roleAdmin)
+                                .build();
+
+                User user = User.builder()
+                                .id(0L)
+                                .username("user")
+                                .password(passwordEncoder.encode("user"))
+                                .role(roleUser)
+                                .build();
+
+                userRepository.saveAll(List.of(user, admin));
+        }
 
 }

@@ -5,6 +5,7 @@ import Pagination from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
 import UserForm from "../components/UserForm";
 import { useAppUtility } from "../hooks/useAppUtility";
+import { useAuth } from "../hooks/useAuth";
 import useDebounce from "../hooks/useDebounce";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
@@ -40,6 +41,8 @@ const UserManagement: React.FC = () => {
   useDocumentTitle("User Management");
   const [searchValue, setSearchValue] = useState<string>("");
   const debouncedSearchValue = useDebounce(searchValue);
+  const { username } = useAuth();
+  const filteredUsers = users.filter((user) => user.username !== username);
 
   const openModal = (userId: number) => {
     setIsOpen(true);
@@ -47,18 +50,18 @@ const UserManagement: React.FC = () => {
   };
 
   const deleteUser = async (userId: number | null): Promise<void> => {
-    resetSuccessMessage();
     try {
       const response = await deleteRequest("/users/" + userId);
       if (response.status === 200) {
-        setSuccessMessage("Record successfully deleted.");
+        setSuccessMessage("User successfully deleted.");
         setIsOpen(false);
         setUserToDeleteId(null);
+        resetPageNumber();
+        resetSearchState();
         fetchAllUsers();
-        if (currentPage !== 1) setCurrentPage(1);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error deleting user data: ", error);
     }
   };
 
@@ -67,36 +70,39 @@ const UserManagement: React.FC = () => {
     setUserToDeleteId(null);
   };
 
-  const fetchAllUsers: () => Promise<void> = async () => {
+  const fetchAllUsers = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await get("/users");
       setUsers(response.data as User[]);
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching users data: ", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchAllUsers();
-  }, []);
-
-  const handleEditClick = async (userId: number) => {
+  const handleEditClick = async (userId: number): Promise<void> => {
     resetSuccessMessage();
     setCurrentUserManagementView("editUser");
     setIsEditing(true);
-    if (currentPage !== 1) setCurrentPage(1);
     try {
       const response = await get("/users/" + userId);
       setUserDetails(response.data as User);
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching user data: ", error);
     }
   };
 
-  const isNotEditingUser = () => {
+  const resetPageNumber = (): void => {
+    if (currentPage !== 1) setCurrentPage(1);
+  };
+
+  const resetSearchState = (): void => {
+    if (searchValue) setSearchValue("");
+  };
+
+  const resetEditingState = (): void => {
     setIsEditing(false);
     setUserDetails(null);
   };
@@ -108,10 +114,9 @@ const UserManagement: React.FC = () => {
   const handleNewUserClick = () => {
     resetSuccessMessage();
     setCurrentUserManagementView("newUser");
-    if (currentPage !== 1) setCurrentPage(1);
   };
 
-  const handleSearchQuery = async (query: string) => {
+  const handleSearchQuery = async (query: string): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await get(`users/search?username=${query}`);
@@ -119,19 +124,26 @@ const UserManagement: React.FC = () => {
         setUsers(response.data as User[]);
       }
     } catch (error) {
-      console.error("Error fetching search results: ", error);
+      console.error("Error fetching user search results: ", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    handleSearchQuery(debouncedSearchValue);
+    const fetchData = async (query: string): Promise<void> => {
+      if (query.trim() === "") {
+        await fetchAllUsers();
+      } else {
+        await handleSearchQuery(debouncedSearchValue);
+      }
+    };
+    fetchData(debouncedSearchValue);
   }, [debouncedSearchValue]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = users.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
 
   const paginate = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -139,18 +151,18 @@ const UserManagement: React.FC = () => {
   };
 
   const UserManagementCard = () => (
-    <div className="px-8 py-1 my-1.5">
-      <div className="card card-bordered border-gray-300 rounded-none shadow">
+    <div className="px-1.5 md:px-2.5 py-1 my-1.5">
+      <div className="card card-bordered bg-base-100 border-gray-300 rounded-none shadow">
         <div className="card-body p-0">
-          <h6 className="card-title bg-gray-100 text-sm text-primary p-1">
+          <span className="card-title bg-gray-100 text-sm text-primary p-1.5">
             User Management
-          </h6>
+          </span>
           {successMessage && (
             <div
               role="alert"
-              className="alert alert-success rounded-none flex justify-between"
+              className="alert alert-success rounded-none flex justify-between max-sm:px-2"
             >
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-x-1.5">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6 shrink-0 stroke-current"
@@ -176,17 +188,16 @@ const UserManagement: React.FC = () => {
               </svg>
             </div>
           )}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-4 md:gap-0 md:flex-row justify-between items-center">
             <SearchInput
               searchValue={searchValue}
               setSearchValue={setSearchValue}
               keyword={"username"}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
+              resetPageNumber={resetPageNumber}
               resetSuccessMessage={resetSuccessMessage}
             />
             <button
-              className="btn btn-sm btn-outline btn-primary rounded-none mr-1.5"
+              className="btn btn-sm btn-outline btn-primary rounded-none md:mr-1.5 max-sm:w-3/4"
               onClick={handleNewUserClick}
             >
               New User
@@ -217,7 +228,7 @@ const UserManagement: React.FC = () => {
                 ) : users.length === 0 ? (
                   <tr>
                     <td colSpan={100} className="text-center py-4">
-                      <p>No data</p>
+                      <div>No data</div>
                     </td>
                   </tr>
                 ) : (
@@ -299,7 +310,7 @@ const UserManagement: React.FC = () => {
                 >
                   <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z" />
                 </svg>
-                <h3 className="text-error">Confirm Delete</h3>
+                <span className="text-error">Confirm Delete</span>
               </div>
               <p className="my-2.5">
                 Are you sure you want to delete this record?
@@ -332,21 +343,23 @@ const UserManagement: React.FC = () => {
   );
 
   const UserCard = () => (
-    <div className="px-8 py-1 my-1.5">
-      <div className="card card-bordered border-gray-300 rounded-none shadow">
+    <div className="px-2.5 py-1 my-1.5">
+      <div className="card card-bordered bg-base-100 border-gray-300 rounded-none shadow">
         <div className="card-body p-0">
-          <h6 className="card-title bg-gray-100 text-sm text-primary p-1">
+          <span className="card-title bg-gray-100 text-sm text-primary p-1.5">
             {currentUserManagementView === "editUser" && isEditing
               ? "Edit User"
               : "New User"}
-          </h6>
+          </span>
           <UserForm
             userDetails={userDetails}
             setCurrentUserManagementView={setCurrentUserManagementView}
             isEditing={isEditing}
             setSuccessMessage={setSuccessMessage}
             fetchAllUsers={fetchAllUsers}
-            isNotEditingUser={isNotEditingUser}
+            resetEditingState={resetEditingState}
+            resetSearchState={resetSearchState}
+            resetPageNumber={resetPageNumber}
           />
         </div>
       </div>

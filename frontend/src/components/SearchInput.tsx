@@ -1,11 +1,10 @@
 import React, { ChangeEvent } from "react";
 
-interface SearchInputProps {
+type SearchInputProps = {
   searchValue: string;
   setSearchValue: (value: string) => void;
   keyword: string;
-  currentPage: number;
-  setCurrentPage: (page: number) => void;
+  resetPageNumber: () => void;
   resetSuccessMessage: () => void;
 }
 
@@ -13,19 +12,18 @@ const SearchInput: React.FC<SearchInputProps> = ({
   searchValue,
   setSearchValue,
   keyword,
-  currentPage,
-  setCurrentPage,
+  resetPageNumber,
   resetSuccessMessage,
 }) => {
   const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (currentPage !== 1) setCurrentPage(1);
     resetSuccessMessage();
+    resetPageNumber();
     setSearchValue(event.target.value);
   };
   return (
     <input
       type="text"
-      className="input input-sm input-bordered rounded-none w-96 py-1.5 px-3 mx-1.5"
+      className="input input-sm input-bordered rounded-none max-sm:w-3/4 md:w-96 py-1.5 px-3 md:ml-1.5"
       value={searchValue}
       onChange={handleOnChange}
       placeholder={`Search by ${keyword}`}

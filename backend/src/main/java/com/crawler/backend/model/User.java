@@ -3,7 +3,6 @@ package com.crawler.backend.model;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,7 +67,7 @@ public class User implements UserDetails {
     private Set<Token> tokens;
 
     @OneToMany(mappedBy = "createdBy")
-    private List<Profile> profiles;
+    private Set<Profile> profiles;
 
     @PrePersist
     public void onCreate() {

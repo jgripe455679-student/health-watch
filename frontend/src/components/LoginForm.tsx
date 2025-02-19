@@ -66,6 +66,10 @@ const LoginForm: React.FC = () => {
             setErrorMessage(
               "Unauthorized Access\nPlease contact your system administrator."
             );
+            setValues({
+              username: "",
+              password: "",
+            });
           } else {
             login(response.data);
             navigate("/dashboard", { replace: true });
@@ -74,18 +78,22 @@ const LoginForm: React.FC = () => {
         .catch((error) => {
           if (axios.isAxiosError(error) && error.status === 500) {
             setErrorMessage("Invalid Credentials\nPlease try again.");
+            setValues({
+              username: "",
+              password: "",
+            });
           }
-          console.error(error);
+          console.error("Error submitting login data", error);
         });
     }
   };
 
   return (
-    <div className="card bg-base-200 text-primary-content w-96 rounded-none shadow-2xl">
+    <div className="card bg-base-200 text-primary-content w-full md:w-96 rounded-none md:shadow-2xl">
       {errorMessage && (
         <div
           role="alert"
-          className="alert alert-error text-base-100 rounded-none"
+          className="alert alert-error text-base-100 rounded-none max-sm:flex"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -100,17 +108,19 @@ const LoginForm: React.FC = () => {
               d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <span className="whitespace-pre-line text-md">{errorMessage}</span>
+          <span className="whitespace-pre-line text-left text-sm">
+            {errorMessage}
+          </span>
         </div>
       )}
       <div className="card-body items-center p-0">
-        <div className="card-title flex items-center justify-center bg-primary w-full px-2.5 py-3.5">
+        <div className="card-title flex items-center justify-center md:bg-primary w-full px-2.5 pt-3.5 md:py-3.5">
           <img
             src="/transparent.svg"
             alt="HealthWatch Transparent Logo"
-            className="h-12 w-12"
+            className="h-16 w-16"
           />
-          <h6 className="text-md">HealthWatch Admin</h6>
+          <span className="text-xl mr-6">HealthWatch Admin</span>
         </div>
         <form
           className="flex flex-col gap-y-2.5 w-72 my-2.5"

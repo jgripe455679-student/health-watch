@@ -66,4 +66,15 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> getUserCount() {
+        return ResponseEntity.ok(userService.getUserCount());
+    }
+
+    @GetMapping("/username")
+    public ResponseEntity<UserDto> getUserByUsername(@RequestParam String username) {
+        UserDto response = userService.getUserByUsername(username);
+        return ResponseEntity.ok(response);
+    }
+
 }

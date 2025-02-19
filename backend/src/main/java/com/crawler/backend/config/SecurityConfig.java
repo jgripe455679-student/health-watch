@@ -1,5 +1,6 @@
 package com.crawler.backend.config;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
@@ -51,8 +52,9 @@ public class SecurityConfig {
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .cors(cors -> cors.configurationSource(req -> {
                                         CorsConfiguration config = new CorsConfiguration();
-                                        config.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
-                                        config.setAllowedMethods(Collections.singletonList("*"));
+                                        config.setAllowedOrigins(Arrays.asList("http://localhost:3000",
+                                                        "http://localhost:3001"));
+                                        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
                                         config.setAllowCredentials(true);
                                         config.setAllowedHeaders(Collections.singletonList("*"));
                                         config.setMaxAge(3600L);
@@ -91,9 +93,11 @@ public class SecurityConfig {
                                         authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
                                                         .hasAuthority(Permissions.DEPARTMENT_USAGE_READ.getName());
                                         authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
-                                                        .hasAuthority(Permissions.HEALTH_METRICS_READ.getName());
-                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
                                                         .hasAuthority(Permissions.DEMOGRAPHICS_ANALYSIS_READ.getName());
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
+                                                        .hasAuthority(Permissions.BP_TRENDS_READ.getName());
+                                        authorize.requestMatchers(HttpMethod.GET, "/api/v1/reports/**")
+                                                        .hasAuthority(Permissions.BMI_ANALYSIS_READ.getName());
                                         authorize.anyRequest().authenticated();
                                 })
                                 .httpBasic(Customizer.withDefaults())

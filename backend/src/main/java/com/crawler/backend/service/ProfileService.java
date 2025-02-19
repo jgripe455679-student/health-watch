@@ -1,5 +1,6 @@
 package com.crawler.backend.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
@@ -19,5 +20,7 @@ public interface ProfileService {
 
     List<ProfileDto> searchByLastName(String lastName, Sort sort);
 
-    ProfileDto getProfileByFullName(String lastName, String firstName, String middleName, String suffix);
+    ProfileDto findProfile(String lastName, String firstName, String middleName, String suffix, LocalDate dateOfBirth);
+
+    Long getProfileCount();
 }

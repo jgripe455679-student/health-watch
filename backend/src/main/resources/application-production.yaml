@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${MYSQL_ROOT_USER}
+    password: ${MYSQL_ROOT_PASSWORD}
+
+# JWT
+jwt:
+  access-token-duration-minute: 5
+  access-token-duration-second: 300
+  refresh-token-duration-day: 7
+  refresh-token-duration-second: 604800
+
+  access-cookie-name: access_token
+  refresh-cookie-name: refresh_token
+
+# RABBITMQ
+rabbitmq:
+  host: ${RABBITMQ_HOST}
+  port: ${RABBITMQ_PORT}
+  default_user: ${RABBITMQ_DEFAULT_USER}
+  default_password: ${RABBITMQ_DEFAULT_PASS}

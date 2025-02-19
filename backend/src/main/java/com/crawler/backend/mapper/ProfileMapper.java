@@ -1,7 +1,10 @@
 package com.crawler.backend.mapper;
 
+import java.util.stream.Collectors;
+
 import com.crawler.backend.dto.ProfileDto;
 import com.crawler.backend.model.Profile;
+import com.crawler.backend.model.Record;
 
 public class ProfileMapper {
     public static ProfileDto profileToProfileDto(Profile profile) {
@@ -20,6 +23,9 @@ public class ProfileMapper {
                 profile.getEducationalBackground(),
                 profile.getHouseholdSize(),
                 profile.getIncomeBracket(),
+                profile.getRecords() != null
+                        ? profile.getRecords().stream().map(Record::getRecordDate).collect(Collectors.toSet())
+                        : null,
                 profile.getCreatedAt(),
                 profile.getCreatedBy().getUsername(),
                 profile.getUpdatedAt(),

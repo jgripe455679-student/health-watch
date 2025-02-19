@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: backend
+  profiles:
+    active: production
+
+  sql:
+    init:
+      platform: mysql
+      mode: always
+  jpa:
+    properties:
+      hibernate:
+        dialect:
+          "[storage_engine]": innodb
+        show-sql: true
+    hibernate:
+      ddl-auto: update
+
+  datasource:
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+
+  rabbitmq:
+    host: ${rabbitmq.host}
+    port: ${rabbitmq.port}
+    username: ${rabbitmq.default_user}
+    password: ${rabbitmq.default_password}
+
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+
+logging:
+  level:
+    root: INFO
+    org:
+      springframework: INFO
+      hibernate: INFO
+    com:
+      crawler:
+        backend: INFO
+
+# management:
+#   endpoints:
+#     web:
+#       exposure:
+#         include: health,info,metrics
+#   endpoint:
+#     health:
+#       show-details: always

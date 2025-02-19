@@ -23,4 +23,10 @@ public class DepartmentController {
     public ResponseEntity<List<DepartmentDto>> getDepartments() {
         return ResponseEntity.ok(departmentService.getDepartments());
     }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getDepartmentCount() {
+        return ResponseEntity.ok(departmentService.getDepartmentCount());
+    }
+
 }

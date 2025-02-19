@@ -1,5 +1,6 @@
 package com.crawler.backend.service.implementation;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,12 +34,21 @@ public class RecordCountServiceImplementation implements RecordCountService {
     @Override
     public void truncateAndSaveData(List<RecordCount> data) {
         jdbcTemplate.execute("TRUNCATE TABLE record_count");
-        recordCountRepository.saveAll(data);
+        if (recordCountRepository.count() == 0) {
+            recordCountRepository.saveAll(data);
+        }
     }
 
     @Override
     public List<RecordCount> getAllRecordCount() {
         return recordCountRepository.findAll().stream().collect(Collectors.toList());
+    }
+
+    @Override
+    public List<RecordCount> findByRecordDateBetween(String startDate, String endDate) {
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        return recordCountRepository.findByRecordDateBetween(start, end);
     }
 
 }

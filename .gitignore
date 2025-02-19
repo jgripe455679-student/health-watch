@@ -10,9 +10,17 @@ README.md
 /db/
 
 dev.env
+.env.development
+.env.production
 
 # Ignore Python bytecode cache directories
 __pycache__/
 
 # Ignore virtual environment directories
 venv/
+
+# Excluding docker volumes
+/mysql_data/
+/rabbitmq_config/
+/rabbitmq_data/
+/rabbitmq_log/

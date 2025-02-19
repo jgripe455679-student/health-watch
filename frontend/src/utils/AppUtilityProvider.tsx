@@ -4,6 +4,7 @@ export type AppUtilityContextProps = {
   formatLocalDateTime: (dateString: string) => string;
   stripRolePrefix: (role: string) => string;
   isMobileNumberValid: (mobileNumber: string) => boolean;
+  isPasswordValid: (password: string) => boolean;
 };
 
 export const AppUtilityContext = createContext<
@@ -35,9 +36,25 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
     const mobileNumberPattern = /^09\d{9}$/;
     return mobileNumberPattern.test(mobileNumber);
   };
+  const isPasswordValid = (password: string): boolean => {
+    let isValid = true;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>_]/.test(password);
+    const isLengthValid = password.length >= 8;
+    if (!hasUpperCase || !hasNumber || !hasSymbol || !isLengthValid) {
+      isValid = false;
+    }
+    return isValid;
+  };
   return (
     <AppUtilityContext.Provider
-      value={{ formatLocalDateTime, stripRolePrefix, isMobileNumberValid }}
+      value={{
+        formatLocalDateTime,
+        stripRolePrefix,
+        isMobileNumberValid,
+        isPasswordValid,
+      }}
     >
       {children}
     </AppUtilityContext.Provider>

@@ -18,4 +18,8 @@ public interface UserService {
     String deleteUser(Long userId);
 
     List<UserDto> searchByUsername(String username, Sort sort);
+
+    Long getUserCount();
+
+    UserDto getUserByUsername(String username);
 }
