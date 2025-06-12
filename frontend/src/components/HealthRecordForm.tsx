@@ -377,9 +377,12 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
 
   const validation = (): boolean => {
     let isValid = true;
-    const newProfileFormErrors: ProfileFormValues = getEmptyProfileFormValues();
-    const newRecordFormErrors: HealthRecordFormValues =
-      initialHealthRecordFormValues;
+    const newProfileFormErrors: ProfileFormValues = {
+      ...getEmptyProfileFormValues(),
+    };
+    const newRecordFormErrors: HealthRecordFormValues = {
+      ...initialHealthRecordFormValues,
+    };
 
     if (!profileFormValues.firstName) {
       newProfileFormErrors.firstName = "First name is required.";

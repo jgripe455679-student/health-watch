@@ -125,7 +125,7 @@ const ProfileForm: React.FC<ProfileProps> = ({
 
   const validation = (): boolean => {
     let isValid = true;
-    const newErrors: ProfileFormValues = initalProfileFormValues;
+    const newErrors: ProfileFormValues = { ...initalProfileFormValues };
 
     if (!values.lastName) {
       newErrors.lastName = "Last name is required.";

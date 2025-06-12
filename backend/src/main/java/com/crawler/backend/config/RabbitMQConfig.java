@@ -9,7 +9,6 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-
 @Configuration
 public class RabbitMQConfig {
 
@@ -24,28 +23,58 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Exchange recordCountExchange() {
+        return new DirectExchange("record_count_exchange");
+    }
+
+    @Bean
+    public Exchange serviceUsageExchange() {
+        return new DirectExchange("service_usage_exchange");
+    }
+
+    @Bean
+    public Exchange healthConditionOccurrenceExchange() {
+        return new DirectExchange("health_condition_occurrence_exchange");
+    }
+
+    @Bean
+    public Exchange medicalProblemOccurrenceExchange() {
+        return new DirectExchange("medical_problem_occurrence_exchange");
+    }
+
+    @Bean
+    public Exchange demographicsAnalysisExchange() {
+        return new DirectExchange("demographics_analysis_exchange");
+    }
+
+    @Bean
     public Queue countPatientVisitQueue() {
         return new Queue("count_patient_visit_queue");
     }
 
-    // @Bean
-    // public Queue aggregateHealthMetricsQueue() {
-    //     return new Queue("aggregate_health_metrics_queue");
-    // }
-
     @Bean
-    public Queue aggregateBloodPressureTrendsQueue() {
-        return new Queue("aggregate_blood_pressure_trends_queue");
+    public Queue calculateServiceUsageQueue() {
+        return new Queue("calculate_service_usage_queue");
     }
 
     @Bean
-    public Queue bmiAnalysisQueue() {
-        return new Queue("bmi_analysis_queue");
+    public Queue aggregateHealthConditionOccurrenceQueue() {
+        return new Queue("aggregate_health_condition_occurrence_queue");
     }
 
     @Bean
-    public Queue calculateDepartmentUsageQueue() {
-        return new Queue("calculate_department_usage_queue");
+    public Queue tallyMedicalProblemOccurrenceQueue() {
+        return new Queue("tally_medical_problem_occurrence_queue");
+    }
+
+    @Bean
+    public Queue demographicsAnalysisDescriptiveAnalyticsQueue() {
+        return new Queue("demographics_analysis_descriptive_analytics_queue");
+    }
+
+    @Bean
+    public Queue demographicsAnalysisDescriptiveAnalyticsResultQueue() {
+        return new Queue("demographics_analysis_descriptive_analytics_result_queue");
     }
 
     @Bean
@@ -59,33 +88,68 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue medicalProblemOccurrenceDescriptiveAnalyticsQueue() {
+        return new Queue("medical_problem_occurrence_descriptive_analytics_queue", true);
+    }
+
+    @Bean
+    public Queue medicalProblemOccurrenceDescriptiveAnalyticsResultQueue() {
+        return new Queue("medical_problem_occurrence_descriptive_analytics_result_queue", true);
+    }
+
+    @Bean
+    public Queue healthConditionOccurrenceDescriptiveAnalyticsQueue() {
+        return new Queue("health_condition_occurrence_descriptive_analytics_queue", true);
+    }
+
+    @Bean
+    public Queue healthConditionOccurrenceDescriptiveAnalyticsResultQueue() {
+        return new Queue("health_condition_occurrence_descriptive_analytics_result_queue", true);
+    }
+
+    @Bean
+    public Queue serviceUsageDescriptiveAnalyticsQueue() {
+        return new Queue("service_usage_descriptive_analytics_queue", true);
+    }
+
+    @Bean
+    public Queue serviceUsageDescriptiveAnalyticsResultQueue() {
+        return new Queue("service_usage_descriptive_analytics_result_queue", true);
+    }
+
+    @Bean
+    public Queue recordCountDescriptiveAnalyticsQueue() {
+        return new Queue("record_count_descriptive_analytics_queue", true);
+    }
+
+    @Bean
+    public Queue recordCountDescriptiveAnalyticsResultQueue() {
+        return new Queue("record_count_descriptive_analytics_result_queue", true);
+    }
+
+    @Bean
     public Binding countPatientVisitBinding(FanoutExchange rawRecordsExchange, Queue countPatientVisitQueue) {
         return BindingBuilder.bind(countPatientVisitQueue)
                 .to(rawRecordsExchange);
     }
 
-    // @Bean
-    // public Binding aggregateHealthMetricsBinding(FanoutExchange rawRecordsExchange, Queue aggregateHealthMetricsQueue) {
-    //     return BindingBuilder.bind(aggregateHealthMetricsQueue)
-    //             .to(rawRecordsExchange);
-    // }
-
     @Bean
-    public Binding aggregateBloodPressureTrendsBinding(FanoutExchange rawRecordsExchange, Queue aggregateBloodPressureTrendsQueue) {
-        return BindingBuilder.bind(aggregateBloodPressureTrendsQueue)
+    Binding calculateServiceUsageBinding(FanoutExchange rawRecordsExchange, Queue calculateServiceUsageQueue) {
+        return BindingBuilder.bind(calculateServiceUsageQueue)
                 .to(rawRecordsExchange);
     }
 
     @Bean
-    public Binding bmiAnalysisBinding(FanoutExchange rawRecordsExchange, Queue bmiAnalysisQueue) {
-        return BindingBuilder.bind(bmiAnalysisQueue)
+    Binding aggregateHealthConditionOccurrenceBinding(FanoutExchange rawRecordsExchange,
+            Queue aggregateHealthConditionOccurrenceQueue) {
+        return BindingBuilder.bind(aggregateHealthConditionOccurrenceQueue)
                 .to(rawRecordsExchange);
     }
 
     @Bean
-    public Binding calculateDepartmentUsageBinding(FanoutExchange rawRecordsExchange,
-            Queue calculateDepartmentUsageQueue) {
-        return BindingBuilder.bind(calculateDepartmentUsageQueue)
+    Binding tallyMedicalProblemOccurrenceBinding(FanoutExchange rawRecordsExchange,
+            Queue tallyMedicalProblemOccurrenceQueue) {
+        return BindingBuilder.bind(tallyMedicalProblemOccurrenceQueue)
                 .to(rawRecordsExchange);
     }
 
@@ -104,6 +168,98 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(profileDemographicsAnalysisResultQueue)
                 .to(rawProfilesExchange)
                 .with("profile_demographics_analysis_result_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding recordCountDescriptiveAnalyticsBinding(Queue recordCountDescriptiveAnalyticsQueue,
+            Exchange recordCountExchange) {
+        return BindingBuilder.bind(recordCountDescriptiveAnalyticsQueue)
+                .to(recordCountExchange)
+                .with("record_count_descriptive_analytics_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding recordCountDescriptiveAnalyticsResultBinding(Queue recordCountDescriptiveAnalyticsResultQueue,
+            Exchange recordCountExchange) {
+        return BindingBuilder.bind(recordCountDescriptiveAnalyticsResultQueue)
+                .to(recordCountExchange)
+                .with("record_count_descriptive_analytics_result_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding serviceUsageDescriptiveAnalyticsBinding(Queue serviceUsageDescriptiveAnalyticsQueue,
+            Exchange serviceUsageExchange) {
+        return BindingBuilder.bind(serviceUsageDescriptiveAnalyticsQueue)
+                .to(serviceUsageExchange)
+                .with("service_usage_descriptive_analytics_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding serviceUsageDescriptiveAnalyticsResultBinding(Queue serviceUsageDescriptiveAnalyticsResultQueue,
+            Exchange serviceUsageExchange) {
+        return BindingBuilder.bind(serviceUsageDescriptiveAnalyticsResultQueue)
+                .to(serviceUsageExchange)
+                .with("service_usage_descriptive_analytics_result_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding healthConditionOccurrenceDescriptiveAnalyticsBinding(
+            Queue healthConditionOccurrenceDescriptiveAnalyticsQueue,
+            Exchange healthConditionOccurrenceExchange) {
+        return BindingBuilder.bind(healthConditionOccurrenceDescriptiveAnalyticsQueue)
+                .to(healthConditionOccurrenceExchange)
+                .with("health_condition_occurrence_descriptive_analytics_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding healthConditionOccurrenceDescriptiveAnalyticsResultBinding(
+            Queue healthConditionOccurrenceDescriptiveAnalyticsResultQueue,
+            Exchange healthConditionOccurrenceExchange) {
+        return BindingBuilder.bind(healthConditionOccurrenceDescriptiveAnalyticsResultQueue)
+                .to(healthConditionOccurrenceExchange)
+                .with("health_condition_occurrence_descriptive_analytics_result_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding medicalProblemOccurrenceDescriptiveAnalyticsBinding(
+            Queue medicalProblemOccurrenceDescriptiveAnalyticsQueue, Exchange medicalProblemOccurrenceExchange) {
+        return BindingBuilder.bind(medicalProblemOccurrenceDescriptiveAnalyticsQueue)
+                .to(medicalProblemOccurrenceExchange)
+                .with("medical_problem_occurrence_descriptive_analytics_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding medicalProblemOccurrenceDescriptiveAnalyticsResultBinding(
+            Queue medicalProblemOccurrenceDescriptiveAnalyticsResultQueue, Exchange medicalProblemOccurrenceExchange) {
+        return BindingBuilder.bind(medicalProblemOccurrenceDescriptiveAnalyticsResultQueue)
+                .to(medicalProblemOccurrenceExchange)
+                .with("medical_problem_occurrence_descriptive_analytics_result_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding demographicsAnalysisDescriptiveAnalyticsBinding(Queue demographicsAnalysisDescriptiveAnalyticsQueue,
+            Exchange demographicsAnalysisExchange) {
+        return BindingBuilder.bind(demographicsAnalysisDescriptiveAnalyticsQueue)
+                .to(demographicsAnalysisExchange)
+                .with("demographics_analysis_descriptive_analytics_routing_key")
+                .noargs();
+    }
+
+    @Bean
+    public Binding demographicsAnalysisDescriptiveAnalyticsResultBinding(
+            Queue demographicsAnalysisDescriptiveAnalyticsResultQueue, Exchange demographicsAnalysisExchange) {
+        return BindingBuilder.bind(demographicsAnalysisDescriptiveAnalyticsResultQueue)
+                .to(demographicsAnalysisExchange)
+                .with("demographics_analysis_descriptive_analytics_result_routing_key")
                 .noargs();
     }
 }

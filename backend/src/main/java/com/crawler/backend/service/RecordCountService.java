@@ -1,17 +1,19 @@
 package com.crawler.backend.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.crawler.backend.model.RecordCount;
+import com.crawler.backend.model.RecordCountAnalytics;
 
 public interface RecordCountService {
-    boolean isTableEmpty();
-    
-    void saveData(List<RecordCount> data);
-
-    void truncateAndSaveData(List<RecordCount> data);
-
     List<RecordCount> getAllRecordCount();
 
-    List<RecordCount> findByRecordDateBetween(String startDate, String endDate);
+    List<RecordCount> getAllRecordCountByDateRange(List<RecordCount> records, String startDate, String endDate);
+
+    List<RecordCountAnalytics> getRecordCountAnalytics();
+
+    String getRecordCountDescription();
+
+    Map<String, Object> getDescriptiveAnalytics();
 }

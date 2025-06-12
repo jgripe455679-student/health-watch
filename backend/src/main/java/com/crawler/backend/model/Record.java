@@ -35,14 +35,11 @@ public class Record {
     @Column(nullable = false)
     private LocalDate recordDate;
 
-    @Column(nullable = false)
-    private String profileType;
-
     @ManyToOne
     private Profile profile;
 
     @ManyToOne
-    private Department department;
+    private Service service;
 
     @Column(nullable = true)
     private Integer height;
@@ -52,6 +49,24 @@ public class Record {
     
     @Column(nullable = true)
     private String bloodPressure;
+
+    @Column(nullable = true)
+    private Integer pulseRate;
+
+    @Column(nullable = true)
+    private String healthCondition;
+    
+    @Column(nullable = true)
+    private String medicalProblem;
+
+    @Column(nullable = true)
+    private String diagnosis;
+
+    @Column(nullable = true)
+    private String medication;
+
+    @Column(nullable = true)
+    private String notes;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

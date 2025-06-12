@@ -1,40 +1,36 @@
-import React, { useEffect, useState } from "react";
-import BMIAnalysisChart from "../components/BMIAnalysisChart";
-import BPTrendsChart from "../components/BPTrendsChart";
+import React from "react";
 import DemographicsAnalysisChart from "../components/DemographicsAnalysisChart";
 import Navbar from "../components/Navbar";
-import RecordCountChart from "../components/RecordCountChart";
-import { DateRange } from "../hooks/useDateRange";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import useFetchModelCounts from "../hooks/useFetchModelCounts";
 
 const Dashboard: React.FC = () => {
   useDocumentTitle("Dashboard");
   const { counts, isLoading } = useFetchModelCounts();
-  const [dateRange, setDateRange] = useState<DateRange>({
-    startDate: "",
-    endDate: "",
-  });
+  // const [dateRange, setDateRange] = useState<DateRange>({
+  //   startDate: "",
+  //   endDate: "",
+  // });
 
-  useEffect(() => {
-    const getWeekStartAndEndDates = (): DateRange => {
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-  
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - dayOfWeek).toString();
-  
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-  
-      const startDateString = startDate.toISOString().split("T")[0];
-      const endDateString = endDate.toISOString().split("T")[0];
-  
-      return { startDate: startDateString, endDate: endDateString };
-    };
-    const { startDate, endDate } = getWeekStartAndEndDates();
-    setDateRange({ startDate, endDate });
-  }, []);
+  // useEffect(() => {
+  //   const getWeekStartAndEndDates = (): DateRange => {
+  //     const today = new Date();
+  //     const dayOfWeek = today.getDay();
+
+  //     const startDate = new Date(today);
+  //     startDate.setDate(today.getDate() - dayOfWeek).toString();
+
+  //     const endDate = new Date(startDate);
+  //     endDate.setDate(startDate.getDate() + 6);
+
+  //     const startDateString = startDate.toISOString().split("T")[0];
+  //     const endDateString = endDate.toISOString().split("T")[0];
+
+  //     return { startDate: startDateString, endDate: endDateString };
+  //   };
+  //   const { startDate, endDate } = getWeekStartAndEndDates();
+  //   setDateRange({ startDate, endDate });
+  // }, []);
 
   return (
     <div className="h-full w-full min-h-screen">
@@ -84,7 +80,7 @@ const Dashboard: React.FC = () => {
                       <span className="loading loading-spinner loading-sm text-primary self-end mr-5 mt-6 md:mr-3 md:mb-3 lg:mr-5 lg:mb-5"></span>
                     ) : (
                       <span className="block mt-4 mr-3.5 text-end text-3xl md:text-xl lg:text-3xl">
-                        {counts?.departments}
+                        {}
                       </span>
                     )}
                   </div>
@@ -105,13 +101,9 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div className="relative w-full h-64 md:h-80 lg:h-96">
-                <RecordCountChart
-                  startDate={dateRange.startDate}
-                  endDate={dateRange.endDate}
-                  titleText="Patient Visit Dashboard: Weekly Overview"
-                />
+                {/* <RecordCountChart titleText="Patient Visit Dashboard: Weekly Overview" /> */}
               </div>
-              <div className="relative w-full flex flex-col lg:flex-row gap-2 lg:gap-4">
+              {/* <div className="relative w-full flex flex-col lg:flex-row gap-2 lg:gap-4">
                 <div className="flex-1 h-64 md:h-80 lg:h-96">
                   <BPTrendsChart
                     startDate={dateRange.startDate}
@@ -126,7 +118,7 @@ const Dashboard: React.FC = () => {
                     titleText="BMI Distribution Dashboard: Weekly Overview"
                   />
                 </div>
-              </div>
+              </div> */}
               <div className="relative w-full flex flex-col lg:flex-row gap-2 lg:gap-4">
                 <div className="flex-1 h-64 md:h-80 lg:h-96">
                   <DemographicsAnalysisChart />

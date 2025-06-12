@@ -11,13 +11,12 @@ import com.crawler.backend.dto.RecordRequestDto;
 import com.crawler.backend.dto.RecordResponseDto;
 import com.crawler.backend.exception.ResourceNotFoundException;
 import com.crawler.backend.mapper.RecordMapper;
-import com.crawler.backend.model.Department;
 import com.crawler.backend.model.Profile;
 import com.crawler.backend.model.Record;
 import com.crawler.backend.model.User;
-import com.crawler.backend.repository.DepartmentRepository;
 import com.crawler.backend.repository.ProfileRepository;
 import com.crawler.backend.repository.RecordRepository;
+import com.crawler.backend.repository.ServiceRepository;
 import com.crawler.backend.repository.UserRepository;
 import com.crawler.backend.service.RecordService;
 
@@ -30,7 +29,7 @@ public class RecordServiceImplementation implements RecordService {
         private final RecordRepository recordRepository;
         private final ProfileRepository profileRepository;
         private final UserRepository userRepository;
-        private final DepartmentRepository departmentRepository;
+        private final ServiceRepository serviceRepository;
 
         @Override
         public List<RecordResponseDto> getRecords(Sort sort) {
@@ -47,14 +46,15 @@ public class RecordServiceImplementation implements RecordService {
                                 .orElseThrow(
                                                 () -> new ResourceNotFoundException("Profile not found"));
 
-                Department department = departmentRepository.findByName(recordRequestDto.department()).orElseThrow(
-                                () -> new ResourceNotFoundException("Department not found"));
+                com.crawler.backend.model.Service service = serviceRepository.findByName(recordRequestDto.service())
+                                .orElseThrow(
+                                                () -> new ResourceNotFoundException("Service not found"));
 
                 User user = userRepository.findByUsername(recordRequestDto.createdBy()).orElseThrow(
                                 () -> new ResourceNotFoundException("User not found"));
 
                 record.setProfile(profile);
-                record.setDepartment(department);
+                record.setService(service);
                 record.setCreatedBy(user);
 
                 return RecordMapper.recordToRecordResponseDto(recordRepository.save(record));
@@ -69,18 +69,24 @@ public class RecordServiceImplementation implements RecordService {
                                 .orElseThrow(
                                                 () -> new ResourceNotFoundException("Profile not found"));
 
-                Department department = departmentRepository.findByName(recordRequestDto.department()).orElseThrow(
-                                () -> new ResourceNotFoundException("Department not found"));
+                com.crawler.backend.model.Service service = serviceRepository.findByName(recordRequestDto.service())
+                                .orElseThrow(
+                                                () -> new ResourceNotFoundException("Service not found"));
 
                 User updatedBy = userRepository.findByUsername(recordRequestDto.updatedBy()).orElseThrow(
                                 () -> new ResourceNotFoundException("User not found"));
 
-                record.setProfileType(recordRequestDto.profileType());
                 record.setProfile(profile);
-                record.setDepartment(department);
+                record.setService(service);
                 record.setHeight(recordRequestDto.height());
                 record.setWeight(recordRequestDto.weight());
                 record.setBloodPressure(recordRequestDto.bloodPressure());
+                record.setPulseRate(recordRequestDto.pulseRate());
+                record.setHealthCondition(recordRequestDto.healthCondition());
+                record.setMedicalProblem(recordRequestDto.medicalProblem());
+                record.setDiagnosis(recordRequestDto.diagnosis());
+                record.setMedication(recordRequestDto.medication());
+                record.setNotes(recordRequestDto.notes());
                 record.setUpdatedBy(updatedBy);
 
                 return RecordMapper.recordToRecordResponseDto(recordRepository.save(record));
@@ -108,7 +114,7 @@ public class RecordServiceImplementation implements RecordService {
         }
 
         @Override
-        public List<RecordResponseDto> findByRecordDateBetween(String startDate, String endDate, Sort sort) {
+        public List<RecordResponseDto> getRecordsByDateRange(String startDate, String endDate, Sort sort) {
                 LocalDate start = LocalDate.parse(startDate);
                 LocalDate end = LocalDate.parse(endDate);
                 return recordRepository.findByRecordDateBetween(start, end, sort).stream()

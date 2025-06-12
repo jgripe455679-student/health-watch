@@ -15,14 +15,14 @@ public class ProfileMapper {
                 profile.getLastName(),
                 profile.getSuffix(),
                 profile.getDateOfBirth(),
+                profile.getAge(),
                 profile.getGender(),
                 profile.getMaritalStatus(),
                 profile.getAddress(),
+                profile.getEmailAddress(),
                 profile.getMobileNumber(),
                 profile.getOccupation(),
                 profile.getEducationalBackground(),
-                profile.getHouseholdSize(),
-                profile.getIncomeBracket(),
                 profile.getRecords() != null
                         ? profile.getRecords().stream().map(Record::getRecordDate).collect(Collectors.toSet())
                         : null,
@@ -39,14 +39,14 @@ public class ProfileMapper {
         profile.setLastName(profileDto.lastName());
         profile.setSuffix(profileDto.suffix());
         profile.setDateOfBirth(profileDto.dateOfBirth());
+        profile.setAge(profileDto.age());
         profile.setGender(profileDto.gender());
         profile.setMaritalStatus(profileDto.maritalStatus());
         profile.setAddress(profileDto.address());
+        profile.setEmailAddress(profileDto.emailAddress());
         profile.setMobileNumber(profileDto.mobileNumber());
         profile.setOccupation(profileDto.occupation());
         profile.setEducationalBackground(profileDto.educationalBackground());
-        profile.setHouseholdSize(profileDto.householdSize());
-        profile.setIncomeBracket(profileDto.incomeBracket());
         return profile;
     }
 }

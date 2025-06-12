@@ -65,14 +65,14 @@ public class ProfileServiceImplementation implements ProfileService {
                 profile.setLastName(profileDto.lastName());
                 profile.setSuffix(profileDto.suffix());
                 profile.setDateOfBirth(profileDto.dateOfBirth());
+                profile.setAge(profileDto.age());
                 profile.setGender(profileDto.gender());
                 profile.setMaritalStatus(profileDto.maritalStatus());
                 profile.setAddress(profileDto.address());
+                profile.setEmailAddress(profileDto.emailAddress());
                 profile.setMobileNumber(profileDto.mobileNumber());
                 profile.setOccupation(profileDto.occupation());
                 profile.setEducationalBackground(profileDto.educationalBackground());
-                profile.setHouseholdSize(profileDto.householdSize());
-                profile.setIncomeBracket(profileDto.incomeBracket());
                 profile.setUpdatedBy(updatedBy);
 
                 return ProfileMapper.profileToProfileDto(profileRepository.save(profile));

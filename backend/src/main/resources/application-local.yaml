@@ -6,6 +6,12 @@ spring:
     url: jdbc:mysql://localhost:3306/db_healthwatch
     username: root
     password: qL301[CE
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    type: redis
 
 # JWT
 jwt:

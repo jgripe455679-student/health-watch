@@ -67,13 +67,13 @@ public class RecordController {
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<List<RecordResponseDto>> getFilteredRecordsByRecordDateBetween(@RequestParam String startDate,
+    public ResponseEntity<List<RecordResponseDto>> getRecordsByDateRange(@RequestParam String startDate,
             @RequestParam String endDate) {
         if (startDate == null || startDate.trim().isEmpty() ||
                 endDate == null || endDate.trim().isEmpty()) {
             throw new IllegalArgumentException("startDate and endDate must not be empty.");
         }
-        List<RecordResponseDto> response = recordService.findByRecordDateBetween(startDate, endDate,
+        List<RecordResponseDto> response = recordService.getRecordsByDateRange(startDate, endDate,
                 Sort.by(Sort.Direction.DESC, "createdAt"));
         return ResponseEntity.ok(response);
     }

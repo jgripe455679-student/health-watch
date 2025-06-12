@@ -20,5 +20,5 @@ public interface RecordService {
 
     Long getRecordCount();
 
-    List<RecordResponseDto> findByRecordDateBetween(String startDate, String endDate, Sort sort);
+    List<RecordResponseDto> getRecordsByDateRange(String startDate, String endDate, Sort sort);
 }

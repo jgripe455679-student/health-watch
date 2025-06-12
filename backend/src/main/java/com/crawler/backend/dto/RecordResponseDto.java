@@ -3,11 +3,11 @@ package com.crawler.backend.dto;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Set;
 
-public record RecordResponseDto(Long id, LocalDate recordDate, String profileType, Long profileId, String profile,
-                String department,
-                Set<String> services, Integer height, Integer weight, String bloodPressure,
+public record RecordResponseDto(Long id, LocalDate recordDate, Long profileId, String profile,
+                String service,
+                Integer height, Integer weight, String bloodPressure, Integer pulseRate,
+                String healthCondition, String medicalProblem, String diagnosis, String medication, String notes,
                 LocalDateTime createdAt, String createdBy, LocalDateTime updatedAt, String updatedBy)
                 implements Serializable {
 

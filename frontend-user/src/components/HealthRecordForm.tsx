@@ -58,7 +58,7 @@ export interface ProfileFormValues {
   incomeBracket: string;
 }
 
-const initalProfileFormValues: ProfileFormValues = {
+const initialProfileFormValues: ProfileFormValues = {
   firstName: "",
   middleName: "",
   lastName: "",
@@ -83,12 +83,12 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
   const [healthRecordFormValues, setHealthRecordFormValues] =
     useState<HealthRecordFormValues>(initialHealthRecordFormValues);
   const [profileFormValues, setProfileFormValues] = useState<ProfileFormValues>(
-    initalProfileFormValues
+    initialProfileFormValues
   );
   const [healthRecordFormErrors, setHealthRecordFormErrors] =
     useState<HealthRecordFormValues>(initialHealthRecordFormValues);
   const [profileFormErrors, setProfileFormErrors] = useState<ProfileFormValues>(
-    initalProfileFormValues
+    initialProfileFormValues
   );
   const [successMessage, setSuccessMessage] = useState<string>("");
   const { username } = useAuth();
@@ -193,12 +193,12 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
 
   const resetHealthRecordAndProfileFormValues = (): void => {
     setHealthRecordFormValues(initialHealthRecordFormValues);
-    setProfileFormValues(initalProfileFormValues);
+    setProfileFormValues(initialProfileFormValues);
   };
 
   const resetHealthRecordAndProfileFormErrors = (): void => {
     setHealthRecordFormErrors(initialHealthRecordFormValues);
-    setProfileFormErrors(initalProfileFormValues);
+    setProfileFormErrors(initialProfileFormValues);
   };
 
   const isHeightValid = (value: string): boolean => {
@@ -228,97 +228,9 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
     return isValid;
   };
 
-  const validation = (): boolean => {
-    let isValid = true;
-    const newHealthRecordFormErrors: HealthRecordFormValues =
-      initialHealthRecordFormValues;
-    const newProfileFormErrors: ProfileFormValues = initalProfileFormValues;
-
-    if (!profileFormValues.firstName) {
-      newProfileFormErrors.firstName = "First name is required.";
-      isValid = false;
-    }
-
-    if (!profileFormValues.lastName) {
-      newProfileFormErrors.lastName = "Last name is required.";
-      isValid = false;
-    }
-
-    if (!profileFormValues.dateOfBirth) {
-      newProfileFormErrors.dateOfBirth = "Date of birth is required.";
-      isValid = false;
-    }
-
-    if (!profileFormValues.gender) {
-      newProfileFormErrors.gender = "Gender is required.";
-      isValid = false;
-    }
-
-    if (!profileFormValues.maritalStatus) {
-      newProfileFormErrors.maritalStatus = "Civil status is required.";
-      isValid = false;
-    }
-
-    if (!profileFormValues.address) {
-      newProfileFormErrors.address = "Address is required.";
-      isValid = false;
-    }
-
-    if (!profileFormValues.mobileNumber) {
-      newProfileFormErrors.mobileNumber = "Mobile number is required.";
-      isValid = false;
-    }
-
-    if (
-      profileFormValues.mobileNumber &&
-      !isMobileNumberValid(profileFormValues.mobileNumber)
-    ) {
-      newProfileFormErrors.mobileNumber = "Invalid mobile number format";
-      isValid = false;
-    }
-
-    if (!healthRecordFormValues.profileType) {
-      newHealthRecordFormErrors.profileType = "Profile type is required.";
-      isValid = false;
-    }
-
-    if (!healthRecordFormValues.department) {
-      newHealthRecordFormErrors.department = "Department is required.";
-      isValid = false;
-    }
-
-    if (
-      healthRecordFormValues.height &&
-      !isHeightValid(healthRecordFormValues.height)
-    ) {
-      newHealthRecordFormErrors.height = "Invalid height format.";
-      isValid = false;
-    }
-
-    if (
-      healthRecordFormValues.weight &&
-      !isWeightValid(healthRecordFormValues.weight)
-    ) {
-      newHealthRecordFormErrors.weight = "Invalid weight format.";
-      isValid = false;
-    }
-
-    if (
-      healthRecordFormValues.bloodPressure &&
-      !isBloodPressureValid(healthRecordFormValues.bloodPressure)
-    ) {
-      newHealthRecordFormErrors.bloodPressure =
-        "Invalid blood pressure format.";
-      isValid = false;
-    }
-
-    setHealthRecordFormErrors(newHealthRecordFormErrors);
-    setProfileFormErrors(newProfileFormErrors);
-    return isValid;
-  };
-
   const handleOnSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
+    console.log("Executed");
     if (validation()) {
       if (healthRecordFormValues.profileType === "OLD") {
         const { lastName, firstName, middleName, suffix, dateOfBirth } =
@@ -402,6 +314,98 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
         }
       }
     }
+  };
+
+  const validation = (): boolean => {
+    let isValid = true;
+    const newHealthRecordFormErrors: HealthRecordFormValues = {
+      ...initialHealthRecordFormValues,
+    };
+    const newProfileFormErrors: ProfileFormValues = {
+      ...initialProfileFormValues,
+    };
+
+    if (!profileFormValues.firstName) {
+      newProfileFormErrors.firstName = "First name is required.";
+      isValid = false;
+    }
+
+    if (!profileFormValues.lastName) {
+      newProfileFormErrors.lastName = "Last name is required.";
+      isValid = false;
+    }
+
+    if (!profileFormValues.dateOfBirth) {
+      newProfileFormErrors.dateOfBirth = "Date of birth is required.";
+      isValid = false;
+    }
+
+    if (!profileFormValues.gender) {
+      newProfileFormErrors.gender = "Gender is required.";
+      isValid = false;
+    }
+
+    if (!profileFormValues.maritalStatus) {
+      newProfileFormErrors.maritalStatus = "Civil status is required.";
+      isValid = false;
+    }
+
+    if (!profileFormValues.address) {
+      newProfileFormErrors.address = "Address is required.";
+      isValid = false;
+    }
+
+    if (!profileFormValues.mobileNumber) {
+      newProfileFormErrors.mobileNumber = "Mobile number is required.";
+      isValid = false;
+    }
+
+    if (
+      profileFormValues.mobileNumber &&
+      !isMobileNumberValid(profileFormValues.mobileNumber)
+    ) {
+      newProfileFormErrors.mobileNumber = "Invalid mobile number format";
+      isValid = false;
+    }
+
+    if (!healthRecordFormValues.profileType) {
+      newHealthRecordFormErrors.profileType = "Profile type is required.";
+      isValid = false;
+    }
+
+    if (!healthRecordFormValues.department) {
+      newHealthRecordFormErrors.department = "Department is required.";
+      isValid = false;
+    }
+
+    if (
+      healthRecordFormValues.height &&
+      !isHeightValid(healthRecordFormValues.height)
+    ) {
+      newHealthRecordFormErrors.height = "Invalid height format.";
+      isValid = false;
+    }
+
+    if (
+      healthRecordFormValues.weight &&
+      !isWeightValid(healthRecordFormValues.weight)
+    ) {
+      newHealthRecordFormErrors.weight = "Invalid weight format.";
+      isValid = false;
+    }
+
+    if (
+      healthRecordFormValues.bloodPressure &&
+      !isBloodPressureValid(healthRecordFormValues.bloodPressure)
+    ) {
+      newHealthRecordFormErrors.bloodPressure =
+        "Invalid blood pressure format.";
+      isValid = false;
+    }
+
+    setHealthRecordFormErrors(newHealthRecordFormErrors);
+    setProfileFormErrors(newProfileFormErrors);
+    return isValid;
   };
 
   return (

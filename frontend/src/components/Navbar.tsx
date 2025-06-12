@@ -25,7 +25,7 @@ const Navbar: React.FC<NavbarProps> = ({
   setCurrentProfilingView,
   setCurrentUserManagementView,
 }) => {
-  const { logout, username, setUsername } = useAuth();
+  const { logout, setUsername } = useAuth();
   const navigate = useNavigate();
 
   const menuItems: MenuItem[] = [
@@ -172,13 +172,35 @@ const Navbar: React.FC<NavbarProps> = ({
           </Link>
         </div>
         <div className="navbar-end">
-          <ul className="menu menu-horizontal z-[1] px-1">
+          <div className="dropdown dropdown-end">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-circle avatar"
+            >
+              <div className="w-10 rounded-full">
+                <img src="/default_avatar.png" alt="" />
+              </div>
+            </div>
+            <ul
+              tabIndex={0}
+              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+            >
+              <li>
+                <Link to="/reset-password">Reset Password</Link>
+              </li>
+              <li>
+                <a onClick={handleLogout}>Log Out</a>
+              </li>
+            </ul>
+          </div>
+          {/* <ul className="menu menu-horizontal z-[1] px-1">
             <li>
               <details>
                 <summary className="italic text-xs md:text-sm">
                   Hello, {username}
                 </summary>
-                <ul className="bg-base-200 rounded-t-none p-2">
+                <ul className="bg-base-200 rounded-box p-2 shadow">
                   <li>
                     <Link to="/reset-password">Reset Password</Link>
                   </li>
@@ -188,7 +210,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 </ul>
               </details>
             </li>
-          </ul>
+          </ul> */}
         </div>
       </div>
       <div className="navbar bg-base-100 px-8 py-0 min-h-0 border-b border-gray-300">

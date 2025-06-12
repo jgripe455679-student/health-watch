@@ -2,7 +2,7 @@ spring:
   application:
     name: backend
   profiles:
-    active: production
+    active: local
 
   sql:
     init:

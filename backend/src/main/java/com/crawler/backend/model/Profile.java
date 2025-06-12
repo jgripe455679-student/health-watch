@@ -49,6 +49,9 @@ public class Profile {
     private LocalDate dateOfBirth;
 
     @Column(nullable = false)
+    private Short age;
+
+    @Column(nullable = false)
     private String gender;
 
     @Column(nullable = false)
@@ -56,6 +59,13 @@ public class Profile {
 
     @Column(nullable = false)
     private String address;
+
+    @Column(nullable = true)
+    @Pattern(
+        regexp = "^(?=.{1,64}@)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+        message = "Invalid email address format"
+    )
+    private String emailAddress;
 
     @Column(nullable = false)
     @Pattern(regexp = "^09\\d{9}$", message = "Invalid mobile number format")
@@ -66,12 +76,6 @@ public class Profile {
 
     @Column(nullable = true)
     private String educationalBackground;
-
-    @Column(nullable = true)
-    private Integer householdSize;
-
-    @Column(nullable = true)
-    private String incomeBracket;
 
     @OneToMany(mappedBy = "profile")
     private Set<Record> records;

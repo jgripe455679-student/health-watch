@@ -1,47 +1,39 @@
 import json
 import logging
 import pandas as pd # type: ignore
+import numpy as np # type:ignore
 import pika # type: ignore
 
-education_levels = [
-    "NO FORMAL EDUCATION", "SOME ELEMENTARY", "ELEMENTARY GRADUATE",
-    "SOME JUNIOR HIGH SCHOOL", "JUNIOR HIGH SCHOOL GRADUATE",
-    "SOME SENIOR HIGH SCHOOL", "SENIOR HIGH SCHOOL GRADUATE",
-    "SOME COLLEGE", "COLLEGE GRADUATE", "POSTGRADUATE STUDIES"
-]
-
-income_brackets = [
-    "POOR", "LOW INCOME (BUT NOT POOR)", "LOWER MIDDLE CLASS",
-    "MIDDLE CLASS", "UPPER MIDDLE INCOME", "HIGH INCOME (BUT NOT RICH)",
-    "RICH"
-]
-
 def demographics_analysis(ch, method, properties, body):
-    def determine_socioeconomic_class(educational_background, income_bracket):
-        if educational_background in education_levels[:5] and income_bracket in income_brackets[:2]:
-            return "Lower Class"
-        elif educational_background in education_levels[5:8] and income_bracket in income_brackets[2:4]:
-            return "Lower Middle Class"
-        elif educational_background in education_levels[8:] and income_bracket in income_brackets[4:6]:
-            return "Upper Middle Class"
-        elif educational_background in education_levels[8:] and income_bracket == income_brackets[6]:
-            return "Upper Class"
-        else:
-            return "Unclassified"
-    def analyze_data(data):
-        df = pd.DataFrame(data)
-        df["occupation"] = df["occupation"].fillna("Unknown")
-        df["educationalBackground"] = df["educationalBackground"].fillna("Unknown")
-        df["householdSize"] = df["householdSize"].fillna("Unknown")
-        df["incomeBracket"] = df["incomeBracket"].fillna("Unknown")
-        df["socioeconomic_class"] = df.apply(
-            lambda row: determine_socioeconomic_class(row["educationalBackground"], row["incomeBracket"]),
-            axis=1
-        )
-        class_distribution = df.groupby(["socioeconomic_class"]).size().reset_index(name="profileCount")
-        total_profiles = len(df)
-        class_distribution["percentage"] = (class_distribution["profileCount"] / total_profiles) * 100
-        return class_distribution.to_json();
+    def analyze_data(profiles: list) -> json:
+        df = pd.DataFrame(profiles)
+        df["age"] = pd.to_numeric(df["age"], errors="coerce")
+        bins = [0, 5, 13, 20, 40, 60, np.inf]
+        labels = [
+            "0-4 years old",
+            "5-12 years old",
+            "13-19 years old",
+            "20-39 years old",
+            "40-59 years old",
+            "60+ years old"
+            ]
+        df["ageGroup"] = pd.cut(
+            df["age"],
+            bins=bins,
+            labels=labels,
+            right=False,
+            include_lowest=True
+            )
+        age_group_counts = df["ageGroup"].value_counts(normalize=True).sort_index()
+        age_group_percentages = age_group_counts * 100
+        result = pd.DataFrame({
+            "ageGroup": age_group_percentages.index,
+            "percentage": age_group_percentages.values
+            })
+        result = result.sort_values("percentage", ascending=False)
+        result["percentage"] = result["percentage"].map(lambda x: f"{x:.2f}")
+        result = result.reset_index(drop=True)
+        return result.to_json()
     try:
         profiles = json.loads(body)
         analyzed_data = analyze_data(profiles)
@@ -53,9 +45,9 @@ def demographics_analysis(ch, method, properties, body):
             properties=pika.BasicProperties(
                 content_type="application/json",
                 delivery_mode=2
+                )
             )
-        )
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
-        logging.error("Error processing demographics analysis: %s", e)
+        logging.error("Error processing demographics analysis: %s" % e)
         ch.basic_nack(delivery_tag=method.delivery_tag)

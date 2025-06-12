@@ -1,7 +1,7 @@
 import { ChartOptions } from "chart.js";
 import React from "react";
 import useFetchBPTrends from "../hooks/useFetchBPTrends";
-import LineChart from "./LineChart";
+import LineChart from "./charts/LineChart";
 
 type BPTrendsProps = {
   startDate: string;

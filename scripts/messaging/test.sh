@@ -7,6 +7,7 @@ SCRIPT2="aggregate_blood_pressure_trends_consumer.py"
 SCRIPT3="bmi_analysis_consumer.py"
 SCRIPT4="calculate_department_usage_consumer.py"
 SCRIPT5="patient_demographics_analysis_consumer.py"
+SCRIPT6="record_count_descriptive_analytics_consumer.py"
 
 # Open the first terminal window
 gnome-terminal -- bash -c "
@@ -47,4 +48,12 @@ cd dev/projects/health-watch/scripts &&
 source $VENV_PATH &&
 cd messaging &&
 python $SCRIPT5;
+exec bash"
+
+# Open the sixth terminal window
+gnome-terminal -- bash -c "
+cd dev/projects/health-watch/scripts &&
+source $VENV_PATH &&
+cd messaging &&
+python $SCRIPT6;
 exec bash"

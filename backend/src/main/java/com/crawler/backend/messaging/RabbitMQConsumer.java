@@ -1,24 +1,29 @@
 package com.crawler.backend.messaging;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
-import com.crawler.backend.model.BMIAnalysis;
-import com.crawler.backend.model.BPTrends;
 import com.crawler.backend.model.DemographicsAnalysis;
-import com.crawler.backend.model.DepartmentUsage;
+import com.crawler.backend.model.DemographicsAnalysisAnalytics;
+import com.crawler.backend.model.HealthConditionOccurrence;
+import com.crawler.backend.model.HealthConditionOccurrenceAnalytics;
+import com.crawler.backend.model.MedicalProblemOccurrence;
+import com.crawler.backend.model.MedicalProblemOccurrenceAnalytics;
 import com.crawler.backend.model.RecordCount;
-import com.crawler.backend.service.BMIAnalysisService;
-import com.crawler.backend.service.BPTrendsService;
-import com.crawler.backend.service.DemographicsAnalysisService;
-import com.crawler.backend.service.DepartmentUsageService;
+import com.crawler.backend.model.RecordCountAnalytics;
+import com.crawler.backend.model.ServiceUsage;
+import com.crawler.backend.model.ServiceUsageAnalytics;
 import com.crawler.backend.service.RecordCountService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,23 +31,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class RabbitMQConsumer {
 
-    private final DepartmentUsageService departmentUsageService;
-    private final ObjectMapper objectMapper;
-    private final RecordCountService recordCountService;
-    private final DemographicsAnalysisService demographicsAnalysisService;
-    private final BPTrendsService bpTrendsService;
-    private final BMIAnalysisService bmiAnalysisService;
+    private static final Logger logger = LoggerFactory.getLogger(RabbitMQConsumer.class);
 
-    public RabbitMQConsumer(DepartmentUsageService departmentUsageService, ObjectMapper objectMapper,
-            RecordCountService recordCountService,
-            DemographicsAnalysisService demographicsAnalysisService, BPTrendsService bpTrendsService,
-            BMIAnalysisService bmiAnalysisService) {
-        this.departmentUsageService = departmentUsageService;
+    private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+
+    public RabbitMQConsumer(ObjectMapper objectMapper,
+            RecordCountService recordCountService, RedisTemplate<String, Object> redisTemplate,
+            StringRedisTemplate stringRedisTemplate) {
         this.objectMapper = objectMapper;
-        this.recordCountService = recordCountService;
-        this.demographicsAnalysisService = demographicsAnalysisService;
-        this.bpTrendsService = bpTrendsService;
-        this.bmiAnalysisService = bmiAnalysisService;
+        this.redisTemplate = redisTemplate;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     @RabbitListener(queues = "count_patient_visit_result_queue")
@@ -53,70 +53,160 @@ public class RabbitMQConsumer {
             JsonNode recordDateNode = rootNode.get("recordDate");
             JsonNode recordCountNode = rootNode.get("recordCount");
 
+            String hashKey = "record_count";
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
+
             List<RecordCount> records = new ArrayList<>();
 
             Iterator<String> fieldNames = recordDateNode.fieldNames();
             while (fieldNames.hasNext()) {
                 String fieldName = fieldNames.next();
                 long recordDateMillis = recordDateNode.path(fieldName).asLong();
-                int recordCount = recordCountNode.path(fieldName).asInt();
+                long recordCount = recordCountNode.path(fieldName).asLong();
 
-                LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
+                String recordDateStr = Instant.ofEpochMilli(recordDateMillis)
+                        .atZone(ZoneId.of("UTC"))
+                        .toLocalDate()
+                        .toString();
 
                 RecordCount record = new RecordCount();
-                record.setRecordDate(recordDate);
+                record.setRecordDate(recordDateStr);
                 record.setRecordCount(recordCount);
 
                 records.add(record);
             }
-            if (recordCountService.isTableEmpty()) {
-                recordCountService.saveData(records);
-            } else {
-                recordCountService.truncateAndSaveData(records);
-            }
+
+            valOps.set(hashKey, records);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to process incoming message from count_patient_visit_result_queue:", e);
         }
     }
 
-    @RabbitListener(queues = "calculate_department_usage_result_queue")
-    public void receiveCalculateDepartmentUsageResult(String message) {
+    @RabbitListener(queues = "calculate_service_usage_result_queue")
+    public void receiveServiceUsageResult(String message) {
         try {
             String jsonString = objectMapper.readValue(message, String.class);
             JsonNode rootNode = objectMapper.readTree(jsonString);
-            JsonNode departmentNode = rootNode.get("department");
             JsonNode recordDateNode = rootNode.get("recordDate");
-            JsonNode recordCountNode = rootNode.get("recordCount");
+            JsonNode serviceNode = rootNode.get("service");
+            JsonNode usageNode = rootNode.get("recordCount");
 
-            List<DepartmentUsage> records = new ArrayList<>();
+            String hashKey = "service_usage";
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
 
-            Iterator<String> fieldNames = departmentNode.fieldNames();
+            List<ServiceUsage> usages = new ArrayList<>();
+
+            Iterator<String> fieldNames = recordDateNode.fieldNames();
             while (fieldNames.hasNext()) {
                 String fieldName = fieldNames.next();
-                String department = departmentNode.path(fieldName).asText();
                 long recordDateMillis = recordDateNode.path(fieldName).asLong();
-                int recordCount = recordCountNode.path(fieldName).asInt();
+                String service = serviceNode.path(fieldName).asText();
+                long recordCount = usageNode.path(fieldName).asLong();
 
-                LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
+                String recordDateStr = Instant.ofEpochMilli(recordDateMillis)
+                        .atZone(ZoneId.of("UTC"))
+                        .toLocalDate()
+                        .toString();
 
-                DepartmentUsage record = new DepartmentUsage();
-                record.setDepartment(department);
-                record.setRecordDate(recordDate);
-                record.setRecordCount(recordCount);
+                ServiceUsage usage = new ServiceUsage();
+                usage.setRecordDate(recordDateStr);
+                usage.setService(service);
+                usage.setRecordCount(recordCount);
 
-                records.add(record);
+                usages.add(usage);
             }
-            if (departmentUsageService.isTableEmpty()) {
-                departmentUsageService.saveData(records);
-            } else {
-                departmentUsageService.truncateAndSaveData(records);
-            }
+
+            valOps.set(hashKey, usages);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to process incoming message from calculate_service_usage_result_queue:", e);
+        }
+    }
+
+    @RabbitListener(queues = "aggregate_health_condition_occurrence_result_queue")
+    public void receiveHealthConditionOccurrenceResult(String message) {
+        try {
+            String jsonString = objectMapper.readValue(message, String.class);
+            JsonNode rootNode = objectMapper.readTree(jsonString);
+            JsonNode recordDateNode = rootNode.get("recordDate");
+            JsonNode healthConditionNode = rootNode.get("healthCondition");
+            JsonNode recordCountNode = rootNode.get("recordCount");
+
+            String hashKey = "health_condition_occurrence";
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
+
+            List<HealthConditionOccurrence> occurrences = new ArrayList<>();
+
+            Iterator<String> fieldNames = recordDateNode.fieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                long recordDateMillis = recordDateNode.path(fieldName).asLong();
+                String healthCondition = healthConditionNode.path(fieldName).asText();
+                long recordCount = recordCountNode.path(fieldName).asLong();
+
+                String recordDateStr = Instant.ofEpochMilli(recordDateMillis)
+                        .atZone(ZoneId.of("UTC"))
+                        .toLocalDate()
+                        .toString();
+
+                HealthConditionOccurrence occurrence = new HealthConditionOccurrence();
+                occurrence.setRecordDate(recordDateStr);
+                occurrence.setHealthCondition(healthCondition);
+                occurrence.setRecordCount(recordCount);
+
+                occurrences.add(occurrence);
+            }
+
+            valOps.set(hashKey, occurrences);
+        } catch (Exception e) {
+            logger.error("Failed to process incoming message from aggregate_health_condition_occurrence_result_queue:",
+                    e);
+        }
+    }
+
+    @RabbitListener(queues = "tally_medical_problem_occurrence_result_queue")
+    public void receiveMedicalProblemOccurrenceResult(String message) {
+        try {
+            String jsonString = objectMapper.readValue(message, String.class);
+            JsonNode rootNode = objectMapper.readTree(jsonString);
+            JsonNode recordDateNode = rootNode.get("recordDate");
+            JsonNode healthConditionNode = rootNode.get("healthCondition");
+            JsonNode medicalProblemNode = rootNode.get("medicalProblem");
+            JsonNode recordCountNode = rootNode.get("recordCount");
+
+            String hashKey = "medical_problem_occurrence";
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> redisValOps = redisTemplate.opsForValue();
+
+            List<MedicalProblemOccurrence> occurrences = new ArrayList<>();
+
+            Iterator<String> fieldNames = recordDateNode.fieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                long recordDateMillis = recordDateNode.path(fieldName).asLong();
+                String healthCondition = healthConditionNode.path(fieldName).asText();
+                String medicalProblem = medicalProblemNode.path(fieldName).asText();
+                long recordCount = recordCountNode.path(fieldName).asLong();
+
+                String recordDateStr = Instant.ofEpochMilli(recordDateMillis)
+                        .atZone(ZoneId.of("UTC"))
+                        .toLocalDate()
+                        .toString();
+
+                MedicalProblemOccurrence occurrence = new MedicalProblemOccurrence();
+                occurrence.setRecordDate(recordDateStr);
+                occurrence.setHealthCondition(healthCondition);
+                occurrence.setMedicalProblem(medicalProblem);
+                occurrence.setRecordCount(recordCount);
+
+                occurrences.add(occurrence);
+            }
+
+            redisValOps.set(hashKey, occurrences);
+        } catch (Exception e) {
+            logger.error("Failed to process incoming message from tally_medical_problem_occurrence_result_queue:", e);
         }
     }
 
@@ -125,228 +215,220 @@ public class RabbitMQConsumer {
         try {
             String jsonString = objectMapper.readValue(message, String.class);
             JsonNode rootNode = objectMapper.readTree(jsonString);
-            JsonNode socioeconomicClassNode = rootNode.get("socioeconomic_class");
-            JsonNode profileCountNode = rootNode.get("profileCount");
+            JsonNode ageGroupNode = rootNode.get("ageGroup");
             JsonNode percentageNode = rootNode.get("percentage");
+
+            String hashKey = "demographics_analysis";
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
 
             List<DemographicsAnalysis> profiles = new ArrayList<>();
 
-            Iterator<String> fieldNames = socioeconomicClassNode.fieldNames();
+            Iterator<String> fieldNames = ageGroupNode.fieldNames();
             while (fieldNames.hasNext()) {
                 String fieldName = fieldNames.next();
-                String socioeconomicClass = socioeconomicClassNode.path(fieldName).asText();
-                long profileCount = profileCountNode.path(fieldName).asLong();
+                String ageGroup = ageGroupNode.path(fieldName).asText();
                 double percentage = percentageNode.path(fieldName).asDouble();
 
                 DemographicsAnalysis profile = new DemographicsAnalysis();
-                profile.setSocioeconomicClass(socioeconomicClass);
-                profile.setProfileCount(profileCount);
+                profile.setAgeGroup(ageGroup);
                 profile.setPercentage(percentage);
 
                 profiles.add(profile);
             }
-            if (demographicsAnalysisService.isTableEmpty()) {
-                demographicsAnalysisService.saveData(profiles);
-            } else {
-                demographicsAnalysisService.truncateAndSaveData(profiles);
-            }
+
+            valOps.set(hashKey, profiles);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to process incoming message from profile_demographics_analysis_result_queue:", e);
         }
     }
 
-    @RabbitListener(queues = "aggregate_blood_pressure_trends_result_queue")
-    public void receiveBPTrendsResult(String message) {
+    @RabbitListener(queues = "record_count_descriptive_analytics_result_queue")
+    public void receiveRecordCountDescriptiveAnalyticsResult(String message) {
         try {
-            String jsonString = objectMapper.readValue(message, String.class);
-            JsonNode rootNode = objectMapper.readTree(jsonString);
-            JsonNode recordDateNode = rootNode.get("recordDate");
-            JsonNode systolicMeanNode = rootNode.get("systolic_mean");
-            JsonNode systolicMedianNode = rootNode.get("systolic_median");
-            JsonNode systolicStdNode = rootNode.get("systolic_std");
-            JsonNode diastolicMeanNode = rootNode.get("diastolic_mean");
-            JsonNode diastolicMedianNode = rootNode.get("diastolic_median");
-            JsonNode diastolicStdNode = rootNode.get("diastolic_std");
+            JsonNode rootNode = objectMapper.readTree(message);
+            JsonNode analyticsNode = rootNode.get("analytics");
+            String description = rootNode.get("description").asText();
 
-            List<BPTrends> records = new ArrayList<>();
+            String hashKey = "record_count_descriptive_analytics";
+            ValueOperations<String, String> strValOps = stringRedisTemplate.opsForValue();
 
-            Iterator<String> fieldNames = recordDateNode.fieldNames();
-            while (fieldNames.hasNext()) {
-                String fieldName = fieldNames.next();
-                long recordDateMillis = recordDateNode.path(fieldName).asLong();
-                double systolicMean = systolicMeanNode.path(fieldName).asDouble();
-                double systolicMedian = systolicMedianNode.path(fieldName).asDouble();
-                double systolicStd = systolicStdNode.path(fieldName).asDouble();
-                double diastolicMean = diastolicMeanNode.path(fieldName).asDouble();
-                double diastolicMedian = diastolicMedianNode.path(fieldName).asDouble();
-                double diastolicStd = diastolicStdNode.path(fieldName).asDouble();
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
 
-                LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
+            List<RecordCountAnalytics> records = new ArrayList<>();
 
-                BPTrends record = new BPTrends();
-                record.setRecordDate(recordDate);
-                record.setSystolicMean(systolicMean);
-                record.setSystolicMedian(systolicMedian);
-                record.setSystolicStd(systolicStd);
-                record.setDiastolicMean(diastolicMean);
-                record.setDiastolicMedian(diastolicMedian);
-                record.setDiastolicStd(diastolicStd);
+            if (analyticsNode != null && analyticsNode.isArray()) {
+                analyticsNode.forEach(node -> {
+                    String recordDateStr = node.get("recordDate").asText();
+                    double rateOfChange = node.get("rateOfChange").asDouble();
 
-                records.add(record);
+                    RecordCountAnalytics record = new RecordCountAnalytics();
+                    record.setRecordDate(recordDateStr);
+                    record.setRateOfChange(rateOfChange);
+
+                    records.add(record);
+                });
             }
-            if (bpTrendsService.isTableEmpty()) {
-                bpTrendsService.saveData(records);
-            } else {
-                bpTrendsService.truncateAndSaveData(records);
-            }
+            valOps.set(hashKey, records);
+            strValOps.set(hashKey + ":description", description);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to process incoming message from record_count_descriptive_analytics_result_queue:", e);
         }
     }
 
-    @RabbitListener(queues = "bmi_analysis_result_queue")
-    public void receiveBMIAnalysisResult(String message) {
+    @RabbitListener(queues = "service_usage_descriptive_analytics_result_queue")
+    public void receiveServiceUsageDescriptiveAnalyticsResult(String message) {
         try {
-            String jsonString = objectMapper.readValue(message, String.class);
-            JsonNode rootNode = objectMapper.readTree(jsonString);
-            JsonNode bmiCategoryNode = rootNode.get("BMI_Category");
-            JsonNode recordDateNode = rootNode.get("recordDate");
-            JsonNode recordCountNode = rootNode.get("recordCount");
+            JsonNode rootNode = objectMapper.readTree(message);
+            JsonNode analyticsNode = rootNode.get("analytics");
+            String description = rootNode.get("description").asText();
 
-            List<BMIAnalysis> records = new ArrayList<>();
+            String hashKey = "service_usage_descriptive_analytics";
+            ValueOperations<String, String> strValOps = stringRedisTemplate.opsForValue();
 
-            Iterator<String> fieldNames = bmiCategoryNode.fieldNames();
-            while (fieldNames.hasNext()) {
-                String fieldName = fieldNames.next();
-                String bmiCategory = bmiCategoryNode.path(fieldName).asText();
-                long recordDateMillis = recordDateNode.path(fieldName).asLong();
-                int recordCount = recordCountNode.path(fieldName).asInt();
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
 
-                LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
+            List<ServiceUsageAnalytics> usages = new ArrayList<>();
 
-                BMIAnalysis record = new BMIAnalysis();
-                record.setBmiCategory(bmiCategory);
-                record.setRecordDate(recordDate);
-                record.setRecordCount(recordCount);
+            if (analyticsNode != null && analyticsNode.isArray()) {
+                analyticsNode.forEach(node -> {
+                    String service = node.get("service").asText();
+                    long recordCount = node.get("recordCount").asLong();
+                    double percentage = node.get("percentage").asDouble();
 
-                records.add(record);
+                    ServiceUsageAnalytics usage = new ServiceUsageAnalytics();
+                    usage.setService(service);
+                    usage.setRecordCount(recordCount);
+                    usage.setPercentage(percentage);
+
+                    usages.add(usage);
+                });
             }
-            if (bmiAnalysisService.isTableEmpty()) {
-                bmiAnalysisService.saveData(records);
-            } else {
-                bmiAnalysisService.truncateAndSaveData(records);
-            }
+
+            valOps.set(hashKey, usages);
+            strValOps.set(hashKey + ":description", description);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to process incoming message from service_usage_descriptive_analytics_result_queue:",
+                    e);
         }
-        // try {
-        // String jsonString = objectMapper.readValue(message, String.class);
-        // JsonNode rootNode = objectMapper.readTree(jsonString);
-        // JsonNode departmentNode = rootNode.get("department");
-        // JsonNode recordDateNode = rootNode.get("recordDate");
-        // JsonNode recordCountNode = rootNode.get("recordCount");
+    }
 
-        // List<DepartmentRecordCount> records = new ArrayList<>();
+    @RabbitListener(queues = "health_condition_occurrence_descriptive_analytics_result_queue")
+    public void receiveHealthConditionOccurrenceDescriptiveAnalyticsResult(String message) {
+        try {
+            JsonNode rootNode = objectMapper.readTree(message);
+            JsonNode analyticsNode = rootNode.get("analytics");
+            String description = rootNode.get("description").asText();
 
-        // Iterator<String> fieldNames = departmentNode.fieldNames();
-        // while (fieldNames.hasNext()) {
-        // String fieldName = fieldNames.next();
-        // String department = departmentNode.path(fieldName).asText();
-        // long recordDateMillis = recordDateNode.path(fieldName).asLong();
-        // int recordCount = recordCountNode.path(fieldName).asInt();
+            String hashKey = "health_condition_occurrence_descriptive_analytics";
+            ValueOperations<String, String> strValOps = stringRedisTemplate.opsForValue();
 
-        // LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
-        // .atZone(ZoneId.systemDefault())
-        // .toLocalDate();
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
 
-        // DepartmentRecordCount record = new DepartmentRecordCount();
-        // record.setDepartment(department);
-        // record.setRecordDate(recordDate);
-        // record.setRecordCount(recordCount);
+            List<HealthConditionOccurrenceAnalytics> occurrences = new ArrayList<>();
 
-        // records.add(record);
-        // }
-        // if (departmentRecordCountService.isTableEmpty()) {
-        // departmentRecordCountService.saveData(records);
-        // } else {
-        // departmentRecordCountService.saveNewData(records);
-        // }
-        // } catch (Exception e) {
-        // e.printStackTrace();
-        // }
+            if (analyticsNode != null && analyticsNode.isArray()) {
+                analyticsNode.forEach(node -> {
+                    String healthCondition = node.get("healthCondition").asText();
+                    double percentage = node.get("percentage").asDouble();
+                    double rateOfChange = node.get("rateOfChange").asDouble();
+
+                    HealthConditionOccurrenceAnalytics occurrence = new HealthConditionOccurrenceAnalytics();
+                    occurrence.setHealthCondition(healthCondition);
+                    occurrence.setPercentage(percentage);
+                    occurrence.setRateOfChange(rateOfChange);
+
+                    occurrences.add(occurrence);
+                });
+            }
+
+            valOps.set(hashKey, occurrences);
+            strValOps.set(hashKey + ":description", description);
+        } catch (Exception e) {
+            logger.error(
+                    "Failed to process incoming message from health_condition_occurrence_descriptive_analytics_result_queue:",
+                    e);
+        }
+    }
+
+    @RabbitListener(queues = "medical_problem_occurrence_descriptive_analytics_result_queue")
+    public void receiveMedicalProblemOccurrenceDescriptiveAnalyticsResult(String message) {
+        try {
+            JsonNode rootNode = objectMapper.readTree(message);
+            JsonNode analyticsNode = rootNode.get("analytics");
+            String description = rootNode.get("description").asText();
+
+            String hashKey = "medical_problem_occurrence_descriptive_analytics";
+            ValueOperations<String, String> strValOps = stringRedisTemplate.opsForValue();
+
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
+
+            List<MedicalProblemOccurrenceAnalytics> occurrences = new ArrayList<>();
+
+            if (analyticsNode != null && analyticsNode.isArray()) {
+                analyticsNode.forEach(node -> {
+                    String medicalProblem = node.get("medicalProblem").asText();
+                    double percentage = node.get("percentage").asDouble();
+                    double rateOfChange = node.get("rateOfChange").asDouble();
+
+                    MedicalProblemOccurrenceAnalytics occurrence = new MedicalProblemOccurrenceAnalytics();
+                    occurrence.setMedicalProblem(medicalProblem);
+                    occurrence.setPercentage(percentage);
+                    occurrence.setRateOfChange(rateOfChange);
+
+                    occurrences.add(occurrence);
+                });
+            }
+
+            valOps.set(hashKey, occurrences);
+            strValOps.set(hashKey + ":description", description);
+        } catch (Exception e) {
+            logger.error(
+                    "Failed to process incoming message from medical_problem_occurrence_descriptive_analytics_result_queue:",
+                    e);
+        }
+
+    }
+
+    @RabbitListener(queues = "demographics_analysis_descriptive_analytics_result_queue")
+    public void receiveDemographicsAnalysisDescriptiveAnalyticsResult(String message) {
+        try {
+            JsonNode rootNode = objectMapper.readTree(message);
+            JsonNode analyticsNode = rootNode.get("analytics");
+            String description = rootNode.get("description").asText();
+
+            String hashKey = "demographics_analysis_descriptive_analytics";
+            ValueOperations<String, String> strValOps = stringRedisTemplate.opsForValue();
+
+            redisTemplate.delete(hashKey);
+            ValueOperations<String, Object> valOps = redisTemplate.opsForValue();
+
+            List<DemographicsAnalysisAnalytics> age_groups = new ArrayList<>();
+
+            if (analyticsNode != null && analyticsNode.isArray()) {
+                analyticsNode.forEach(node -> {
+                    String ageGroup = node.get("ageGroup").asText();
+                    double percentage = node.get("percentage").asDouble();
+
+                    DemographicsAnalysisAnalytics age_group = new DemographicsAnalysisAnalytics();
+                    age_group.setAgeGroup(ageGroup);
+                    age_group.setPercentage(percentage);
+
+                    age_groups.add(age_group);
+                });
+            }
+
+            valOps.set(hashKey, age_groups);
+            strValOps.set(hashKey + ":description", description);
+        } catch (Exception e) {
+            logger.error(
+                    "Failed to process incoming message from demographics_analysis_descriptive_analytics_result_queue:",
+                    e);
+        }
     }
 
 }
-
-// @RabbitListener(queues = "aggregate_health_metrics_result_queue")
-// public void receiveAggregateHealthMetricsResult(String message) {
-// try {
-// String jsonString = objectMapper.readValue(message, String.class);
-// JsonNode rootNode = objectMapper.readTree(jsonString);
-// JsonNode recordDateNode = rootNode.get("recordDate");
-// JsonNode heightMeanNode = rootNode.get("height_mean");
-// JsonNode heightMedianNode = rootNode.get("height_median");
-// JsonNode heightStdNode = rootNode.get("height_std");
-// JsonNode weightMeanNode = rootNode.get("weight_mean");
-// JsonNode weightMedianNode = rootNode.get("weight_median");
-// JsonNode weightStdNode = rootNode.get("weight_std");
-// JsonNode systolicMeanNode = rootNode.get("systolic_mean");
-// JsonNode systolicMedianNode = rootNode.get("systolic_median");
-// JsonNode systolicStdNode = rootNode.get("systolic_std");
-// JsonNode diastolicMeanNode = rootNode.get("diastolic_mean");
-// JsonNode diastolicMedianNode = rootNode.get("diastolic_median");
-// JsonNode diastolicStdNode = rootNode.get("diastolic_std");
-
-// List<HealthMetrics> records = new ArrayList<>();
-
-// Iterator<String> fieldNames = recordDateNode.fieldNames();
-// while (fieldNames.hasNext()) {
-// String fieldName = fieldNames.next();
-// long recordDateMillis = recordDateNode.path(fieldName).asLong();
-// double heightMean = heightMeanNode.path(fieldName).asDouble();
-// double heightMedian = heightMedianNode.path(fieldName).asDouble();
-// double heightStd = heightStdNode.path(fieldName).asDouble();
-// double weightMean = weightMeanNode.path(fieldName).asDouble();
-// double weightMedian = weightMedianNode.path(fieldName).asDouble();
-// double weightStd = weightStdNode.path(fieldName).asDouble();
-// double systolicMean = systolicMeanNode.path(fieldName).asDouble();
-// double systolicMedian = systolicMedianNode.path(fieldName).asDouble();
-// double systolicStd = systolicStdNode.path(fieldName).asDouble();
-// double diastolicMean = diastolicMeanNode.path(fieldName).asDouble();
-// double diastolicMedian = diastolicMedianNode.path(fieldName).asDouble();
-// double diastolicStd = diastolicStdNode.path(fieldName).asDouble();
-
-// LocalDate recordDate = Instant.ofEpochMilli(recordDateMillis)
-// .atZone(ZoneId.systemDefault())
-// .toLocalDate();
-
-// HealthMetrics record = new HealthMetrics();
-// record.setRecordDate(recordDate);
-// record.setHeightMean(heightMean);
-// record.setHeightMedian(heightMedian);
-// record.setHeightStd(heightStd);
-// record.setWeightMean(weightMean);
-// record.setWeightMedian(weightMedian);
-// record.setWeightStd(weightStd);
-// record.setSystolicMean(systolicMean);
-// record.setSystolicMedian(systolicMedian);
-// record.setSystolicStd(systolicStd);
-// record.setDiastolicMean(diastolicMean);
-// record.setDiastolicMedian(diastolicMedian);
-// record.setDiastolicStd(diastolicStd);
-
-// records.add(record);
-// }
-// if (healthMetricsService.isTableEmpty()) {
-// healthMetricsService.saveData(records);
-// } else {
-// healthMetricsService.truncateAndSaveData(records);
-// }
-// } catch (Exception e) {
-// e.printStackTrace();
-// }
-// }

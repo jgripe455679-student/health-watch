@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -16,7 +14,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -42,9 +39,17 @@ public class SecurityConfig {
                         SWAGGER_UI_URL, API_DOCS_URL, RABBITMQ_URL
         };
 
-        private final UserDetailsService userDetailsService;
+        // private final UserDetailsService userDetailsService;
         private final JwtFilter jwtFilter;
         private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+        // @Bean
+        // public AuthenticationProvider authenticationProvider() {
+        //         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        //         provider.setPasswordEncoder(passwordEncoder());
+        //         provider.setUserDetailsService(userDetailsService);
+        //         return provider;
+        // }
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -52,8 +57,8 @@ public class SecurityConfig {
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .cors(cors -> cors.configurationSource(req -> {
                                         CorsConfiguration config = new CorsConfiguration();
-                                        config.setAllowedOrigins(Arrays.asList("http://localhost:3000",
-                                                        "http://localhost:3001"));
+                                        config.setAllowedOrigins(Arrays.asList("http://localhost:5173",
+                                                        "http://localhost:5174"));
                                         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
                                         config.setAllowCredentials(true);
                                         config.setAllowedHeaders(Collections.singletonList("*"));
@@ -107,14 +112,6 @@ public class SecurityConfig {
                                                 .authenticationEntryPoint(customAuthenticationEntryPoint))
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                                 .build();
-        }
-
-        @Bean
-        public AuthenticationProvider authenticationProvider() {
-                DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-                provider.setPasswordEncoder(passwordEncoder());
-                provider.setUserDetailsService(userDetailsService);
-                return provider;
         }
 
         @Bean
