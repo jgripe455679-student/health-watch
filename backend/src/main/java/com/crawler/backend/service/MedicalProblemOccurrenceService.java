@@ -8,8 +8,15 @@ import com.crawler.backend.model.MedicalProblemOccurrenceAnalytics;
 
 public interface MedicalProblemOccurrenceService {
     List<MedicalProblemOccurrence> getAllMedicalProblemOccurrence();
-    List<MedicalProblemOccurrence> getFilteredMedicalProblemOccurrence(List<MedicalProblemOccurrence> records, String healthCondition);
+
+    List<MedicalProblemOccurrence> getFilteredMedicalProblemOccurrence(String healthCondition);
+
+    List<MedicalProblemOccurrence> getFilteredMedicalProblemOccurrenceByDateRange(String healthCondition,
+            String startDate, String endDate);
+
     List<MedicalProblemOccurrenceAnalytics> getMedicalProblemOccurrenceAnalytics();
+
     String getMedicalProblemOccurrenceDescription();
+
     Map<String, Object> getDescriptiveAnalytics();
 }

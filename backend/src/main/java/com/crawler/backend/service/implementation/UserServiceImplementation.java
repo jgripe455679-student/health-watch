@@ -12,12 +12,8 @@ import com.crawler.backend.dto.UserDto;
 import com.crawler.backend.exception.AppException;
 import com.crawler.backend.exception.ResourceNotFoundException;
 import com.crawler.backend.mapper.UserMapper;
-import com.crawler.backend.model.Profile;
-import com.crawler.backend.model.Record;
 import com.crawler.backend.model.Role;
 import com.crawler.backend.model.User;
-import com.crawler.backend.repository.ProfileRepository;
-import com.crawler.backend.repository.RecordRepository;
 import com.crawler.backend.repository.RoleRepository;
 import com.crawler.backend.repository.UserRepository;
 import com.crawler.backend.service.UserService;
@@ -31,8 +27,6 @@ public class UserServiceImplementation implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ProfileRepository profileRepository;
-    private final RecordRepository recordRepository;
 
     @Override
     public UserDto create(UserDto userDto) {
@@ -98,54 +92,22 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public String deleteUser(Long userId) {
-        User userToDelete = userRepository.findById(userId).orElseThrow(
+    public String disableUser(Long userId) {
+        User userToDisable = userRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
 
-        User defaultUser = userRepository.findByUsername("sys_admin").orElseThrow(
+        User disabledBy = userRepository.findByUsername("sys_admin").orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
 
-        // User entity
-        List<User> referencingUsersForCreatedBy = userRepository.findByCreatedBy(userToDelete);
-        for (User user : referencingUsersForCreatedBy) {
-            user.setCreatedBy(defaultUser);
-            userRepository.save(user);
-        }
+        userToDisable.setAccountNonExpired(false);
+        userToDisable.setAccountNonLocked(false);
+        userToDisable.setCredentialsNonExpired(false);
+        userToDisable.setEnabled(false);
+        userToDisable.setUpdatedBy(disabledBy);
 
-        List<User> referencingUsersForUpdatedBy = userRepository.findByUpdatedBy(userToDelete);
-        for (User user : referencingUsersForUpdatedBy) {
-            user.setUpdatedBy(defaultUser);
-            userRepository.save(user);
-        }
+        userRepository.save(userToDisable);
 
-        // Profile entity
-        List<Profile> referencingProfilesForCreatedBy = profileRepository.findByCreatedBy(userToDelete);
-        for (Profile profile : referencingProfilesForCreatedBy) {
-            profile.setCreatedBy(defaultUser);
-            profileRepository.save(profile);
-        }
-
-        List<Profile> referencingProfilesForUpdatedBy = profileRepository.findByUpdatedBy(userToDelete);
-        for (Profile profile : referencingProfilesForUpdatedBy) {
-            profile.setUpdatedBy(defaultUser);
-            profileRepository.save(profile);
-        }
-
-        // Record entity
-        List<Record> referencingRecordsForCreatedBy = recordRepository.findByCreatedBy(userToDelete);
-        for (Record record : referencingRecordsForCreatedBy) {
-            record.setCreatedBy(defaultUser);
-            recordRepository.save(record);
-        }
-
-        List<Record> referencingRecordsForUpdatedBy = recordRepository.findByUpdatedBy(userToDelete);
-        for (Record record : referencingRecordsForUpdatedBy) {
-            record.setUpdatedBy(defaultUser);
-            recordRepository.save(record);
-        }
-
-        userRepository.delete(userToDelete);
-        return String.format("User with %d deleted successfully", userId);
+        return String.format("User with user_id %d disabled successfully", userId);
     }
 
     @Override

@@ -76,26 +76,28 @@ const ServiceUsageReportPanel: React.FC<ServiceUsageReportPanelProps> = ({
 
   const handleServiceUsageDescriptiveAnalytics = async (): Promise<void> => {
     setExpandedCard((prev) => (prev === "2" ? null : "2"));
-    setIsLoading(true);
-    try {
-      const post_response = await post(
-        "/rabbitmq/service-usage/analytics",
-        rawData
-      );
-      if (post_response.status === 200) {
-        const get_response = await get("/reports/service-usage/analytics");
-        const { analytics, description } =
-          get_response.data as ServiceUsageDescriptiveAnalyticsResponse;
-        setAnalyticsData(analytics);
-        setDescription(description);
+    if (expandedCard === null || expandedCard !== "2") {
+      setIsLoading(true);
+      try {
+        const post_response = await post(
+          "/rabbitmq/service-usage/analytics",
+          rawData
+        );
+        if (post_response.status === 200) {
+          const get_response = await get("/reports/service-usage/analytics");
+          const { analytics, description } =
+            get_response.data as ServiceUsageDescriptiveAnalyticsResponse;
+          setAnalyticsData(analytics);
+          setDescription(description);
+        }
+      } catch (error) {
+        console.error(
+          "Error submitting and fetching service usage analytics data: ",
+          error
+        );
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error(
-        "Error submitting and fetching service usage analytics data: ",
-        error
-      );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -105,18 +107,20 @@ const ServiceUsageReportPanel: React.FC<ServiceUsageReportPanelProps> = ({
         "2"
       )} w-full h-64 md:h-80 lg:h-96 rounded-none border-x-gray-300 border-t-gray-300 shadow transition-all duration-300`}
     >
-      <div
-        className={`h-5/6 ${expandedCard === "2" ? "flex justify-center" : ""}`}
-      >
+      <div className={`h-5/6 ${expandedCard === "2" ? "flex" : ""}`}>
         {expandedCard === "2" ? (
           <>
             <div className="w-3/4">
               <ServiceUsageChart
-                titleText="Medical Services Usage Over Time"
+                titleText="Medical Service Usages Over Time"
                 rawData={rawData}
               />
             </div>
-            <div className="w-1/4 overflow-auto">
+            <div
+              className={`w-1/4 overflow-auto ${
+                isLoading ? "flex items-center justify-center" : ""
+              }`}
+            >
               {isLoading ? (
                 <span className="loading loading-spinner loading-xs text-primary"></span>
               ) : (
@@ -149,7 +153,7 @@ const ServiceUsageReportPanel: React.FC<ServiceUsageReportPanelProps> = ({
           </>
         ) : (
           <ServiceUsageChart
-            titleText="Medical Services Usage Over Time"
+            titleText="Medical Service Usages Over Time"
             rawData={rawData}
           />
         )}

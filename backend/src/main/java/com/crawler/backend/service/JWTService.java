@@ -1,6 +1,6 @@
 package com.crawler.backend.service;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalUnit;
 import java.util.Map;
 
@@ -14,7 +14,7 @@ public interface JWTService {
 
     String extractUsername(String token);
 
-    LocalDateTime extractExpiration(String token);
+    ZonedDateTime extractExpiration(String token);
 
     boolean validateToken(String token);
 

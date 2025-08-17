@@ -1,5 +1,7 @@
 package com.crawler.backend.service.implementation;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +25,8 @@ public class HealthConditionOccurrenceServiceImplementation implements HealthCon
     private final RedisTemplate<String, Object> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
 
+    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     public HealthConditionOccurrenceServiceImplementation(RedisTemplate<String, Object> redisTemplate,
             StringRedisTemplate stringRedisTemplate) {
         this.redisTemplate = redisTemplate;
@@ -39,6 +43,21 @@ public class HealthConditionOccurrenceServiceImplementation implements HealthCon
             return occurrences;
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public List<HealthConditionOccurrence> getAllHealthConditionOccurrenceByDateRange(String startDate,
+            String endDate) {
+        LocalDate start = LocalDate.parse(startDate, fmt);
+        LocalDate end = LocalDate.parse(endDate, fmt);
+        List<HealthConditionOccurrence> occurrences = this.getAllHealthConditionOccurrence();
+        return occurrences.stream()
+                .filter(occurrence -> {
+                    LocalDate recordDate = LocalDate.parse(occurrence.getRecordDate(), fmt);
+                    return (recordDate.isEqual(start) || recordDate.isAfter(start)) &&
+                            (recordDate.isEqual(end) || recordDate.isBefore(end));
+                })
+                .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")

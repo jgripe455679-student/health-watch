@@ -1,8 +1,8 @@
 package com.crawler.backend.service.implementation;
 
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalUnit;
 import java.util.Base64;
 import java.util.Date;
@@ -42,20 +42,20 @@ public class JWTServiceImplementation implements JWTService {
 
         String username = user.getUsername();
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiryDate = now.plus(duration, durationType);
+        ZonedDateTime nowUtc = ZonedDateTime.now(ZoneOffset.UTC);
+        ZonedDateTime expiryUtc = nowUtc.plus(duration, durationType);
 
         String token = Jwts.builder()
                 .claims()
                 .add(extraClaims)
                 .subject(username)
-                .issuedAt(toDate(now))
-                .expiration(toDate(expiryDate))
+                .issuedAt(Date.from(nowUtc.toInstant()))
+                .expiration(Date.from(expiryUtc.toInstant()))
                 .and()
                 .signWith(getKey())
                 .compact();
 
-        return new Token(0L, TokenType.ACCESS, token, expiryDate, false, null);
+        return new Token(null, TokenType.ACCESS, token, expiryUtc, false, null);
     }
 
     @Override
@@ -72,6 +72,7 @@ public class JWTServiceImplementation implements JWTService {
             Jwts
                     .parser()
                     .verifyWith(getKey())
+                    .clockSkewSeconds(60)
                     .build()
                     .parseSignedClaims(token);
             return true;
@@ -89,6 +90,7 @@ public class JWTServiceImplementation implements JWTService {
         return Jwts
                 .parser()
                 .verifyWith(getKey())
+                .clockSkewSeconds(60)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -98,34 +100,35 @@ public class JWTServiceImplementation implements JWTService {
     public Token generateRefreshToken(long duration, TemporalUnit durationType, UserDetails user) {
         String username = user.getUsername();
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiryDate = now.plus(duration, durationType);
+        ZonedDateTime nowUtc = ZonedDateTime.now(ZoneOffset.UTC);
+        ZonedDateTime expiryUtc = nowUtc.plus(duration, durationType);
 
         String token = Jwts.builder()
                 .claims()
                 .subject(username)
-                .issuedAt(toDate(now))
-                .expiration(toDate(expiryDate))
+                .issuedAt(Date.from(nowUtc.toInstant()))
+                .expiration(Date.from(expiryUtc.toInstant()))
                 .and()
                 .signWith(getKey())
                 .compact();
 
-        return new Token(0L, TokenType.REFRESH, token, expiryDate, false, null);
+        return new Token(null, TokenType.REFRESH, token, expiryUtc, false, null);
     }
 
-    public LocalDateTime extractExpiration(String token) {
-        return toLocalDateTime(extractClaim(token, Claims::getExpiration));
+    public ZonedDateTime extractExpiration(String token) {
+        Date expDate = extractClaim(token, Claims::getExpiration);
+        return expDate.toInstant().atZone(ZoneOffset.UTC);
     }
 
-    private LocalDateTime toLocalDateTime(Date date) {
-        ZoneOffset zoneOffset = ZoneOffset.UTC;
-        return date.toInstant().atOffset(zoneOffset).toLocalDateTime();
-    }
+    // private LocalDateTime toLocalDateTime(Date date) {
+    // ZoneOffset zoneOffset = ZoneOffset.UTC;
+    // return date.toInstant().atOffset(zoneOffset).toLocalDateTime();
+    // }
 
-    private Date toDate(LocalDateTime localDateTime) {
-        ZoneOffset zoneOffset = ZoneOffset.UTC;
-        return Date.from(localDateTime.toInstant(zoneOffset));
-    }
+    // private Date toDate(LocalDateTime localDateTime) {
+    // ZoneOffset zoneOffset = ZoneOffset.UTC;
+    // return Date.from(localDateTime.toInstant(zoneOffset));
+    // }
 
     private SecretKey getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);

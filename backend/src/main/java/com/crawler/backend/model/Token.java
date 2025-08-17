@@ -1,6 +1,6 @@
 package com.crawler.backend.model;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 import com.crawler.backend.enums.TokenType;
 
@@ -29,7 +29,7 @@ public class Token {
     private Long id;
     private TokenType type;
     private String value;
-    private LocalDateTime expiryDate;
+    private ZonedDateTime expiryUtc;
     private boolean disabled;
     @ManyToOne
     private User user;

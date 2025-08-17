@@ -40,6 +40,10 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const userData: AuthUser = JSON.parse(storedUser);
           const response = await get("auth/info");
           if (response.status === 200) {
+            const { role } = userData;
+            if (role !== "ADMIN") {
+              logout();
+            }
             login(userData);
           }
         } else {
@@ -47,7 +51,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } catch (error) {
         logout();
-        console.error("Error fetching user authentication information", error);
+        console.error("Error fetching user authentication data", error);
       }
     };
 

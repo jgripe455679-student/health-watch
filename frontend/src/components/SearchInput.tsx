@@ -23,7 +23,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   return (
     <input
       type="text"
-      className="input input-sm input-bordered rounded-none max-sm:w-3/4 md:w-96 py-1.5 px-3 md:ml-1.5"
+      className="input input-sm input-bordered rounded-none max-sm:w-3/4 md:w-96 py-1.5 px-3"
       value={searchValue}
       onChange={handleOnChange}
       placeholder={`Search by ${keyword}`}

@@ -12,6 +12,7 @@ import ResetPassword from "./pages/ResetPassword";
 import UserManagement from "./pages/UserManagement";
 import AppUtilityProvider from "./utils/AppUtilityProvider";
 import AuthProvider from "./utils/AuthProvider";
+import HealthConditionsProvider from "./utils/HealthConditionsProvider";
 
 const App: React.FC = () => {
   return (
@@ -19,7 +20,13 @@ const App: React.FC = () => {
       <AuthProvider>
         <AppUtilityProvider>
           <Routes>
-            <Route element={<PrivateRoutes />}>
+            <Route
+              element={
+                <HealthConditionsProvider>
+                  <PrivateRoutes />
+                </HealthConditionsProvider>
+              }
+            >
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/user-management" element={<UserManagement />} />
               <Route path="/profiling" element={<Profiling />} />

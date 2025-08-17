@@ -1,18 +1,11 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { get, post } from "../../api/apiClient";
 import { useHealthConditions } from "../../hooks/useHealthConditions";
-import { HealthCondition } from "../../utils/HealthConditionsProvider";
-import HealthConditionOccurrenceChart, {
-  HealthConditionOccurrence,
-} from "../charts/HealthConditionOccurrenceChart";
+import MedicalProblemOccurrenceChart, {
+  MedicalProblemOccurrence,
+} from "../charts/MedicalProblemOccurrenceChart";
 
-type HealthConditionOccurrenceReportPanelProps = {
+type MedicalProblemOccurrenceReportPanelProps = {
   startDate: string;
   endDate: string;
   expandedCard: string | null;
@@ -21,50 +14,56 @@ type HealthConditionOccurrenceReportPanelProps = {
   order: (id: string) => string;
 };
 
-interface HealthConditionOccurrenceAnalytics {
-  healthCondition: string;
+interface MedicalProblemOccurrenceAnalytics {
+  medicalProblem: string;
   percentage: number;
   rateOfChange: number;
 }
 
-interface HealthConditionOccurrenceDescriptiveAnalyticsResponse {
-  analytics: HealthConditionOccurrenceAnalytics[];
+interface MedicalProblemOccurrenceDescriptiveAnalyticsResponse {
+  analytics: MedicalProblemOccurrenceAnalytics[];
   description: string;
 }
 
-const HealthConditionOccurrenceReportPanel: React.FC<
-  HealthConditionOccurrenceReportPanelProps
+const MedicalProblemOccurrenceReportPanel: React.FC<
+  MedicalProblemOccurrenceReportPanelProps
 > = ({ startDate, endDate, expandedCard, setExpandedCard, span, order }) => {
-  const [rawData, setRawData] = useState<HealthConditionOccurrence[]>([]);
+  const [rawData, setRawData] = useState<MedicalProblemOccurrence[]>([]);
+  const [selectedHealthCondition, setSelectedHealthCondition] =
+    useState<string>("");
   const [analyticsData, setAnalyticsData] = useState<
-    HealthConditionOccurrenceAnalytics[]
+    MedicalProblemOccurrenceAnalytics[]
   >([]);
   const [description, setDescription] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { populateHealthConditions } = useHealthConditions();
-  const didRun = useRef(false);
+  const { healthConditions } = useHealthConditions();
 
-  const fetchHealthConditionOccurrence = async (): Promise<void> => {
+  const fetchMedicalProblemOccurrence = async (
+    healthCondition: string
+  ): Promise<void> => {
     try {
-      const response = await get("/reports/health-condition-occurrence");
-      setRawData(response.data as HealthConditionOccurrence[]);
+      const response = await get(
+        `/reports/medical-problem-occurrence/filter?healthCondition=${healthCondition}`
+      );
+      setRawData(response.data as MedicalProblemOccurrence[]);
     } catch (error) {
-      console.error("Error fetching health condition occurrence data: ", error);
+      console.error("Error fetching medical problem occurrence data: ", error);
     }
   };
 
-  const fetchHealthConditionOccurrenceByDateRange = async (
+  const fetchMedicalProblemOccurrenceByDateRange = async (
+    healthCondition: string,
     startDate: string,
     endDate: string
   ): Promise<void> => {
     try {
       const response = await get(
-        `reports/health-condition-occurrence/filter?startDate=${startDate}&endDate=${endDate}`
+        `/reports/medical-problem-occurrence/filter?healthCondition=${healthCondition}&startDate=${startDate}&endDate=${endDate}`
       );
-      setRawData(response.data as HealthConditionOccurrence[]);
+      setRawData(response.data as MedicalProblemOccurrence[]);
     } catch (error) {
       console.error(
-        "Error fetching health condition occurrence data by date range: ",
+        "Error fetching medical problem occurrence data by date range: ",
         error
       );
     }
@@ -72,71 +71,45 @@ const HealthConditionOccurrenceReportPanel: React.FC<
 
   useEffect(() => {
     const fetchData = async (
+      healthCondition: string,
       startDate: string,
       endDate: string
     ): Promise<void> => {
       if (startDate && endDate) {
-        await fetchHealthConditionOccurrenceByDateRange(startDate, endDate);
-      } else {
-        await fetchHealthConditionOccurrence();
-      }
-    };
-    fetchData(startDate, endDate);
-    didRun.current = false;
-  }, [startDate, endDate]);
-
-  useEffect(() => {
-    const getTotalByHealthCondition = (
-      data: HealthConditionOccurrence[]
-    ): { healthCondition: string; recordCount: number }[] => {
-      const countMap = new Map<string, number>();
-      for (const { healthCondition, recordCount } of data) {
-        countMap.set(
+        await fetchMedicalProblemOccurrenceByDateRange(
           healthCondition,
-          (countMap.get(healthCondition) ?? 0) + recordCount
+          startDate,
+          endDate
         );
+      } else {
+        await fetchMedicalProblemOccurrence(healthCondition);
       }
-      return Array.from(countMap, ([healthCondition, recordCount]) => ({
-        healthCondition,
-        recordCount,
-      }));
     };
-    if (rawData.length) {
-      const result = getTotalByHealthCondition(rawData);
-      if (!didRun.current) {
-        const healthConditions: HealthCondition[] = result.map(
-          ({ healthCondition }) => ({
-            healthCondition: healthCondition,
-          })
-        );
-        populateHealthConditions(healthConditions);
-        didRun.current = true;
-      }
-    }
-  }, [populateHealthConditions, rawData]);
+    fetchData(selectedHealthCondition, startDate, endDate);
+  }, [startDate, endDate, selectedHealthCondition]);
 
-  const handleHealthConditionOccurrenceDescriptiveAnalytics =
+  const handleMedicalProblemOccurrenceDescriptiveAnalytics =
     async (): Promise<void> => {
-      setExpandedCard((prev) => (prev === "3" ? null : "3"));
-      if (expandedCard === null || expandedCard !== "3") {
+      setExpandedCard((prev) => (prev === "4" ? null : "4"));
+      if (expandedCard === null || expandedCard !== "4") {
         setIsLoading(true);
         try {
           const post_response = await post(
-            "/rabbitmq/health-condition-occurrence/analytics",
+            "/rabbitmq/medical-problem-occurrence/analytics",
             rawData
           );
           if (post_response.status === 200) {
             const get_response = await get(
-              "/reports/health-condition-occurrence/analytics"
+              "/reports/medical-problem-occurrence/analytics"
             );
             const { analytics, description } =
-              get_response.data as HealthConditionOccurrenceDescriptiveAnalyticsResponse;
+              get_response.data as MedicalProblemOccurrenceDescriptiveAnalyticsResponse;
             setAnalyticsData(analytics);
             setDescription(description);
           }
         } catch (error) {
           console.error(
-            "Error submitting and fetching health condition occurrence analytics data: ",
+            "Error submitting and fetching medical problem occurrence analytics data: ",
             error
           );
         } finally {
@@ -147,17 +120,22 @@ const HealthConditionOccurrenceReportPanel: React.FC<
 
   return (
     <div
-      className={`card card-bordered ${span("3")} ${order(
-        "3"
+      className={`card card-bordered ${span("4")} ${order(
+        "4"
       )} w-full h-64 md:h-80 lg:h-96 rounded-none border-x-gray-300 border-t-gray-300 shadow transition-all duration-300`}
     >
-      <div className={`h-5/6 ${expandedCard === "3" ? "flex" : ""}`}>
-        {expandedCard === "3" ? (
+      <div className={`h-5/6 ${expandedCard === "4" ? "flex" : ""}`}>
+        {expandedCard === "4" ? (
           <>
             <div className="w-3/4">
-              <HealthConditionOccurrenceChart
-                titleText="Health Condition Occurrences Over Time"
+              <MedicalProblemOccurrenceChart
+                titleText="Illness Occurrences Over Time"
                 rawData={rawData}
+                selectedHealthCondition={selectedHealthCondition}
+                setSelectedHealthCondition={setSelectedHealthCondition}
+                setExpandedCard={setExpandedCard}
+                expandedCard={expandedCard}
+                healthConditions={healthConditions}
               />
             </div>
             <div
@@ -171,9 +149,7 @@ const HealthConditionOccurrenceReportPanel: React.FC<
                 <table className="table table-sm border-collapse border border-gray-600">
                   <thead>
                     <tr>
-                      <th className="border border-gray-600">
-                        Health Condition
-                      </th>
+                      <th className="border border-gray-600">Illness</th>
                       <th className="border border-gray-600">Percentage</th>
                       <th className="border border-gray-600">Rate of Change</th>
                     </tr>
@@ -182,7 +158,7 @@ const HealthConditionOccurrenceReportPanel: React.FC<
                     {analyticsData.map((d, idx) => (
                       <tr key={idx}>
                         <td className="border border-gray-600">
-                          {d.healthCondition}
+                          {d.medicalProblem}
                         </td>
                         <td className="border border-gray-600">
                           {d.percentage}%
@@ -206,15 +182,20 @@ const HealthConditionOccurrenceReportPanel: React.FC<
             </div>
           </>
         ) : (
-          <HealthConditionOccurrenceChart
-            titleText="Health Condition Occurrences Over Time"
+          <MedicalProblemOccurrenceChart
+            titleText="Illness Occurrences Over Time"
             rawData={rawData}
+            selectedHealthCondition={selectedHealthCondition}
+            setSelectedHealthCondition={setSelectedHealthCondition}
+            setExpandedCard={setExpandedCard}
+            expandedCard={expandedCard}
+            healthConditions={healthConditions}
           />
         )}
       </div>
       <div className="card-body p-2 bg-base-100 border-x-gray-800 border-b-gray-800 rounded-none shadow">
         <div className="card-actions justify-start">
-          {expandedCard === "3" ? (
+          {expandedCard === "4" ? (
             <div className="flex items-center m-1.5">
               {isLoading ? (
                 <span className="loading loading-spinner loading-xs text-primary"></span>
@@ -223,7 +204,7 @@ const HealthConditionOccurrenceReportPanel: React.FC<
               )}
               <button
                 className="btn btn-sm btn-link"
-                onClick={handleHealthConditionOccurrenceDescriptiveAnalytics}
+                onClick={handleMedicalProblemOccurrenceDescriptiveAnalytics}
               >
                 Collapse
               </button>
@@ -231,7 +212,7 @@ const HealthConditionOccurrenceReportPanel: React.FC<
           ) : (
             <button
               className="btn btn-sm btn-link my-1.5"
-              onClick={handleHealthConditionOccurrenceDescriptiveAnalytics}
+              onClick={handleMedicalProblemOccurrenceDescriptiveAnalytics}
             >
               View full on analytics
             </button>
@@ -242,4 +223,4 @@ const HealthConditionOccurrenceReportPanel: React.FC<
   );
 };
 
-export default HealthConditionOccurrenceReportPanel;
+export default MedicalProblemOccurrenceReportPanel;

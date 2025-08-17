@@ -36,7 +36,7 @@ const Pagination: React.FC<PaginationProps> = ({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="join justify-center my-2.5">
+    <div className="absolute inset-x-0 w-60 mx-auto join justify-center my-2.5">
       <button
         className="join-item rounded-none btn btn-sm"
         onClick={() => paginate(currentPage - 1)}

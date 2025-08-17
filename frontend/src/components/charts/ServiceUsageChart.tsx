@@ -9,8 +9,8 @@ import {
   Tooltip,
 } from "chart.js";
 import React from "react";
-import useAggregatedByService from "../../hooks/useAggregatedByService";
-import HorizontalBarChart from "./HorizontalBarChart";
+import useAggregatedByService from "../../hooks/useAggregation";
+import BarChart from "./BarChart";
 
 ChartJS.register(
   CategoryScale,
@@ -36,13 +36,13 @@ const ServiceUsageChart: React.FC<ServiceUsageChartProps> = ({
   titleText,
   rawData,
 }) => {
-  const data = useAggregatedByService(rawData);
+  const data = useAggregatedByService(rawData, "service");
 
   const chartData = {
-    labels: data.map((d) => d.service.replace(/ *\([^)]*\) */g, "")),
+    labels: data.map((d) => d.column.replace(/ *\([^)]*\) */g, "")),
     datasets: [
       {
-        label: "Medical Services Usage",
+        label: "Number of Usages",
         data: data.map((d) => d.recordCount),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
@@ -87,7 +87,7 @@ const ServiceUsageChart: React.FC<ServiceUsageChartProps> = ({
     },
   };
 
-  return <HorizontalBarChart data={chartData} options={options} />;
+  return <BarChart data={chartData} options={options} />;
 };
 
 export default ServiceUsageChart;

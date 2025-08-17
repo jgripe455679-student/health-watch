@@ -114,7 +114,9 @@ def extract_dates(df: pd.DataFrame) -> tuple[pd.to_datetime, pd.to_datetime]:
     df = df.sort_values("recordDate").reset_index(drop=True)
     return df.loc[0, "recordDate"], df.loc[df.index[-1], "recordDate"]
 
-def load_dataframe(data: pd.DataFrame) -> pd.DataFrame:
+def load_dataframe(data: list) -> pd.DataFrame:
+    if not data:
+        raise ValueError("List cannot be empty")
     df = pd.DataFrame(data)
     df["recordDate"] = pd.to_datetime(df["recordDate"], format="%Y-%m-%d")
     df["recordCount"] = pd.to_numeric(df["recordCount"])
@@ -122,6 +124,8 @@ def load_dataframe(data: pd.DataFrame) -> pd.DataFrame:
 
 def record_count_descriptive_analytics(ch, method, properties, body):        
     def analyze_data(records: list) -> DescriptiveAnalytics:
+        if not records:
+            return DescriptiveAnalytics(analytics=[], description="")
         df = load_dataframe(records)
         start_date, end_date = extract_dates(df)
         category = classify_category(start_date, end_date)
@@ -172,6 +176,8 @@ def service_usage_descriptive_analytics(ch, method, properties, body):
         return df.loc[0, "service"], df.loc[0, "percentage"]
     
     def analyze_data(records: list) -> DescriptiveAnalytics:
+        if not records:
+            return DescriptiveAnalytics(analytics=[], description="")
         df = load_dataframe(records)
         start_date, end_date = extract_dates(df)
         df = get_percentages(df, column="service")
@@ -219,6 +225,8 @@ def health_condition_occurrence_descriptive_analytics(ch, method, properties, bo
         return df.loc[0, "healthCondition"], df.loc[0, "percentage"], df.loc[0, "rateOfChange"]
     
     def analyze_data(records: list) -> DescriptiveAnalytics:
+        if not records:
+            return DescriptiveAnalytics(analytics=[], description="")
         df = load_dataframe(records)
         start_date, end_date = extract_dates(df)
         agg = get_percentages(df, column="healthCondition")
@@ -273,6 +281,8 @@ def medical_problem_occurrence_descriptive_analytics(ch, method, properties, bod
             raise ValueError(f"Unsupported pd.DataFrame: {df}")
         return df.loc[0, "healthCondition"]
     def analyze_data(records: list) -> DescriptiveAnalytics:
+        if not records:
+            return DescriptiveAnalytics(analytics=[], description="")
         df = load_dataframe(records)
         health_condition = extract_health_condition(df)
         start_date, end_date = extract_dates(df)
@@ -296,7 +306,7 @@ def medical_problem_occurrence_descriptive_analytics(ch, method, properties, bod
 
         analytics = agg.to_dict(orient="records")
         
-        return DescriptiveAnalytics(analytics, description)
+        return DescriptiveAnalytics(analytics=analytics, description=description)
         
     try:
         medical_problem_occurrence = json.loads(body)
@@ -322,6 +332,8 @@ def demographics_analysis_descriptive_analytics(ch, method, properties, body):
     def extract_top_result(df: pd.DataFrame) -> tuple[str, float]:
         return df.loc[0, "ageGroup"], df.loc[0, "percentage"]
     def analyze_data(analysis: list):
+        if not analysis:
+            return DescriptiveAnalytics(analytics=[], description="")
         df = pd.DataFrame(analysis)
         df["percentage"] = pd.to_numeric(df["percentage"])
         age_group, percentage = extract_top_result(df)

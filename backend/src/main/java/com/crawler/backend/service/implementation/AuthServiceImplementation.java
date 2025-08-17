@@ -1,6 +1,7 @@
 package com.crawler.backend.service.implementation;
 
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +32,16 @@ import com.crawler.backend.service.AuthService;
 import com.crawler.backend.service.JWTService;
 import com.crawler.backend.util.CookieUtil;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImplementation implements AuthService {
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final JwtProperties jwtProperties;
 
@@ -191,26 +197,31 @@ public class AuthServiceImplementation implements AuthService {
     private void addAccessTokenCookie(HttpHeaders httpHeaders, Token token) {
         httpHeaders.add(
                 HttpHeaders.SET_COOKIE,
-                cookieUtil.createAccessTokenCookie(token.getValue(), jwtProperties.getAccessTokenDurationSecond()).toString());
+                cookieUtil.createAccessTokenCookie(token.getValue(), jwtProperties.getAccessTokenDurationSecond())
+                        .toString());
     }
 
     private void addRefreshTokenCookie(HttpHeaders httpHeaders, Token token) {
         httpHeaders.add(
                 HttpHeaders.SET_COOKIE,
-                cookieUtil.createRefreshTokenCookie(token.getValue(), jwtProperties.getRefreshTokenDurationSecond()).toString());
+                cookieUtil.createRefreshTokenCookie(token.getValue(), jwtProperties.getRefreshTokenDurationSecond())
+                        .toString());
     }
 
     private void revokeAllTokenOfUser(User user) {
+        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
         Set<Token> tokens = user.getTokens();
 
-        tokens.forEach(token -> {
-            if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
-                tokenRepository.delete(token);
-            } else if (!token.isDisabled()) {
-                token.setDisabled(true);
-                tokenRepository.save(token);
-            }
-        });
+        if (!tokens.isEmpty()) {
+            tokens.forEach(token -> {
+                if (token.getExpiryUtc().isBefore(now)) {
+                    tokenRepository.delete(token);
+                } else if (!token.isDisabled()) {
+                    token.setDisabled(true);
+                    tokenRepository.save(token);
+                }
+            });
+        }
     }
 
 }

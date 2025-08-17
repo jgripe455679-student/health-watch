@@ -69,9 +69,25 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "createdBy")
     private Set<Profile> profiles;
 
+    @Column(nullable = false)
+    private boolean accountNonExpired;
+
+    @Column(nullable = false)
+    private boolean accountNonLocked;
+
+    @Column(nullable = false)
+    private boolean credentialsNonExpired;
+
+    @Column(nullable = false)
+    private boolean enabled;
+
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.accountNonExpired = true;
+        this.accountNonLocked = true;
+        this.credentialsNonExpired = true;
+        this.enabled = true;
     }
 
     @PreUpdate
@@ -93,22 +109,22 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return this.accountNonExpired;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return this.accountNonLocked;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return this.credentialsNonExpired;
     }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return this.enabled;
     }
 
     @Override

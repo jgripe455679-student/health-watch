@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.crawler.backend.enums.Roles;
+import com.crawler.backend.exception.ResourceNotFoundException;
 import com.crawler.backend.model.Role;
 import com.crawler.backend.model.User;
 import com.crawler.backend.repository.RoleRepository;
@@ -37,6 +38,23 @@ public class BackendApplication implements CommandLineRunner {
         @Override
         public void run(String... args) {
                 createUsers();
+                User sys_admin = userRepository.findByUsername("sys_admin").orElseThrow(
+                        () -> new ResourceNotFoundException("Username not found")
+                );
+                sys_admin.setAccountNonExpired(true);
+                sys_admin.setAccountNonLocked(true);
+                sys_admin.setCredentialsNonExpired(true);
+                sys_admin.setEnabled(true);
+                userRepository.save(sys_admin);
+
+                User sys_user = userRepository.findByUsername("sys_user").orElseThrow(
+                        () -> new ResourceNotFoundException("Username not found")
+                );
+                sys_user.setAccountNonExpired(true);
+                sys_user.setAccountNonLocked(true);
+                sys_user.setCredentialsNonExpired(true);
+                sys_user.setEnabled(true);
+                userRepository.save(sys_user);
         }
 
         public void createUsers() {

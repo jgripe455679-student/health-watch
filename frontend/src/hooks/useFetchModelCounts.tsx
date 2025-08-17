@@ -4,6 +4,7 @@ import { get } from "../api/apiClient";
 interface ModelCounts {
   healthRecords: number;
   profiles: number;
+  services: number;
   systemUsers: number;
 }
 
@@ -15,15 +16,17 @@ const useFetchModelCounts = () => {
     const fetchCounts = async (): Promise<void> => {
       try {
         setIsLoading(true);
-        const [healthRecordsRes, profilesRes, systemUsersRes] =
+        const [healthRecordsRes, profilesRes, servicesRes, systemUsersRes] =
           await Promise.all([
             get("/records/count"),
             get("/profiles/count"),
+            get("/services/count"),
             get("users/count"),
           ]);
         setCounts({
           healthRecords: healthRecordsRes.data as number,
           profiles: profilesRes.data as number,
+          services: servicesRes.data as number,
           systemUsers: systemUsersRes.data as number,
         });
       } catch (error) {

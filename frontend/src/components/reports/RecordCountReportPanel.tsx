@@ -75,38 +75,38 @@ const RecordCountReportPanel: React.FC<RecordCountReportPanelProps> = ({
 
   const handleRecordCountAnalytics = async (): Promise<void> => {
     setExpandedCard((prev) => (prev === "1" ? null : "1"));
-    setIsLoading(true);
-    try {
-      const post_response = await post(
-        "/rabbitmq/record-count/analytics",
-        rawData
-      );
-      if (post_response.status === 200) {
-        const get_response = await get("/reports/record-count/analytics");
-        const { analytics, description } =
-          get_response.data as RecordCountDescriptiveAnalyticsResponse;
-        setAnalyticsData(analytics);
-        setDescription(description);
+    if (expandedCard === null || expandedCard !== "1") {
+      setIsLoading(true);
+      try {
+        const post_response = await post(
+          "/rabbitmq/record-count/analytics",
+          rawData
+        );
+        if (post_response.status === 200) {
+          const get_response = await get("/reports/record-count/analytics");
+          const { analytics, description } =
+            get_response.data as RecordCountDescriptiveAnalyticsResponse;
+          setAnalyticsData(analytics);
+          setDescription(description);
+        }
+      } catch (error) {
+        console.error(
+          "Error submitting and fetching record count analytics data: ",
+          error
+        );
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error(
-        "Error submitting and fetching record count analytics data: ",
-        error
-      );
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div
-      className={`card card-bordered ${span(
+      className={`card card-bordered ${span("1")} ${order(
         "1"
-      )} ${order("1")} w-full h-64 md:h-80 lg:h-96 rounded-none border-x-gray-300 border-t-gray-300 shadow transition-all duration-300`}
+      )} w-full h-64 md:h-80 lg:h-96 rounded-none border-x-gray-300 border-t-gray-300 shadow transition-all duration-300`}
     >
-      <div
-        className={`h-5/6 ${expandedCard === "1" ? "flex justify-center" : ""}`}
-      >
+      <div className={`h-5/6 ${expandedCard === "1" ? "flex" : ""}`}>
         {expandedCard === "1" ? (
           <>
             <div className="w-4/5">
@@ -115,7 +115,11 @@ const RecordCountReportPanel: React.FC<RecordCountReportPanelProps> = ({
                 rawData={rawData}
               />
             </div>
-            <div className="w-1/5 overflow-auto">
+            <div
+              className={`w-1/5 overflow-auto ${
+                isLoading ? "flex items-center justify-center" : ""
+              }`}
+            >
               {isLoading ? (
                 <span className="loading loading-spinner loading-xs text-primary"></span>
               ) : (

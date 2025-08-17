@@ -1,5 +1,7 @@
 package com.crawler.backend.service.implementation;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -22,6 +24,8 @@ public class MedicalProblemOccurrenceServiceImplementation implements MedicalPro
     private final RedisTemplate<String, Object> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
 
+    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     public MedicalProblemOccurrenceServiceImplementation(RedisTemplate<String, Object> redisTemplate,
             StringRedisTemplate stringRedisTemplate) {
         this.redisTemplate = redisTemplate;
@@ -41,8 +45,8 @@ public class MedicalProblemOccurrenceServiceImplementation implements MedicalPro
     }
 
     @Override
-    public List<MedicalProblemOccurrence> getFilteredMedicalProblemOccurrence(List<MedicalProblemOccurrence> records,
-            String healthCondition) {
+    public List<MedicalProblemOccurrence> getFilteredMedicalProblemOccurrence(String healthCondition) {
+        List<MedicalProblemOccurrence> records = this.getAllMedicalProblemOccurrence();
         return records.stream()
                 .filter(record -> healthCondition.equals(record.getHealthCondition()))
                 .collect(Collectors.toList());
@@ -78,6 +82,21 @@ public class MedicalProblemOccurrenceServiceImplementation implements MedicalPro
         descriptive_analytics.put("analytics", getMedicalProblemOccurrenceAnalytics());
         descriptive_analytics.put("description", getMedicalProblemOccurrenceDescription());
         return descriptive_analytics;
+    }
+
+    @Override
+    public List<MedicalProblemOccurrence> getFilteredMedicalProblemOccurrenceByDateRange(String healthCondition,
+            String startDate, String endDate) {
+        LocalDate start = LocalDate.parse(startDate, fmt);
+        LocalDate end = LocalDate.parse(endDate, fmt);
+        List<MedicalProblemOccurrence> occurrences = this.getFilteredMedicalProblemOccurrence(healthCondition);
+        return occurrences.stream()
+                .filter(occurrence -> {
+                    LocalDate recordDate = LocalDate.parse(occurrence.getRecordDate(), fmt);
+                    return (recordDate.isEqual(start) || recordDate.isAfter(start)) &&
+                            (recordDate.isEqual(end) || recordDate.isBefore(end));
+                })
+                .collect(Collectors.toList());
     }
 
 }

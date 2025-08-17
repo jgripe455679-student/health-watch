@@ -75,6 +75,14 @@ public class ReportsController {
         return ResponseEntity.ok(healthConditionOccurrenceService.getAllHealthConditionOccurrence());
     }
 
+    @GetMapping("/health-condition-occurrence/filter")
+    public ResponseEntity<List<HealthConditionOccurrence>> getAllHealthConditionOccurrenceByDateRange(
+            @RequestParam String startDate, @RequestParam String endDate) {
+        List<HealthConditionOccurrence> occurrences = healthConditionOccurrenceService
+                .getAllHealthConditionOccurrenceByDateRange(startDate, endDate);
+        return ResponseEntity.ok(occurrences);
+    }
+
     @GetMapping("/health-condition-occurrence/analytics")
     public ResponseEntity<Map<String, Object>> getHealthConditionOccurrenceDescriptiveAnalytics() {
         return ResponseEntity.ok(healthConditionOccurrenceService.getDescriptiveAnalytics());
@@ -89,7 +97,6 @@ public class ReportsController {
     public ResponseEntity<Map<String, Object>> getDemographicsAnalysisDescriptiveAnalytics() {
         return ResponseEntity.ok(demographicsAnalysisService.getDescriptiveAnalytics());
     }
-    
 
     @GetMapping("/medical-problem-occurrence")
     public ResponseEntity<List<MedicalProblemOccurrence>> getAllMedicalProblemOccurrence() {
@@ -98,11 +105,17 @@ public class ReportsController {
 
     @GetMapping("/medical-problem-occurrence/filter")
     public ResponseEntity<List<MedicalProblemOccurrence>> getFilteredMedicalProblemOccurrence(
-            @RequestParam String healthCondition) {
-        List<MedicalProblemOccurrence> occurrences = medicalProblemOccurrenceService.getAllMedicalProblemOccurrence();
-        List<MedicalProblemOccurrence> filteredOccurrences = medicalProblemOccurrenceService
-                .getFilteredMedicalProblemOccurrence(occurrences, healthCondition);
-        return ResponseEntity.ok(filteredOccurrences);
+            @RequestParam String healthCondition, @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        if ((startDate != null && !startDate.isEmpty()) && (endDate != null && !endDate.isBlank())) {
+            List<MedicalProblemOccurrence> occurrences = medicalProblemOccurrenceService
+                    .getFilteredMedicalProblemOccurrenceByDateRange(healthCondition, startDate, endDate);
+            return ResponseEntity.ok(occurrences);
+        } else {
+            List<MedicalProblemOccurrence> filteredOccurrences = medicalProblemOccurrenceService
+                    .getFilteredMedicalProblemOccurrence(healthCondition);
+            return ResponseEntity.ok(filteredOccurrences);
+        }
     }
 
     @GetMapping("/medical-problem-occurrence/analytics")
