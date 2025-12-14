@@ -21,16 +21,17 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
     const dateTime = new Date(dateString);
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
-      month: "long",
-      day: "numeric",
+      month: "2-digit",
+      day: "2-digit",
       hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
     };
     return dateTime.toLocaleString("en-US", options);
   };
   const stripRolePrefix = (role: string): string => {
-    return role.replace("ROLE_", "");
+    const role_str: string = role.replace("ROLE_", "");
+    return role_str;
   };
   const isMobileNumberValid = (mobileNumber: string): boolean => {
     const mobileNumberPattern = /^09\d{9}$/;

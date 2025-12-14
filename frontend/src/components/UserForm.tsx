@@ -1,20 +1,16 @@
 import axios from "axios";
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { get, post, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
+import { useUserManagement } from "../hooks/useUserManagement";
 import { useAuth } from "../hooks/useAuth";
-import { User } from "../pages/UserManagement";
+import getEmptyUserFormValues, { UserFormValues } from "../utils/user";
+import { useNavigate } from "react-router-dom";
 
 type UserProps = {
-  setCurrentUserManagementView: (view: string) => void;
-  userDetails: User | null;
   isEditing: boolean;
-  setSuccessMessage: (message: string) => void;
-  fetchAllUsers: () => Promise<void>;
-  resetEditingState: () => void;
-  resetSearchState: () => void;
-  resetPageNumber: () => void;
+  setMessage: React.Dispatch<React.SetStateAction<string>>;
+  userDetails?: User;
 };
 
 interface Role {
@@ -25,22 +21,15 @@ interface Role {
   permissions: string[];
 }
 
-interface UserFormValues {
-  username: string;
-  password: string;
-  confirmPassword: string;
-  role: string;
+interface FormMessageProps {
+  isError: boolean;
+  message: string;
 }
 
 const UserForm: React.FC<UserProps> = ({
-  setCurrentUserManagementView,
-  userDetails,
   isEditing,
-  setSuccessMessage,
-  fetchAllUsers,
-  resetEditingState,
-  resetSearchState,
-  resetPageNumber,
+  setMessage,
+  userDetails,
 }) => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [values, setValues] = useState<UserFormValues>({
@@ -49,17 +38,15 @@ const UserForm: React.FC<UserProps> = ({
     confirmPassword: "",
     role: userDetails?.role || "",
   });
-  const [errors, setErrors] = useState<UserFormValues>({
-    username: "",
-    password: "",
-    confirmPassword: "",
-    role: "",
-  });
-  const [globalError, setGlobalError] = useState<string>("");
+  const [errors, setErrors] = useState<UserFormValues>(
+    getEmptyUserFormValues(),
+  );
+  const [formMessage, setFormMessage] = useState<FormMessageProps | null>(null);
   const { stripRolePrefix, isPasswordValid } = useAppUtility();
   const { username } = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { stopEditing } = useUserManagement();
 
   const fetchAllRoles = async (): Promise<void> => {
     setIsLoading(true);
@@ -86,32 +73,20 @@ const UserForm: React.FC<UserProps> = ({
       setValues({ ...values, [name]: value });
       setErrors({ ...errors, [name]: "" });
     }
-    if (globalError) setGlobalError("");
+    if (formMessage) setFormMessage(null);
   };
 
-  const resetState = (view?: string): void => {
-    setValues({
-      username: "",
-      password: "",
-      confirmPassword: "",
-      role: "",
-    });
-    resetEditingState();
-    if (view) setCurrentUserManagementView(view);
-  };
-
-  const handleGoBackClick = (): void => {
-    resetState("userManagement");
+  const handleOnClose = (): void => {
+    if (isEditing) {
+      stopEditing();
+    }
+    navigate(-1);
   };
 
   const handleOnSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const newErrors: UserFormValues = {
-      username: "",
-      password: "",
-      confirmPassword: "",
-      role: "",
-    };
+    const id = event.nativeEvent.submitter?.value;
+    const newErrors: UserFormValues = getEmptyUserFormValues();
     if (initialValidation() && !isEditing) {
       try {
         const response = await post("/users", {
@@ -119,82 +94,65 @@ const UserForm: React.FC<UserProps> = ({
           createdBy: username,
         });
         if (response.status === 201) {
-          setSuccessMessage("User created successfully.");
-          resetState("userManagement");
-          resetSearchState();
-          resetPageNumber();
-          fetchAllUsers();
+          setValues(getEmptyUserFormValues());
+          if (id === "Save & Add New") {
+            setFormMessage({
+              isError: false,
+              message: "User successfully saved.",
+            });
+          } else {
+            setMessage("User successfully saved.");
+            navigate("/user-management", { replace: true });
+          }
         }
       } catch (error) {
         if (axios.isAxiosError(error) && error.status === 409) {
           newErrors.username = error.response?.data?.message + ".";
         } else {
-          setGlobalError(
-            "Oops, something went wrong. Please contact your system administrator."
-          );
-          setValues({
-            username: "",
-            password: "",
-            confirmPassword: "",
-            role: "",
+          setFormMessage({
+            isError: true,
+            message:
+              "Oops, something went wrong. Please contact your system administrator.",
           });
+          setValues(getEmptyUserFormValues());
         }
-        console.error("Error submitting user data: ", error);
+        console.error("Error submitting new user data: ", error);
       }
       setErrors(newErrors);
-    } else if (initialValidation() && isEditing && userDetails !== null) {
+    }
+    if (isEditing && userDetails !== null) {
       try {
-        const response = await put("/users/" + userDetails.id, {
+        const response = await put("users/" + userDetails.id, {
           username: values.username,
           password: values.password,
           role: stripRolePrefix(values.role),
           updatedBy: username,
         });
         if (response.status === 200) {
-          const userResponse = await get(
-            `/users/username?username=${username}`
-          );
-          if (userResponse.status === 200) {
-            const { id } = userResponse.data as User;
-            if (userDetails.id === id) {
-              resetEditingState();
-              navigate("/", { replace: true });
-            }
-          }
-          setSuccessMessage("User updated successfully.");
-          resetState("userManagement");
-          resetSearchState();
-          resetPageNumber();
-          fetchAllUsers();
+          setValues(getEmptyUserFormValues());
+          stopEditing;
+          setMessage("Changes successfully applied.");
+          navigate("/user-management", { replace: true });
         }
       } catch (error) {
         if (axios.isAxiosError(error) && error.status === 409) {
           newErrors.username = error.response?.data?.message + ".";
           setErrors(newErrors);
         } else {
-          setGlobalError(
-            "Oops, something went wrong. Please contact your system administrator."
-          );
-          setValues({
-            username: "",
-            password: "",
-            confirmPassword: "",
-            role: "",
+          setFormMessage({
+            isError: true,
+            message:
+              "Oops, something went wrong. Please contact your system administrator.",
           });
         }
-        console.error("Error submitting user data: ", error);
+        console.error("Error submitting user data, Changes not saved: ", error);
       }
     }
   };
 
   const initialValidation = (): boolean => {
     let isValid = true;
-    const newErrors: UserFormValues = {
-      username: "",
-      password: "",
-      confirmPassword: "",
-      role: "",
-    };
+    const newErrors: UserFormValues = getEmptyUserFormValues();
 
     if (!values.username) {
       newErrors.username = "Username is required.";
@@ -233,10 +191,10 @@ const UserForm: React.FC<UserProps> = ({
 
   return (
     <div className="flex flex-col items-center w-full">
-      {globalError && (
+      {formMessage && (
         <div
           role="alert"
-          className="alert alert-error rounded-none flex justify-between"
+          className={`alert ${!formMessage.isError ? "alert-success" : "alert-error"} rounded-none flex justify-between`}
         >
           <div className="flex items-center gap-x-1.5">
             <svg
@@ -252,13 +210,13 @@ const UserForm: React.FC<UserProps> = ({
                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="text-sm">{globalError}</span>
+            <span className="text-sm">{formMessage.message}</span>
           </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-3 w-3 shrink-0 stroke-current cursor-pointer"
             viewBox="0 0 384 512"
-            onClick={() => setGlobalError("")}
+            onClick={() => setFormMessage(null)}
           >
             <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z" />
           </svg>
@@ -369,16 +327,25 @@ const UserForm: React.FC<UserProps> = ({
           )}
         </label>
         <div className="flex flex-row-reverse gap-x-1.5 py-1.5">
+          {!userDetails && (
+            <input
+              data-id="new"
+              type="submit"
+              className="btn btn-sm btn-primary rounded-none"
+              value="Save & Add New"
+            />
+          )}
           <input
+            data-id="add"
             type="submit"
-            className="btn btn-sm btn-primary rounded-none"
-            value={isEditing ? "Update" : "Add"}
+            className="btn btn-sm btn-outline rounded-none"
+            value="Save & Close"
           />
           <button
             className="btn btn-ghost btn-sm rounded-none"
-            onClick={handleGoBackClick}
+            onClick={handleOnClose}
           >
-            Cancel
+            Close
           </button>
         </div>
       </form>

@@ -51,7 +51,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } catch (error) {
         logout();
-        console.error("Error fetching user authentication data", error);
+        console.error("Error fetching user authentication data1", error);
       }
     };
 

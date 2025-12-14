@@ -3,7 +3,7 @@ import React, { ChangeEvent, FormEvent, useState } from "react";
 import { get, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
 import { useAuth } from "../hooks/useAuth";
-import { User } from "../pages/UserManagement";
+import { User } from "../pages/user-management/UserManagement";
 
 interface ResetPasswordFormValues {
   password: string;

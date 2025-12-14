@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { deleteRequest, get } from "../api/apiClient";
-import Navbar from "../components/Navbar";
-import Pagination from "../components/Pagination";
-import SearchInput from "../components/SearchInput";
-import UserForm from "../components/UserForm";
-import { useAppUtility } from "../hooks/useAppUtility";
-import { useAuth } from "../hooks/useAuth";
-import useDebounce from "../hooks/useDebounce";
-import useDocumentTitle from "../hooks/useDocumentTitle";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { deleteRequest, get } from "../../api/apiClient";
+import Pagination from "../../components/Pagination";
+import SearchInput from "../../components/SearchInput";
+import { useAppUtility } from "../../hooks/useAppUtility";
+import { useAuth } from "../../hooks/useAuth";
+import useDebounce from "../../hooks/useDebounce";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import { useUserManagement } from "../../hooks/useUserManagement";
 
 export interface User {
   id: number;
@@ -26,18 +26,11 @@ export interface User {
 }
 
 const UserManagement: React.FC = () => {
-  const [currentUserManagementView, setCurrentUserManagementView] =
-    useState<string>("userManagement");
   const [users, setUsers] = useState<User[]>([]);
-  const [userDetails, setUserDetails] = useState<User | null>(null);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [successMessage, setSuccessMessage] = useState<string>(
-    "User successfully deleted."
-  );
+  const { message, setMessage } = useUserManagement();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(5);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
   const { stripRolePrefix, formatLocalDateTime } = useAppUtility();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   useDocumentTitle("User Management");
@@ -47,31 +40,40 @@ const UserManagement: React.FC = () => {
   const filteredUsers = users.filter((user) => user.username !== username);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const allIds: number[] = users.map((d) => d.id);
+  const selectedCount = selectedIds.size;
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
-  const openModal = (userId: number) => {
+  const openModal = () => {
     setIsOpen(true);
-    setUserToDeleteId(userId);
   };
 
-  const deleteUser = async (userId: number | null): Promise<void> => {
+  const deleteUser = async (userIds: Set<number>): Promise<void> => {
     try {
-      const response = await deleteRequest("/users/" + userId);
-      if (response.status === 200) {
-        setSuccessMessage("User successfully deleted.");
+      const idsArray = Array.from(userIds);
+      const responses = await Promise.all(
+        idsArray.map((id) => deleteRequest(`/users/${id}`)),
+      );
+      const allSuccessful = responses.every((res) => res.status === 200);
+      if (allSuccessful) {
+        if (userIds.size > 1) {
+          setMessage("Selected users have been deactivated successfully.");
+        } else if (userIds.size == 1) {
+          setMessage("User has been deactivated successfully.");
+        }
         setIsOpen(false);
-        setUserToDeleteId(null);
         resetPageNumber();
         resetSearchState();
         fetchAllUsers();
+        setSelectedIds(new Set());
       }
     } catch (error) {
-      console.error("Error deleting user data: ", error);
+      console.error("Error deactivating user data: ", error);
     }
   };
 
   const closeModal = () => {
     setIsOpen(false);
-    setUserToDeleteId(null);
   };
 
   const fetchAllUsers = async (): Promise<void> => {
@@ -86,18 +88,6 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleEditClick = async (userId: number): Promise<void> => {
-    resetSuccessMessage();
-    setCurrentUserManagementView("editUser");
-    setIsEditing(true);
-    try {
-      const response = await get("/users/" + userId);
-      setUserDetails(response.data as User);
-    } catch (error) {
-      console.error("Error fetching user data: ", error);
-    }
-  };
-
   const resetPageNumber = (): void => {
     if (currentPage !== 1) setCurrentPage(1);
   };
@@ -106,25 +96,31 @@ const UserManagement: React.FC = () => {
     if (searchValue) setSearchValue("");
   };
 
-  const resetEditingState = (): void => {
-    setIsEditing(false);
-    setUserDetails(null);
+  const resetMessage = (): void => {
+    if (message) setMessage("");
   };
 
-  const resetSuccessMessage = (): void => {
-    if (successMessage) setSuccessMessage("");
+  const handleEditUser = (): void => {
+    selectedIds.forEach((value) => {
+      navigate(`edit/${value}`);
+    });
   };
 
-  const handleNewUserClick = () => {
-    resetSuccessMessage();
-    setCurrentUserManagementView("newUser");
-  };
+  // Keep the header checkbox indeterminate when partially selected
+
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+    const total = users.length;
+    const selectedCount = selectedIds.size;
+    selectAllRef.current.indeterminate =
+      selectedCount > 0 && selectedCount < total;
+  }, [selectedIds, users.length]);
 
   // Master checkbox
 
   const toggleAll = () => {
     setSelectedIds((prev) =>
-      prev.size === users.length ? new Set() : new Set(allIds)
+      prev.size === users.length || prev.size > 0 ? new Set() : new Set(allIds),
     );
   };
 
@@ -133,7 +129,11 @@ const UserManagement: React.FC = () => {
   const toggleRow = (id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -173,13 +173,13 @@ const UserManagement: React.FC = () => {
 
   const paginate = (pageNumber: number) => {
     setCurrentPage(pageNumber);
-    resetSuccessMessage();
+    resetMessage();
   };
 
-  const UserManagementCard = () => (
-    <div className="relative px-1.5 md:px-2.5 py-1 my-1.5">
+  return (
+    <>
       <h1 className="text-4xl p-1.5 pl-0 mb-2.5">User Management</h1>
-      {successMessage && (
+      {message && (
         <div
           role="alert"
           className="alert alert-success rounded-none flex justify-between max-sm:px-2 md:my-1.5"
@@ -198,13 +198,13 @@ const UserManagement: React.FC = () => {
                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="text-sm">{successMessage}</span>
+            <span className="text-sm">{message}</span>
           </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-3 w-3 shrink-0 stroke-current cursor-pointer"
             viewBox="0 0 384 512"
-            onClick={resetSuccessMessage}
+            onClick={resetMessage}
           >
             <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z" />
           </svg>
@@ -216,21 +216,57 @@ const UserManagement: React.FC = () => {
           setSearchValue={setSearchValue}
           keyword={"username"}
           resetPageNumber={resetPageNumber}
-          resetSuccessMessage={resetSuccessMessage}
+          resetSuccessMessage={resetMessage}
         />
-        <button
-          className="btn btn-sm btn-outline btn-primary rounded-none max-sm:w-3/4"
-          onClick={handleNewUserClick}
-        >
-          New User
-        </button>
+        <div className="flex gap-x-2">
+          {selectedCount > 0 && selectedCount === 1 ? (
+            <>
+              <button
+                className="btn btn-sm btn-error rounded-none max-sm:w-3/4"
+                onClick={() => openModal()}
+              >
+                Deactivate User
+              </button>
+              <button
+                className="btn btn-sm btn-secondary rounded-none max-sm:w-3/4"
+                onClick={handleEditUser}
+              >
+                Edit User
+              </button>
+            </>
+          ) : selectedCount > 0 ? (
+            <button
+              className="btn btn-sm btn-error rounded-none max-sm:w-3/4"
+              onClick={() => openModal()}
+            >
+              Deactivate Users
+            </button>
+          ) : (
+            <></>
+          )}
+          <Link
+            to="new"
+            className="btn btn-sm btn-outline btn-primary rounded-none max-sm:w-3/4"
+            onClick={resetMessage}
+          >
+            New User
+          </Link>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="table table-xs mb-0.5">
           <thead>
             <tr>
               <th>
-                <input type="checkbox" className="checkbox checkbox-xs" />
+                <input
+                  type="checkbox"
+                  ref={selectAllRef}
+                  className="checkbox checkbox-xs"
+                  onChange={toggleAll}
+                  checked={selectedCount === users.length && users.length > 0}
+                  title="Select all"
+                  aria-label="Select all users"
+                />
               </th>
               <th>ID</th>
               <th>Username</th>
@@ -240,7 +276,6 @@ const UserManagement: React.FC = () => {
               <th>Updated At</th>
               <th>Updated By</th>
               <th>Status</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -286,40 +321,6 @@ const UserManagement: React.FC = () => {
                         <span className="text-error">Inactive</span>
                       )}
                     </td>
-                    <td>
-                      <div className="flex items-center gap-2.5">
-                        <button
-                          className="btn btn-primary btn-xs rounded-full"
-                          onClick={() => handleEditClick(user.id)}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            viewBox="0 0 512 512"
-                          >
-                            <path
-                              fill="#020d19"
-                              d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          className="btn btn-error btn-xs rounded-full"
-                          onClick={() => openModal(user.id)}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            viewBox="0 0 448 512"
-                          >
-                            <path
-                              fill="#020d19"
-                              d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
                   </tr>
                 );
               })
@@ -346,21 +347,24 @@ const UserManagement: React.FC = () => {
             >
               <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z" />
             </svg>
-            <span className="text-error">Confirm Delete</span>
+            <span className="text-error">Confirm Deactivate</span>
           </div>
-          <p className="my-2.5">Are you sure you want to delete this record?</p>
+          <p className="my-2.5">
+            Permanently deactivate
+            {selectedIds.size > 1 ? "the selected users" : "this user"}
+          </p>
           <div className="join flex justify-end gap-x-1.5">
             <button
               className="btn btn-sm btn-ghost rounded-none"
-              onClick={() => deleteUser(userToDeleteId)}
+              onClick={() => deleteUser(selectedIds)}
             >
-              Yes
+              Confirm
             </button>
             <button
               className="btn btn-sm btn-ghost rounded-none"
               onClick={closeModal}
             >
-              No
+              Cancel
             </button>
           </div>
         </div>
@@ -371,42 +375,7 @@ const UserManagement: React.FC = () => {
         currentPage={currentPage}
         paginate={paginate}
       />
-    </div>
-  );
-
-  const UserCard = () => (
-    <div className="px-2.5 py-1 my-1.5">
-      <div className="card card-bordered bg-base-100 border-gray-300 rounded-none shadow">
-        <div className="card-body p-0">
-          <span className="card-title bg-gray-100 text-sm text-primary p-1.5">
-            {currentUserManagementView === "editUser" && isEditing
-              ? "Edit User"
-              : "New User"}
-          </span>
-          <UserForm
-            userDetails={userDetails}
-            setCurrentUserManagementView={setCurrentUserManagementView}
-            isEditing={isEditing}
-            setSuccessMessage={setSuccessMessage}
-            fetchAllUsers={fetchAllUsers}
-            resetEditingState={resetEditingState}
-            resetSearchState={resetSearchState}
-            resetPageNumber={resetPageNumber}
-          />
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="h-full w-full">
-      <Navbar setCurrentUserManagementView={setCurrentUserManagementView} />
-      {currentUserManagementView === "userManagement" ? (
-        <UserManagementCard />
-      ) : (
-        <UserCard />
-      )}
-    </div>
+    </>
   );
 };
 

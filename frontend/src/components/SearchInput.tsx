@@ -6,7 +6,7 @@ type SearchInputProps = {
   keyword: string;
   resetPageNumber: () => void;
   resetSuccessMessage: () => void;
-}
+};
 
 const SearchInput: React.FC<SearchInputProps> = ({
   searchValue,
@@ -27,7 +27,6 @@ const SearchInput: React.FC<SearchInputProps> = ({
       value={searchValue}
       onChange={handleOnChange}
       placeholder={`Search by ${keyword}`}
-      autoFocus
     />
   );
 };
