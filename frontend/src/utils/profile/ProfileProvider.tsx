@@ -3,7 +3,8 @@ import profileContext from "./profileContext";
 
 export type ProfileContextProps = {
   isEditing: boolean;
-  update: () => void;
+  startEditing: () => void;
+  stopEditing: () => void;
   message: string;
   setMessage: React.Dispatch<React.SetStateAction<string>>;
 };

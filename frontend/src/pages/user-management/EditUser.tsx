@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import UserForm from "../../components/UserForm";
-import { useUserManagement } from "../../hooks/useUserManagement";
 import { useParams } from "react-router-dom";
 import { get } from "../../api/apiClient";
+import UserForm from "../../components/UserForm";
+import { useUserManagement } from "../../hooks/useUserManagement";
 
 interface User {
   id: number;
@@ -39,7 +39,7 @@ const EditUser: React.FC = () => {
       }
     };
     getUserDetailsToEdit();
-  }, []);
+  }, [startEditing, userDetails, userId]);
   return (
     <>
       <h1 className="text-4xl p-1.5 pl-0 mb-2.5">Edit User</h1>

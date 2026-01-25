@@ -7,14 +7,13 @@ const getEmptyProfileFormValues = (): ProfileFormValues => {
     lastName: "",
     suffix: "",
     dateOfBirth: "",
+    age: null,
     gender: "",
     maritalStatus: "",
     address: "",
     mobileNumber: "",
-    occupation: "",
     educationalBackground: "",
-    householdSize: null,
-    incomeBracket: "",
+    occupation: "",
   };
 };
 

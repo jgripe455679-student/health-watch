@@ -1,31 +1,24 @@
 import axios from "axios";
 import React, { ChangeEvent, FormEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { get, post, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
 import { useAuth } from "../hooks/useAuth";
-import { Profile } from "../pages/Profiling";
+import { useProfiling } from "../hooks/useProfiling";
+import { Profile } from "../pages/profiling/Profiling";
 import getEmptyProfileFormValues, { ProfileFormValues } from "../utils/profile";
+import { FormMessageProps } from "../utils/types";
 
 type ProfileProps = {
-  setCurrentProfilingView: (view: string) => void;
-  setSuccessMessage: (message: string) => void;
+  setMessage: React.Dispatch<React.SetStateAction<string>>;
   isEditing: boolean;
-  profileDetails: Profile | null;
-  fetchAllProfiles: () => Promise<void>;
-  resetEditingState: () => void;
-  resetSearchState: () => void;
-  resetPageNumber: () => void;
+  profileDetails?: Profile;
 };
 
 const ProfileForm: React.FC<ProfileProps> = ({
-  setCurrentProfilingView,
-  setSuccessMessage,
   isEditing,
+  setMessage,
   profileDetails,
-  fetchAllProfiles,
-  resetEditingState,
-  resetSearchState,
-  resetPageNumber,
 }) => {
   const [values, setValues] = useState<ProfileFormValues>({
     firstName: profileDetails?.firstName || "",
@@ -33,32 +26,27 @@ const ProfileForm: React.FC<ProfileProps> = ({
     lastName: profileDetails?.lastName || "",
     suffix: profileDetails?.suffix || "",
     dateOfBirth: profileDetails?.dateOfBirth || "",
+    age: profileDetails?.age || null,
     gender: profileDetails?.gender || "",
     maritalStatus: profileDetails?.maritalStatus || "",
     address: profileDetails?.address || "",
     mobileNumber: profileDetails?.mobileNumber || "",
-    occupation: profileDetails?.occupation || "",
     educationalBackground: profileDetails?.educationalBackground || "",
-    householdSize: profileDetails?.householdSize || null,
-    incomeBracket: profileDetails?.incomeBracket || "",
+    occupation: profileDetails?.occupation || "",
   });
   const [errors, setErrors] = useState<ProfileFormValues>(
-    getEmptyProfileFormValues()
+    getEmptyProfileFormValues(),
   );
-  const [globalError, setGlobalError] = useState<string>("");
+  const [formMessage, setFormMessage] = useState<FormMessageProps | null>(null);
   const { username } = useAuth();
   const { isMobileNumberValid } = useAppUtility();
-
-  const resetState = (view?: string): void => {
-    setValues(getEmptyProfileFormValues());
-    resetEditingState();
-    if (view) setCurrentProfilingView(view);
-  };
+  const navigate = useNavigate();
+  const { stopEditing } = useProfiling();
 
   const handleOnChange = (
     event: ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = event.target;
 
@@ -73,11 +61,14 @@ const ProfileForm: React.FC<ProfileProps> = ({
       setErrors({ ...errors, [name]: "" });
     }
 
-    if (globalError) setGlobalError("");
+    if (formMessage) setFormMessage(null);
   };
 
-  const handleGoBackClick = (): void => {
-    resetState("profiling");
+  const handleOnClose = (): void => {
+    if (isEditing) {
+      stopEditing();
+    }
+    navigate(-1);
   };
 
   const handleOnSubmit = async (event: FormEvent): Promise<void> => {
@@ -104,7 +95,7 @@ const ProfileForm: React.FC<ProfileProps> = ({
         if (axios.isAxiosError(error)) {
           setValues(getEmptyProfileFormValues());
           setGlobalError(
-            "Oops, something went wrong. Please contact your system administrator."
+            "Oops, something went wrong. Please contact your system administrator.",
           );
         }
         console.error("Error submitting profile data: ", error);
@@ -131,7 +122,7 @@ const ProfileForm: React.FC<ProfileProps> = ({
         if (axios.isAxiosError(error)) {
           setValues(getEmptyProfileFormValues());
           setGlobalError(
-            "Oops, something went wrong. Please contact your system administrator."
+            "Oops, something went wrong. Please contact your system administrator.",
           );
         }
         console.error("Error submitting profile data: ", error);
@@ -189,10 +180,10 @@ const ProfileForm: React.FC<ProfileProps> = ({
 
   return (
     <div className="flex flex-col items-center w-full">
-      {globalError && (
+      {formMessage && (
         <div
           role="alert"
-          className="alert alert-error rounded-none flex justify-between"
+          className={`alert ${!formMessage.isError ? "alert-success" : "alert-error"} rounded-none flex justify-between`}
         >
           <div className="flex items-center gap-x-1.5">
             <svg
@@ -208,13 +199,13 @@ const ProfileForm: React.FC<ProfileProps> = ({
                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="text-sm">{globalError}</span>
+            <span className="text-sm">{formMessage.message}</span>
           </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-3 w-3 shrink-0 stroke-current cursor-pointer"
             viewBox="0 0 384 512"
-            onClick={() => setGlobalError("")}
+            onClick={() => setFormMessage(null)}
           >
             <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z" />
           </svg>

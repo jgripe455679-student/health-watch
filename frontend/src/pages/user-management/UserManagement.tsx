@@ -44,10 +44,6 @@ const UserManagement: React.FC = () => {
   const selectAllRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const openModal = () => {
-    setIsOpen(true);
-  };
-
   const deleteUser = async (userIds: Set<number>): Promise<void> => {
     try {
       const idsArray = Array.from(userIds);
@@ -72,6 +68,13 @@ const UserManagement: React.FC = () => {
     }
   };
 
+
+  // Modal utilities
+  
+  const openModal = () => {
+    setIsOpen(true);
+  };
+
   const closeModal = () => {
     setIsOpen(false);
   };
@@ -88,6 +91,14 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const handleEditUser = (): void => {
+    selectedIds.forEach((value) => {
+      navigate(`edit/${value}`);
+    });
+  };
+
+  // Reset utilities
+
   const resetPageNumber = (): void => {
     if (currentPage !== 1) setCurrentPage(1);
   };
@@ -98,12 +109,6 @@ const UserManagement: React.FC = () => {
 
   const resetMessage = (): void => {
     if (message) setMessage("");
-  };
-
-  const handleEditUser = (): void => {
-    selectedIds.forEach((value) => {
-      navigate(`edit/${value}`);
-    });
   };
 
   // Keep the header checkbox indeterminate when partially selected

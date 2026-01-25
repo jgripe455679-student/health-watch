@@ -1,15 +1,13 @@
-import React, { createContext } from "react";
+import React from "react";
+import appUtilityContext from "./appUtilityContext";
 
 export type AppUtilityContextProps = {
   formatLocalDateTime: (dateString: string) => string;
+  formatDateOfBirth: (dobString: string) => string;
   stripRolePrefix: (role: string) => string;
   isMobileNumberValid: (mobileNumber: string) => boolean;
   isPasswordValid: (password: string) => boolean;
 };
-
-export const AppUtilityContext = createContext<
-  AppUtilityContextProps | undefined
->(undefined);
 
 const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -28,6 +26,19 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
       second: "2-digit",
     };
     return dateTime.toLocaleString("en-US", options);
+  };
+
+  const formatDateOfBirth = (dobString: string) => {
+    if (!dobString) {
+      return "";
+    }
+    const dob = new Date(dobString);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    };
+    return dob.toLocaleString("en-US", options);
   };
   const stripRolePrefix = (role: string): string => {
     const role_str: string = role.replace("ROLE_", "");
@@ -49,16 +60,17 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
     return isValid;
   };
   return (
-    <AppUtilityContext.Provider
+    <appUtilityContext.Provider
       value={{
         formatLocalDateTime,
+        formatDateOfBirth,
         stripRolePrefix,
         isMobileNumberValid,
         isPasswordValid,
       }}
     >
       {children}
-    </AppUtilityContext.Provider>
+    </appUtilityContext.Provider>
   );
 };
 

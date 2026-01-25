@@ -1,11 +1,13 @@
 import axios from "axios";
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, SyntheticEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { get, post, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
-import { useUserManagement } from "../hooks/useUserManagement";
 import { useAuth } from "../hooks/useAuth";
+import { useUserManagement } from "../hooks/useUserManagement";
+import { User } from "../pages/user-management/UserManagement";
+import { FormMessageProps } from "../utils/types";
 import getEmptyUserFormValues, { UserFormValues } from "../utils/user";
-import { useNavigate } from "react-router-dom";
 
 type UserProps = {
   isEditing: boolean;
@@ -21,11 +23,6 @@ interface Role {
   permissions: string[];
 }
 
-interface FormMessageProps {
-  isError: boolean;
-  message: string;
-}
-
 const UserForm: React.FC<UserProps> = ({
   isEditing,
   setMessage,
@@ -39,7 +36,7 @@ const UserForm: React.FC<UserProps> = ({
     role: userDetails?.role || "",
   });
   const [errors, setErrors] = useState<UserFormValues>(
-    getEmptyUserFormValues(),
+    getEmptyUserFormValues()
   );
   const [formMessage, setFormMessage] = useState<FormMessageProps | null>(null);
   const { stripRolePrefix, isPasswordValid } = useAppUtility();
@@ -83,9 +80,13 @@ const UserForm: React.FC<UserProps> = ({
     navigate(-1);
   };
 
-  const handleOnSubmit = async (event: FormEvent) => {
+  const handleOnSubmit = async (
+    event: SyntheticEvent<HTMLFormElement, SubmitEvent>
+  ) => {
     event.preventDefault();
-    const id = event.nativeEvent.submitter?.value;
+    const submitter = event.nativeEvent.submitter;
+    const id =
+      submitter instanceof HTMLInputElement ? submitter.value : undefined;
     const newErrors: UserFormValues = getEmptyUserFormValues();
     if (initialValidation() && !isEditing) {
       try {
@@ -122,7 +123,7 @@ const UserForm: React.FC<UserProps> = ({
     }
     if (isEditing && userDetails !== null) {
       try {
-        const response = await put("users/" + userDetails.id, {
+        const response = await put("users/" + userDetails?.id, {
           username: values.username,
           password: values.password,
           role: stripRolePrefix(values.role),
@@ -130,7 +131,7 @@ const UserForm: React.FC<UserProps> = ({
         });
         if (response.status === 200) {
           setValues(getEmptyUserFormValues());
-          stopEditing;
+          stopEditing();
           setMessage("Changes successfully applied.");
           navigate("/user-management", { replace: true });
         }
