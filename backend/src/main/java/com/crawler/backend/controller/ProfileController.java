@@ -1,6 +1,7 @@
 package com.crawler.backend.controller;
 
 import java.net.URI;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -55,9 +56,10 @@ public class ProfileController {
     }
 
     @DeleteMapping("/{profileId}")
-    public ResponseEntity<?> deleteProfile(
-            @PathVariable Long profileId) {
-        String response = profileService.deleteProfile(profileId);
+    public ResponseEntity<?> archiveProfile(
+            @PathVariable Long profileId, Principal principal) {
+        String username = principal.getName();
+        String response = profileService.archiveProfile(profileId, username);
         return ResponseEntity.ok(response);
     }
 

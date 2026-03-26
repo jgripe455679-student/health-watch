@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { get } from "../../api/apiClient";
+import { Link, useNavigate } from "react-router-dom";
+import { deleteRequest, get } from "../../api/apiClient";
 import Pagination from "../../components/Pagination";
 import SearchInput from "../../components/SearchInput";
 import { useAppUtility } from "../../hooks/useAppUtility";
@@ -15,7 +15,7 @@ export interface Profile {
   lastName: string;
   suffix: string;
   dateOfBirth: string;
-  age: number;
+  age: string;
   gender: string;
   maritalStatus: string;
   address: string;
@@ -28,6 +28,7 @@ export interface Profile {
   createdBy: string;
   updatedAt: string;
   updatedBy: string;
+  isArchived: boolean;
 }
 
 const Profiling: React.FC = () => {
@@ -45,6 +46,30 @@ const Profiling: React.FC = () => {
   const allIds: number[] = profiles.map((d) => d.id);
   const selectedCount = selectedIds.size;
   const selectAllRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  const archiveProfile = async (profileIds: Set<number>): Promise<void> => {
+    try {
+      const idsArray = Array.from(profileIds);
+      const responses = await Promise.all(
+        idsArray.map((id) => deleteRequest(`/profiles/${id}`)),
+      );
+      const allSuccessful = responses.every((res) => res.status === 200);
+      if (allSuccessful) {
+        if (profileIds.size > 1) {
+          setMessage("Selected profiles have been archived successfully.");
+        } else if (profileIds.size === 1) {
+          setMessage("Profile has been archived successfully.");
+        }
+        setIsOpen(false);
+        resetPageNumber();
+        resetSearchState();
+        setSelectedIds(new Set());
+      }
+    } catch (error) {
+      console.error("Error archiving profile/s data: ", error);
+    }
+  };
 
   const fetchAllProfiles: () => Promise<void> = async (): Promise<void> => {
     setIsLoading(true);
@@ -56,6 +81,12 @@ const Profiling: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEditProfile = (): void => {
+    selectedIds.forEach((value) => {
+      navigate(`edit/${value}`);
+    });
   };
 
   // Reset utilities
@@ -134,6 +165,7 @@ const Profiling: React.FC = () => {
   };
 
   // Multiple selection
+
   const toggleRow = (id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -233,15 +265,21 @@ const Profiling: React.FC = () => {
                 className="btn btn-sm btn-error rounded-none max-sm:w-3/4"
                 onClick={() => openModal()}
               >
-                Deactivate User
+                Archive Profile
               </button>
-              <button className="btn btn-sm btn-secondary rounded-none max-sm:w-3/4">
-                Edit User
+              <button
+                className="btn btn-sm btn-secondary rounded-none max-sm:w-3/4"
+                onClick={handleEditProfile}
+              >
+                Edit Profile
               </button>
             </>
           ) : selectedCount > 0 ? (
-            <button className="btn btn-sm btn-error rounded-none max-sm:w-3/4">
-              Deactivate Users
+            <button
+              className="btn btn-sm btn-error rounded-none max-sm:w-3/4"
+              onClick={() => openModal()}
+            >
+              Archive Profiles
             </button>
           ) : (
             <></>
@@ -346,6 +384,47 @@ const Profiling: React.FC = () => {
           </tbody>
         </table>
       </div>
+      <dialog open={isOpen} className="modal">
+        <div className="modal-box rounded-none">
+          <form method="dialog">
+            <button
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={closeModal}
+            >
+              x
+            </button>
+          </form>
+          <div className="flex items-center gap-1.5">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="#FF0000"
+              viewBox="0 0 512 512"
+            >
+              <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z" />
+            </svg>
+            <span className="text-error">Confirm Deletion</span>
+          </div>
+          <p className="my-2.5">
+            Permanently delete
+            {selectedIds.size > 1 ? "the selected profiles" : "this profile"}
+          </p>
+          <div className="join flex justify-end gap-x-1.5">
+            <button
+              className="btn btn-sm btn-ghost rounded-none"
+              onClick={() => archiveProfile(selectedIds)}
+            >
+              Confirm
+            </button>
+            <button
+              className="btn btn-sm btn-ghost rounded-none"
+              onClick={closeModal}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </dialog>
       <Pagination
         totalItems={profiles.length}
         itemsPerPage={itemsPerPage}

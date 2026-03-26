@@ -2,23 +2,25 @@ import React from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Loader from "./components/Loader";
 import PrivateRoutes from "./components/PrivateRoutes";
-import UserManagementLayout from "./layouts/UserManagementLayout";
 import ProfilingLayout from "./layouts/ProfilingLayout";
+import UserManagementLayout from "./layouts/UserManagementLayout";
 import Dashboard from "./pages/Dashboard";
 import HealthRecord from "./pages/HealthRecord";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import EditProfile from "./pages/profiling/EditProfile";
+import NewProfile from "./pages/profiling/NewProfile";
 import Profiling from "./pages/profiling/Profiling";
 import Reports from "./pages/Reports";
 import ResetPassword from "./pages/ResetPassword";
-import NewUser from "./pages/user-management/NewUser";
 import EditUser from "./pages/user-management/EditUser";
+import NewUser from "./pages/user-management/NewUser";
 import UserManagement from "./pages/user-management/UserManagement";
 import AppUtilityProvider from "./utils/AppUtilityProvider";
 import AuthProvider from "./utils/AuthProvider";
 import HealthConditionsProvider from "./utils/HealthConditionsProvider";
-import UserProvider from "./utils/user/UserProvider";
 import ProfileProvider from "./utils/profile/ProfileProvider";
+import UserProvider from "./utils/user/UserProvider";
 
 const App: React.FC = () => {
   return (
@@ -46,6 +48,8 @@ const App: React.FC = () => {
                   </Route>
                   <Route path="/profiling" element={<ProfilingLayout />}>
                     <Route index element={<Profiling />} />
+                    <Route path="new" element={<NewProfile />} />
+                    <Route path="edit/:id" element={<EditProfile />} />
                   </Route>
                   <Route path="/health-record" element={<HealthRecord />} />
                   <Route path="/reports" element={<Reports />} />

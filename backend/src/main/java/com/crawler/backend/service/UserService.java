@@ -15,7 +15,7 @@ public interface UserService {
 
     UserDto updateUser(Long userId, UserDto userDto);
 
-    String disableUser(Long userId);
+    String disableUser(Long userId, String username);
 
     List<UserDto> searchByUsername(String username, Sort sort);
 

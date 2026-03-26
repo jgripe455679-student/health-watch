@@ -61,10 +61,7 @@ public class Profile {
     private String address;
 
     @Column(nullable = true)
-    @Pattern(
-        regexp = "^(?=.{1,64}@)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
-        message = "Invalid email address format"
-    )
+    @Pattern(regexp = "^(?=.{1,64}@)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "Invalid email address format")
     private String emailAddress;
 
     @Column(nullable = false)
@@ -93,9 +90,13 @@ public class Profile {
     @JoinColumn(nullable = true)
     private User updatedBy;
 
+    @Column(nullable = true)
+    private boolean archived;
+
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.archived = false;
     }
 
     @PreUpdate
@@ -120,5 +121,9 @@ public class Profile {
             sb.append(suffix.toUpperCase());
         }
         return sb.toString();
+    }
+
+    public boolean isArchived() {
+        return this.archived;
     }
 }

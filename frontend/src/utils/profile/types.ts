@@ -4,10 +4,11 @@ export interface ProfileFormValues {
   lastName: string;
   suffix: string;
   dateOfBirth: string;
-  age: number | null;
+  age: string;
   gender: string;
   maritalStatus: string;
   address: string;
+  emailAddress: string;
   mobileNumber: string;
   educationalBackground: string;
   occupation: string;

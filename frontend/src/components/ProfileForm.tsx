@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import React, { ChangeEvent, SyntheticEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { get, post, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
@@ -21,25 +21,26 @@ const ProfileForm: React.FC<ProfileProps> = ({
   profileDetails,
 }) => {
   const [values, setValues] = useState<ProfileFormValues>({
-    firstName: profileDetails?.firstName || "",
-    middleName: profileDetails?.middleName || "",
-    lastName: profileDetails?.lastName || "",
-    suffix: profileDetails?.suffix || "",
-    dateOfBirth: profileDetails?.dateOfBirth || "",
-    age: profileDetails?.age || null,
-    gender: profileDetails?.gender || "",
-    maritalStatus: profileDetails?.maritalStatus || "",
-    address: profileDetails?.address || "",
-    mobileNumber: profileDetails?.mobileNumber || "",
-    educationalBackground: profileDetails?.educationalBackground || "",
-    occupation: profileDetails?.occupation || "",
+    firstName: profileDetails?.firstName ?? "",
+    middleName: profileDetails?.middleName ?? "",
+    lastName: profileDetails?.lastName ?? "",
+    suffix: profileDetails?.suffix ?? "",
+    dateOfBirth: profileDetails?.dateOfBirth ?? "",
+    age: profileDetails?.age ?? "",
+    gender: profileDetails?.gender ?? "",
+    maritalStatus: profileDetails?.maritalStatus ?? "",
+    address: profileDetails?.address ?? "",
+    mobileNumber: profileDetails?.mobileNumber ?? "",
+    emailAddress: profileDetails?.emailAddress ?? "",
+    educationalBackground: profileDetails?.educationalBackground ?? "",
+    occupation: profileDetails?.occupation ?? "",
   });
   const [errors, setErrors] = useState<ProfileFormValues>(
     getEmptyProfileFormValues(),
   );
   const [formMessage, setFormMessage] = useState<FormMessageProps | null>(null);
   const { username } = useAuth();
-  const { isMobileNumberValid } = useAppUtility();
+  const { isMobileNumberValid, isEmailValid, isAgeValid } = useAppUtility();
   const navigate = useNavigate();
   const { stopEditing } = useProfiling();
 
@@ -50,15 +51,38 @@ const ProfileForm: React.FC<ProfileProps> = ({
   ) => {
     const { name, value } = event.target;
 
-    if (name === "mobileNumber") {
-      const mobileNumberPattern = /^(|[0-9]\d{0,10})$/;
-      if (mobileNumberPattern.test(value)) {
-        setValues({ ...values, [name]: value });
-        setErrors({ ...errors, [name]: "" });
-      }
+    let formattedValue = value;
+
+    if (name === "emailAddress") {
+      formattedValue = value.toLowerCase();
+    } else if (name === "mobileNumber" || name === "age") {
+      formattedValue = value.replace(/\D/g, "");
     } else {
-      setValues({ ...values, [name]: value.toUpperCase() });
-      setErrors({ ...errors, [name]: "" });
+      formattedValue = value.toUpperCase();
+    }
+
+    setValues((prev) => ({
+      ...prev,
+      [name]: formattedValue,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+
+    if (name === "emailAddress") {
+      setErrors((prev) => ({
+        ...prev,
+        emailAddress: "",
+      }));
+    }
+
+    if (name === "mobileNumber") {
+      setErrors((prev) => ({
+        ...prev,
+        mobileNumber: "",
+      }));
     }
 
     if (formMessage) setFormMessage(null);
@@ -71,63 +95,116 @@ const ProfileForm: React.FC<ProfileProps> = ({
     navigate(-1);
   };
 
-  const handleOnSubmit = async (event: FormEvent): Promise<void> => {
+  const handleOnSubmit = async (
+    event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
+  ): Promise<void> => {
     event.preventDefault();
+    const submitter = event.nativeEvent.submitter;
+    const id =
+      submitter instanceof HTMLInputElement ? submitter.value : undefined;
+    const sanitize = (value: string): string => (value ?? "").trim();
+    const payload = {
+      ...values,
+      firstName: sanitize(values.firstName),
+      middleName: sanitize(values.middleName),
+      lastName: sanitize(values.lastName),
+      address: sanitize(values.address),
+      mobileNumber: sanitize(values.mobileNumber),
+      emailAddress: sanitize(values.emailAddress),
+      ...(isEditing ? { updatedBy: username } : { createdBy: username }),
+    };
     if (validation() && !isEditing) {
       try {
-        const { lastName, firstName, middleName } = values;
-        const response = await post("/profiles", {
-          ...values,
-          lastName: lastName.trim(),
-          firstName: firstName.trim(),
-          middleName: middleName.trim(),
-          createdBy: username,
-        });
+        const response = await post("/profiles", payload);
         if (response.status === 201) {
+          /*
+          This async operation is a temporary fix for triggering data syncronization. Backend orchestration: Trigger RabbitMQ publish inside the service layer where the data change actually happens.
+          */
           await get("/rabbitmq/profiles/send");
-          setSuccessMessage("Profile created successfully.");
-          resetState("profiling");
-          resetSearchState();
-          resetPageNumber();
-          fetchAllProfiles();
+          if (id === "Save & Add New") {
+            setFormMessage({
+              isError: false,
+              message: "Profile successfully saved.",
+            });
+          } else {
+            setMessage("Profile successfully saved.");
+            navigate("/profiling", { replace: true });
+          }
+          setValues(getEmptyProfileFormValues());
         }
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setValues(getEmptyProfileFormValues());
-          setGlobalError(
-            "Oops, something went wrong. Please contact your system administrator.",
-          );
+        if (axios.isAxiosError(error) && error.status === 409) {
+          setFormMessage({
+            isError: true,
+            message: error.response?.data?.message + ".",
+          });
+        } else {
+          setFormMessage({
+            isError: true,
+            message:
+              "Oops, something went wrong. Please contact your system administrator.",
+          });
         }
+        setValues(getEmptyProfileFormValues());
         console.error("Error submitting profile data: ", error);
       }
-    } else if (validation() && isEditing && profileDetails !== null) {
+    } else if (isEditing && profileDetails !== null) {
       try {
-        const { lastName, firstName, middleName } = values;
-        const response = await put("/profiles/" + profileDetails.id, {
-          ...values,
-          lastName: lastName.trim(),
-          firstName: firstName.trim(),
-          middleName: middleName.trim(),
-          updatedBy: username,
-        });
+        const response = await put("profiles/" + profileDetails?.id, payload);
         if (response.status === 200) {
+          /*
+          This async operation is a temporary fix for triggering data syncronization. Backend orchestration: Trigger RabbitMQ publish inside the service layer where the data change actually happens.
+          */
           await get("/rabbitmq/profiles/send");
-          setSuccessMessage("Profile updated successfully.");
-          resetState("profiling");
-          resetSearchState();
-          resetPageNumber();
-          fetchAllProfiles();
+          setMessage("Changes successfully applied.");
+          navigate("/profiling", { replace: true });
         }
+        setValues(getEmptyProfileFormValues());
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setValues(getEmptyProfileFormValues());
-          setGlobalError(
-            "Oops, something went wrong. Please contact your system administrator.",
-          );
+        if (axios.isAxiosError(error) && error.status === 409) {
+          setFormMessage({
+            isError: true,
+            message: error.response?.data?.message + ".",
+          });
+        } else {
+          setFormMessage({
+            isError: true,
+            message:
+              "Oops, something went wrong. Please contact your system administrator.",
+          });
         }
+        setValues(getEmptyProfileFormValues());
         console.error("Error submitting profile data: ", error);
       }
     }
+    // } else if (validation() && isEditing && profileDetails !== null) {
+    //   try {
+    //     const { lastName, firstName, middleName } = values;
+    //     const response = await put("/profiles/" + profileDetails.id, {
+    //       ...values,
+    //       lastName: lastName.trim(),
+    //       firstName: firstName.trim(),
+    //       middleName: middleName.trim(),
+    //       updatedBy: username,
+    //     });
+    //     if (response.status === 200) {
+    //       await get("/rabbitmq/profiles/send");
+    //       setSuccessMessage("Profile updated successfully.");
+    //       resetState("profiling");
+    //       resetSearchState();
+    //       resetPageNumber();
+    //       fetchAllProfiles();
+    //     }
+    //   } catch (error) {
+    //     if (axios.isAxiosError(error)) {
+    //       setValues(getEmptyProfileFormValues());
+    //       setGlobalError(
+    //         "Oops, something went wrong. Please contact your system administrator.",
+    //       );
+    //     }
+    //     console.error("Error submitting profile data: ", error);
+    //   }
+    // }
   };
 
   const validation = (): boolean => {
@@ -174,6 +251,16 @@ const ProfileForm: React.FC<ProfileProps> = ({
       isValid = false;
     }
 
+    if (values.emailAddress && !isEmailValid(values.emailAddress)) {
+      newErrors.emailAddress = "Invalid email address format";
+      isValid = false;
+    }
+
+    if (values.age && !isAgeValid(values.age)) {
+      newErrors.age = "Invalid age format";
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
@@ -211,9 +298,47 @@ const ProfileForm: React.FC<ProfileProps> = ({
           </svg>
         </div>
       )}
-      <form className="p-4 w-full max-w-96" onSubmit={handleOnSubmit}>
-        <div className="flex items-center">
-          <label className="form-control w-full">
+      <form className="p-4 w-full max-w-screen-md" onSubmit={handleOnSubmit}>
+        <h2 className="text-2xl">Personal Information</h2>
+        <div className="flex justify-start flex-wrap gap-x-8 mb-3">
+          <label className="form-control w-1/4 flex-none">
+            <div className="label">
+              <span className="label-text">First Name</span>
+            </div>
+            <input
+              id="firstName"
+              name="firstName"
+              type="text"
+              className={
+                errors.firstName
+                  ? "input input-sm input-bordered input-error rounded-none w-full py-1.5 px-3"
+                  : "input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+              }
+              value={values.firstName}
+              onChange={handleOnChange}
+            />
+            {errors.firstName && (
+              <div className="label">
+                <span className="label-text-alt text-error">
+                  {errors.firstName}
+                </span>
+              </div>
+            )}
+          </label>
+          <label className="form-control w-1/4 flex-none">
+            <div className="label">
+              <span className="label-text">Middle Name</span>
+            </div>
+            <input
+              id="middleName"
+              name="middleName"
+              type="text"
+              className="input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+              value={values.middleName}
+              onChange={handleOnChange}
+            />
+          </label>
+          <label className="form-control w-1/4 flex-none">
             <div className="label">
               <span className="label-text">Last Name</span>
             </div>
@@ -238,7 +363,7 @@ const ProfileForm: React.FC<ProfileProps> = ({
               </div>
             )}
           </label>
-          <label className="form-control w-20 ml-4">
+          <label className="form-control w-16 flex-none">
             <div className="label">
               <span className="label-text">Suffix</span>
             </div>
@@ -258,283 +383,262 @@ const ProfileForm: React.FC<ProfileProps> = ({
               <option value="V">V</option>
             </select>
           </label>
+          <label className="form-control w-1/4 flex-none">
+            <div className="label">
+              <span className="label-text">Date of Birth</span>
+            </div>
+            <input
+              id="dateOfBirth"
+              name="dateOfBirth"
+              type="date"
+              className={
+                errors.dateOfBirth
+                  ? "input input-sm input-bordered input-error rounded-none w-full py-1.5 px-3"
+                  : "input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+              }
+              value={values.dateOfBirth}
+              onChange={handleOnChange}
+            />
+            {errors.dateOfBirth && (
+              <div className="label">
+                <span className="label-text-alt text-error">
+                  {errors.dateOfBirth}
+                </span>
+              </div>
+            )}
+          </label>
+          <label className="form-control w-12 flex-none">
+            <div className="label">
+              <span className="label-text">Age</span>
+            </div>
+            <input
+              id="age"
+              name="age"
+              type="text"
+              className={
+                errors.age
+                  ? "input input-sm input-bordered input-error rounded-none w-full py-1.5 px-3"
+                  : "input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+              }
+              value={values.age ?? undefined}
+              onChange={handleOnChange}
+            />
+            {errors.age && (
+              <div className="label">
+                <span className="label-text-alt text-error">{errors.age}</span>
+              </div>
+            )}
+          </label>
+          <label className="form-control w-1/4">
+            <div className="label">
+              <span className="label-text">Gender</span>
+            </div>
+            <select
+              id="gender"
+              name="gender"
+              className={
+                errors.gender
+                  ? "input input-sm input-bordered input-error rounded-none w-full px-3"
+                  : "input input-sm input-bordered rounded-none w-full px-3"
+              }
+              value={values.gender}
+              onChange={handleOnChange}
+            >
+              <option value="">Select gender</option>
+              <option value="MALE">MALE</option>
+              <option value="FEMALE">FEMALE</option>
+              <option value="NON-BINARY">NON-BINARY</option>
+              <option value="PREFER NOT TO SAY">PREFER NOT TO SAY</option>
+            </select>
+            {errors.gender && (
+              <div className="label">
+                <span className="label-text-alt text-error">
+                  {errors.gender}
+                </span>
+              </div>
+            )}
+          </label>
+          <label className="form-control w-1/4 flex-none">
+            <div className="label">
+              <span className="label-text">Civil Status</span>
+            </div>
+            <select
+              id="maritalStatus"
+              name="maritalStatus"
+              className={
+                errors.maritalStatus
+                  ? "input input-sm input-bordered input-error rounded-none w-full px-3"
+                  : "input input-sm input-bordered rounded-none w-full px-3"
+              }
+              value={values.maritalStatus}
+              onChange={handleOnChange}
+            >
+              <option value="">Select civil status</option>
+              <option value="SINGLE">SINGLE</option>
+              <option value="MARRIED">MARRIED</option>
+              <option value="DIVORCED">DIVORCED</option>
+              <option value="WIDOWED">WIDOWED</option>
+              <option value="SEPARATED">SEPARATED</option>
+              <option value="DOMESTIC PARTNERSHIP">DOMESTIC PARTNERSHIP</option>
+            </select>
+            {errors.maritalStatus && (
+              <div className="label">
+                <span className="label-text-alt text-error">
+                  {errors.maritalStatus}
+                </span>
+              </div>
+            )}
+          </label>
         </div>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">First Name</span>
-          </div>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            className={
-              errors.firstName
-                ? "input input-sm input-bordered input-error rounded-none w-full py-1.5 px-3"
-                : "input input-sm input-bordered rounded-none w-full py-1.5 px-3"
-            }
-            value={values.firstName}
-            onChange={handleOnChange}
-          />
-          {errors.firstName && (
+        <h2 className="text-2xl">Contact Information</h2>
+        <div className="flex justify-start flex-wrap gap-x-8 mb-3">
+          <label className="form-control w-1/2 flex-none">
             <div className="label">
-              <span className="label-text-alt text-error">
-                {errors.firstName}
+              <span className="label-text">Address</span>
+            </div>
+            <textarea
+              id="address"
+              name="address"
+              rows={1}
+              className={
+                errors.address
+                  ? "textarea textarea-sm textarea-bordered textarea-error rounded-none w-full py-1.5 px-3"
+                  : "textarea textarea-sm textarea-bordered rounded-none w-full py-1.5 px-3"
+              }
+              value={values.address}
+              onChange={handleOnChange}
+            ></textarea>
+            {errors.address && (
+              <div className="label">
+                <span className="label-text-alt text-error">
+                  {errors.address}
+                </span>
+              </div>
+            )}
+          </label>
+          <label className="form-control w-2/5 flex-none">
+            <div className="label">
+              <span className="label-text">Mobile Number</span>
+              <span className="label-text-alt text-gray-600">
+                (e.g. 09123456789)
               </span>
             </div>
-          )}
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Middle Name</span>
-          </div>
-          <input
-            id="middleName"
-            name="middleName"
-            type="text"
-            className="input input-sm input-bordered rounded-none w-full py-1.5 px-3"
-            value={values.middleName}
-            onChange={handleOnChange}
-          />
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Date of Birth</span>
-          </div>
-          <input
-            id="dateOfBirth"
-            name="dateOfBirth"
-            type="date"
-            className={
-              errors.dateOfBirth
-                ? "input input-sm input-bordered input-error rounded-none w-full py-1.5 px-3"
-                : "input input-sm input-bordered rounded-none w-full py-1.5 px-3"
-            }
-            value={values.dateOfBirth}
-            onChange={handleOnChange}
-          />
-          {errors.dateOfBirth && (
+            <input
+              id="mobileNumber"
+              name="mobileNumber"
+              type="text"
+              className={
+                errors.mobileNumber
+                  ? "input input-sm input-bordered input-error rounded-none w-full py-1.5 px-3"
+                  : "input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+              }
+              value={values.mobileNumber}
+              onChange={handleOnChange}
+            />
+            {errors.mobileNumber && (
+              <div className="label">
+                <span className="label-text-alt text-error">
+                  {errors.mobileNumber}
+                </span>
+              </div>
+            )}
+          </label>
+          <label className="form-control w-2/5 flex-none">
             <div className="label">
-              <span className="label-text-alt text-error">
-                {errors.dateOfBirth}
+              <span className="label-text">Email Address</span>
+            </div>
+            <input
+              id="emailAddress"
+              name="emailAddress"
+              type="email"
+              className={
+                errors.emailAddress
+                  ? "input input-sm input-bordered input-error rounded-none w-full py-1.5 px-3"
+                  : "input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+              }
+              value={values.emailAddress}
+              onChange={handleOnChange}
+            />
+            {errors.emailAddress && (
+              <div className="label">
+                <span className="label-text-alt text-error">
+                  {errors.emailAddress}
+                </span>
+              </div>
+            )}
+          </label>
+        </div>
+        <h2 className="text-2xl">Background Information</h2>
+        <div className="flex justify-start gap-x-8">
+          <label className="form-control w-1/2 flex-1">
+            <div className="label">
+              <span className="label-text">Occupation (Optional)</span>
+            </div>
+            <input
+              id="occupation"
+              name="occupation"
+              type="text"
+              className="input input-sm input-bordered rounded-none w-full py-1.5 px-3"
+              value={values.occupation}
+              onChange={handleOnChange}
+            />
+          </label>
+          <label className="form-control w-1/2 flex-1">
+            <div className="label">
+              <span className="label-text">
+                Educational Attainment (Optional)
               </span>
             </div>
+            <select
+              id="educationalBackground"
+              name="educationalBackground"
+              className="input input-sm input-bordered rounded-none w-full px-3"
+              value={values.educationalBackground}
+              onChange={handleOnChange}
+            >
+              <option value="">Select educational attainment</option>
+              <option value="NO FORMAL EDUCATION">NO FORMAL EDUCATION</option>
+              <option value="SOME ELEMENTARY">SOME ELEMENTARY SCHOOL</option>
+              <option value="ELEMENTARY GRADUATE">ELEMENTARY GRADUATE</option>
+              <option value="SOME JUNIOR HIGH SCHOOL">
+                SOME JUNIOR HIGH SCHOOL
+              </option>
+              <option value="JUNIOR HIGH SCHOOL GRADUATE">
+                JUNIOR HIGH SCHOOL GRADUATE
+              </option>
+              <option value="SOME SENIOR HIGH SCHOOL">
+                SOME SENIOR HIGH SCHOOL
+              </option>
+              <option value="SENIOR HIGH SCHOOL GRADUATE">
+                SENIOR HIGH SCHOOL GRADUATE
+              </option>
+              <option value="SOME COLLEGE">SOME COLLEGE</option>
+              <option value="COLLEGE GRADUATE">COLLEGE GRADUATE</option>
+              <option value="POSTGRADUATE STUDIES">POSTGRADUATE STUDIES</option>
+            </select>
+          </label>
+        </div>
+        <div className="flex flex-row-reverse gap-x-1.5 py-1.5">
+          {!profileDetails && (
+            <input
+              data-id="new"
+              type="submit"
+              className="btn btn-sm btn-primary rounded-none"
+              value="Save & Add New"
+            />
           )}
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Gender</span>
-          </div>
-          <select
-            id="gender"
-            name="gender"
-            className={
-              errors.gender
-                ? "input input-sm input-bordered input-error rounded-none w-full px-3"
-                : "input input-sm input-bordered rounded-none w-full px-3"
-            }
-            value={values.gender}
-            onChange={handleOnChange}
-          >
-            <option value="">Select gender</option>
-            <option value="MALE">MALE</option>
-            <option value="FEMALE">FEMALE</option>
-            <option value="NON-BINARY">NON-BINARY</option>
-            <option value="PREFER NOT TO SAY">PREFER NOT TO SAY</option>
-          </select>
-          {errors.gender && (
-            <div className="label">
-              <span className="label-text-alt text-error">{errors.gender}</span>
-            </div>
-          )}
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Civil Status</span>
-          </div>
-          <select
-            id="maritalStatus"
-            name="maritalStatus"
-            className={
-              errors.maritalStatus
-                ? "input input-sm input-bordered input-error rounded-none w-full px-3"
-                : "input input-sm input-bordered rounded-none w-full px-3"
-            }
-            value={values.maritalStatus}
-            onChange={handleOnChange}
-          >
-            <option value="">Select civil status</option>
-            <option value="SINGLE">SINGLE</option>
-            <option value="MARRIED">MARRIED</option>
-            <option value="DIVORCED">DIVORCED</option>
-            <option value="WIDOWED">WIDOWED</option>
-            <option value="SEPARATED">SEPARATED</option>
-            <option value="DOMESTIC PARTNERSHIP">DOMESTIC PARTNERSHIP</option>
-          </select>
-          {errors.maritalStatus && (
-            <div className="label">
-              <span className="label-text-alt text-error">
-                {errors.maritalStatus}
-              </span>
-            </div>
-          )}
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Address</span>
-          </div>
-          <textarea
-            id="address"
-            name="address"
-            rows={4}
-            className={
-              errors.address
-                ? "textarea textarea-sm textarea-bordered textarea-error rounded-none w-full py-1.5 px-3"
-                : "textarea textarea-sm textarea-bordered rounded-none w-full py-1.5 px-3"
-            }
-            value={values.address}
-            onChange={handleOnChange}
-          ></textarea>
-          {errors.address && (
-            <div className="label">
-              <span className="label-text-alt text-error">
-                {errors.address}
-              </span>
-            </div>
-          )}
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Mobile Number</span>
-            <span className="label-text-alt text-gray-600">
-              (e.g. 09123456789)
-            </span>
-          </div>
           <input
-            id="mobileNumber"
-            name="mobileNumber"
-            type="text"
-            className={
-              errors.mobileNumber
-                ? "input input-sm input-bordered input-error rounded-none w-full py-1.5 px-3"
-                : "input input-sm input-bordered rounded-none w-full py-1.5 px-3"
-            }
-            value={values.mobileNumber}
-            onChange={handleOnChange}
+            data-id="add"
+            type="submit"
+            className="btn btn-sm btn-outline rounded-none"
+            value="Save & Close"
           />
-          {errors.mobileNumber && (
-            <div className="label">
-              <span className="label-text-alt text-error">
-                {errors.mobileNumber}
-              </span>
-            </div>
-          )}
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Occupation (Optional)</span>
-          </div>
-          <input
-            id="occupation"
-            name="occupation"
-            type="text"
-            className="input input-sm input-bordered rounded-none w-full py-1.5 px-3"
-            value={values.occupation}
-            onChange={handleOnChange}
-          />
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">
-              Educational Attainment (Optional)
-            </span>
-          </div>
-          <select
-            id="educationalBackground"
-            name="educationalBackground"
-            className="input input-sm input-bordered rounded-none w-full px-3"
-            value={values.educationalBackground}
-            onChange={handleOnChange}
-          >
-            <option value="">Select educational attainment</option>
-            <option value="NO FORMAL EDUCATION">NO FORMAL EDUCATION</option>
-            <option value="SOME ELEMENTARY">SOME ELEMENTARY SCHOOL</option>
-            <option value="ELEMENTARY GRADUATE">ELEMENTARY GRADUATE</option>
-            <option value="SOME JUNIOR HIGH SCHOOL">
-              SOME JUNIOR HIGH SCHOOL
-            </option>
-            <option value="JUNIOR HIGH SCHOOL GRADUATE">
-              JUNIOR HIGH SCHOOL GRADUATE
-            </option>
-            <option value="SOME SENIOR HIGH SCHOOL">
-              SOME SENIOR HIGH SCHOOL
-            </option>
-            <option value="SENIOR HIGH SCHOOL GRADUATE">
-              SENIOR HIGH SCHOOL GRADUATE
-            </option>
-            <option value="SOME COLLEGE">SOME COLLEGE</option>
-            <option value="COLLEGE GRADUATE">COLLEGE GRADUATE</option>
-            <option value="POSTGRADUATE STUDIES">POSTGRADUATE STUDIES</option>
-          </select>
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Household Size (Optional)</span>
-          </div>
-          <input
-            id="householdSize"
-            name="householdSize"
-            type="number"
-            min={0}
-            className="input input-sm input-bordered rounded-none w-full py-1.5 px-3"
-            value={values.householdSize ?? 0}
-            onChange={handleOnChange}
-          />
-        </label>
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">
-              Household Income Bracket (Optional)
-            </span>
-          </div>
-          <select
-            id="incomeBracket"
-            name="incomeBracket"
-            className="input input-sm input-bordered rounded-none w-full px-3"
-            value={values.incomeBracket}
-            onChange={handleOnChange}
-          >
-            <option value="">Select household income bracket</option>
-            <option value="POOR">Below ₱10,957 monthly income</option>
-            <option value="LOW INCOME (BUT NOT POOR)">
-              ₱10,957 to ₱21,914 monthly income
-            </option>
-            <option value="LOWER MIDDLE CLASS">
-              ₱21,914 to ₱43,828 monthly income
-            </option>
-            <option value="MIDDLE CLASS">
-              ₱43,828 to ₱76,66 monthly income
-            </option>
-            <option value="UPPER MIDDLE INCOME">
-              ₱76,669 to ₱131,484 monthly income
-            </option>
-            <option value="HIGH INCOME (BUT NOT RICH)">
-              ₱131,483 to ₱219,140 monthly income
-            </option>
-            <option value="RICH">₱ 219,140 and above monthly income</option>
-          </select>
-        </label>
-        <div className="flex justify-end gap-x-1.5 py-1.5">
           <button
             className="btn btn-ghost btn-sm rounded-none"
-            onClick={handleGoBackClick}
+            onClick={handleOnClose}
           >
-            Cancel
+            Close
           </button>
-          <input
-            type="submit"
-            className="btn btn-sm btn-primary rounded-none"
-            value={isEditing ? "Update" : "Add"}
-          />
         </div>
       </form>
     </div>

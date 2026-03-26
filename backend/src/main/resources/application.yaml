@@ -22,6 +22,15 @@ spring:
     url: ${spring.datasource.url}
     username: ${spring.datasource.username}
     password: ${spring.datasource.password}
+  
+  data:
+    redis:
+      host: ${spring.data.redis.host}
+      port: ${spring.data.redis.port} 
+      username: ${spring.data.redis.username}
+      password: ${spring.data.redis.password}
+  cache:
+    type: ${spring.cache.type}
 
   rabbitmq:
     host: ${rabbitmq.host}
@@ -41,6 +50,7 @@ logging:
         data:
           jpa:
             repository: ERROR
+          redis: ERROR
       hibernate:
         SQL: ERROR
         type:

@@ -3,22 +3,7 @@ import { useParams } from "react-router-dom";
 import { get } from "../../api/apiClient";
 import UserForm from "../../components/UserForm";
 import { useUserManagement } from "../../hooks/useUserManagement";
-
-interface User {
-  id: number;
-  username: string;
-  password: string;
-  role: string;
-  permissions: string[];
-  createdAt: string;
-  createdBy: string;
-  updatedAt: string;
-  updatedBy: string;
-  isAccountNonExpired: boolean;
-  isAccountNonLocked: boolean;
-  isCredentialsNonExpired: boolean;
-  isEnabled: boolean;
-}
+import { User } from "./UserManagement";
 
 const EditUser: React.FC = () => {
   const { isEditing, setMessage, startEditing } = useUserManagement();

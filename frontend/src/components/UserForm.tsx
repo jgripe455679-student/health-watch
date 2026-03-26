@@ -82,7 +82,7 @@ const UserForm: React.FC<UserProps> = ({
 
   const handleOnSubmit = async (
     event: SyntheticEvent<HTMLFormElement, SubmitEvent>
-  ) => {
+  ): Promise<void> => {
     event.preventDefault();
     const submitter = event.nativeEvent.submitter;
     const id =
@@ -106,6 +106,7 @@ const UserForm: React.FC<UserProps> = ({
             navigate("/user-management", { replace: true });
           }
         }
+        setValues(getEmptyUserFormValues());
       } catch (error) {
         if (axios.isAxiosError(error) && error.status === 409) {
           newErrors.username = error.response?.data?.message + ".";

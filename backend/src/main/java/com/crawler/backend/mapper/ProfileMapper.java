@@ -29,7 +29,7 @@ public class ProfileMapper {
                 profile.getCreatedAt(),
                 profile.getCreatedBy().getUsername(),
                 profile.getUpdatedAt(),
-                profile.getUpdatedBy() != null ? profile.getUpdatedBy().getUsername() : null);
+                profile.getUpdatedBy() != null ? profile.getUpdatedBy().getUsername() : null, profile.isArchived());
     }
 
     public static Profile profileDtoToProfile(ProfileDto profileDto) {

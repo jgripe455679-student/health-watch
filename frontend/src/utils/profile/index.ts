@@ -1,2 +1,3 @@
-export { default } from "./ProfileFormInitalValues";
+export { default } from "./ProfileFormInitialValues";
 export * from "./types";
+

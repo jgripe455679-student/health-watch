@@ -54,7 +54,7 @@ const UserManagement: React.FC = () => {
       if (allSuccessful) {
         if (userIds.size > 1) {
           setMessage("Selected users have been deactivated successfully.");
-        } else if (userIds.size == 1) {
+        } else if (userIds.size === 1) {
           setMessage("User has been deactivated successfully.");
         }
         setIsOpen(false);

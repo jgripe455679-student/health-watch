@@ -7,6 +7,8 @@ export type AppUtilityContextProps = {
   stripRolePrefix: (role: string) => string;
   isMobileNumberValid: (mobileNumber: string) => boolean;
   isPasswordValid: (password: string) => boolean;
+  isEmailValid: (email: string) => boolean;
+  isAgeValid: (age: string) => boolean;
 };
 
 const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -45,7 +47,7 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
     return role_str;
   };
   const isMobileNumberValid = (mobileNumber: string): boolean => {
-    const mobileNumberPattern = /^09\d{9}$/;
+    const mobileNumberPattern = /^(|[0-9]\d{0,10})$/;
     return mobileNumberPattern.test(mobileNumber);
   };
   const isPasswordValid = (password: string): boolean => {
@@ -59,6 +61,15 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     return isValid;
   };
+  const isEmailValid = (email: string): boolean => {
+    const emailAddressPattern =
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailAddressPattern.test(email);
+  };
+  const isAgeValid = (age: string): boolean => {
+    const agePattern = /^(0|[1-9][0-9]?|1[01][0-9]|120)$/;
+    return agePattern.test(age);
+  };
   return (
     <appUtilityContext.Provider
       value={{
@@ -67,6 +78,8 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
         stripRolePrefix,
         isMobileNumberValid,
         isPasswordValid,
+        isEmailValid,
+        isAgeValid,
       }}
     >
       {children}

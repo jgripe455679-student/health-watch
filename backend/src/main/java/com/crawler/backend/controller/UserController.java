@@ -1,6 +1,7 @@
 package com.crawler.backend.controller;
 
 import java.net.URI;
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
@@ -54,8 +55,9 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<String> disableUser(
-            @PathVariable Long userId) {
-        String response = userService.disableUser(userId);
+            @PathVariable Long userId, Principal principal) {
+        String username = principal.getName();
+        String response = userService.disableUser(userId, username);
         return ResponseEntity.ok(response);
     }
 

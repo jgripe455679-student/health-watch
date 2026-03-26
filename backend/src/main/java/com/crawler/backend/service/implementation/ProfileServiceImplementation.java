@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.crawler.backend.dto.ProfileDto;
+import com.crawler.backend.exception.AppException;
 import com.crawler.backend.exception.ResourceNotFoundException;
 import com.crawler.backend.mapper.ProfileMapper;
 import com.crawler.backend.model.Profile;
@@ -30,6 +32,11 @@ public class ProfileServiceImplementation implements ProfileService {
         @Override
         public ProfileDto create(ProfileDto profileDto) {
                 Profile profile = ProfileMapper.profileDtoToProfile(profileDto);
+
+                if (profileRepository.findProfile(profileDto.lastName(), profileDto.firstName(),
+                                profileDto.middleName(), profileDto.suffix(), profileDto.dateOfBirth()).isPresent()) {
+                        throw new AppException(HttpStatus.CONFLICT, "Profile already exist");
+                }
 
                 User user = userRepository.findByUsername(profileDto.createdBy()).orElseThrow(
                                 () -> new ResourceNotFoundException("User not found"));
@@ -74,17 +81,25 @@ public class ProfileServiceImplementation implements ProfileService {
                 profile.setOccupation(profileDto.occupation());
                 profile.setEducationalBackground(profileDto.educationalBackground());
                 profile.setUpdatedBy(updatedBy);
+                profile.setArchived(profileDto.isArchived());
 
                 return ProfileMapper.profileToProfileDto(profileRepository.save(profile));
         }
 
         @Override
-        public String deleteProfile(Long profileId) {
+        public String archiveProfile(Long profileId, String username) {
                 Profile profile = profileRepository.findById(profileId).orElseThrow(
                                 () -> new ResourceNotFoundException("Profile not found"));
 
-                profileRepository.delete(profile);
-                return String.format("Profile with %d deleted successfully", profileId);
+                User archivedBy = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+                profile.setArchived(true);
+                profile.setUpdatedBy(archivedBy);
+
+                profileRepository.save(profile);
+
+                return String.format("Profile id %d archived successfully", profileId);
         }
 
         @Override

@@ -39,8 +39,7 @@ public class BackendApplication implements CommandLineRunner {
         public void run(String... args) {
                 createUsers();
                 User sys_admin = userRepository.findByUsername("sys_admin").orElseThrow(
-                        () -> new ResourceNotFoundException("Username not found")
-                );
+                                () -> new ResourceNotFoundException("Username not found"));
                 sys_admin.setAccountNonExpired(true);
                 sys_admin.setAccountNonLocked(true);
                 sys_admin.setCredentialsNonExpired(true);
@@ -48,8 +47,7 @@ public class BackendApplication implements CommandLineRunner {
                 userRepository.save(sys_admin);
 
                 User sys_user = userRepository.findByUsername("sys_user").orElseThrow(
-                        () -> new ResourceNotFoundException("Username not found")
-                );
+                                () -> new ResourceNotFoundException("Username not found"));
                 sys_user.setAccountNonExpired(true);
                 sys_user.setAccountNonLocked(true);
                 sys_user.setCredentialsNonExpired(true);
@@ -90,7 +88,8 @@ public class BackendApplication implements CommandLineRunner {
                                 .role(roleUser)
                                 .build();
 
-                userRepository.saveAll(List.of(user, admin));
+                List<User> users = List.of(user, admin);
+                userRepository.saveAll(users);
         }
 
 }

@@ -32,7 +32,7 @@ public class UserServiceImplementation implements UserService {
     public UserDto create(UserDto userDto) {
         User user = UserMapper.userDtoToUser(userDto);
 
-        if (userRepository.findByUsername(user.getUsername()).isPresent())
+        if (userRepository.findByUsername(userDto.username()).isPresent())
             throw new AppException(HttpStatus.CONFLICT, "Username already exist");
 
         Role role = roleRepository.findByName(userDto.role()).orElseThrow(
@@ -50,6 +50,7 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public List<UserDto> getUsers(Sort sort) {
+        // TODO: Update the hardcoded string "sys_admin" when staging.
         return userRepository
                 .findAll(sort)
                 .stream()
@@ -92,11 +93,11 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public String disableUser(Long userId) {
+    public String disableUser(Long userId, String username) {
         User userToDisable = userRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
 
-        User disabledBy = userRepository.findByUsername("sys_admin").orElseThrow(
+        User disabledBy = userRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
 
         userToDisable.setAccountNonExpired(false);

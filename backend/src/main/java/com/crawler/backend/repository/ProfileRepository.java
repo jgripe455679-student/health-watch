@@ -20,9 +20,9 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
         @Query(value = "SELECT * FROM tbl_profiles p WHERE " +
                         "(p.last_name = :lastName) AND " +
                         "(p.first_name LIKE '%' || :firstName || '%') AND " +
-                        "(p.middle_name = :middleName OR (:middleName IS NOT NULL OR :middleName = '')) AND "
+                        "(p.middle_name = :middleName OR (:middleName IS NULL OR :middleName = '')) AND "
                         +
-                        "(p.suffix = :suffix OR (:suffix IS NOT NULL OR :suffix = '')) AND "
+                        "(p.suffix = :suffix OR (:suffix IS NULL OR :suffix = '')) AND "
                         + "(p.date_of_birth = :dateOfBirth)", nativeQuery = true)
         Optional<Profile> findProfile(
                         @Param("lastName") String lastName,

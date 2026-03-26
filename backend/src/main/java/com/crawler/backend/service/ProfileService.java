@@ -16,7 +16,7 @@ public interface ProfileService {
 
     ProfileDto updateProfile(Long profileId, ProfileDto profileDto);
 
-    String deleteProfile(Long profileId);
+    String archiveProfile(Long profileId, String username);
 
     List<ProfileDto> searchByLastName(String lastName, Sort sort);
 
