@@ -7,6 +7,7 @@ import { useAppUtility } from "../../hooks/useAppUtility";
 import useDebounce from "../../hooks/useDebounce";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import { useProfiling } from "../../hooks/useProfiling";
+import Dialog from "../../components/Dialog";
 
 export interface Profile {
   id: number;
@@ -61,6 +62,7 @@ const Profiling: React.FC = () => {
         } else if (profileIds.size === 1) {
           setMessage("Profile has been archived successfully.");
         }
+        fetchAllProfiles();
         setIsOpen(false);
         resetPageNumber();
         resetSearchState();
@@ -83,9 +85,17 @@ const Profiling: React.FC = () => {
     }
   };
 
+  // Handle utilities
+
   const handleEditProfile = (): void => {
     selectedIds.forEach((value) => {
       navigate(`edit/${value}`);
+    });
+  };
+
+  const handleViewProfile = (): void => {
+    selectedIds.forEach((value) => {
+      navigate(`view/${value}`);
     });
   };
 
@@ -103,18 +113,6 @@ const Profiling: React.FC = () => {
     if (currentPage !== 1) setCurrentPage(1);
   };
 
-  // TODO: CREATE A NEW AND FUNCTIONAL ONE
-  // const handleViewClick = async (profileId: number): Promise<void> => {
-  //   resetMessage();
-  //   setCurrentProfilingView("viewProfile");
-  //   try {
-  //     const response = await get("/profiles/" + profileId);
-  //     setProfileDetails(response.data as Profile);
-  //   } catch (error) {
-  //     console.error("Error fetching profile data: ", error);
-  //   }
-  // };
-
   // Modal utilities
 
   const openModal = () => {
@@ -124,25 +122,6 @@ const Profiling: React.FC = () => {
   const closeModal = () => {
     setIsOpen(false);
   };
-
-  // TODO: MAKE A NEW AND FUNCTIONAL ONE
-  // const deleteProfile = async (profileId: number | null): Promise<void> => {
-  //   try {
-  //     const response = await deleteRequest("/profiles/" + profileId);
-  //     if (response.status === 200) {
-  //       setSuccessMessage("Profile successfully deleted.");
-  //       setIsOpen(false);
-  //       setProfileToDeleteId(null);
-  //       resetPageNumber();
-  //       resetSearchState();
-  //       fetchAllProfiles();
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
-
-  // TODO: handleEditProfile
 
   // Keep the header checkbox indeterminate when partially selected
 
@@ -268,6 +247,12 @@ const Profiling: React.FC = () => {
                 Archive Profile
               </button>
               <button
+                className="btn btn-sm btn-accent rounded-none max-sm:w-3/4"
+                onClick={handleViewProfile}
+              >
+                View Profile
+              </button>
+              <button
                 className="btn btn-sm btn-secondary rounded-none max-sm:w-3/4"
                 onClick={handleEditProfile}
               >
@@ -384,7 +369,16 @@ const Profiling: React.FC = () => {
           </tbody>
         </table>
       </div>
-      <dialog open={isOpen} className="modal">
+      <Dialog
+        isOpen={isOpen}
+        closeModal={closeModal}
+        titleText="Confirm Archive"
+        bodyMessage="Permanently archive"
+        selectedIds={selectedIds}
+        entity="profile"
+        onPerformAction={() => archiveProfile(selectedIds)}
+      />
+      {/* <dialog open={isOpen} className="modal">
         <div className="modal-box rounded-none">
           <form method="dialog">
             <button
@@ -424,7 +418,7 @@ const Profiling: React.FC = () => {
             </button>
           </div>
         </div>
-      </dialog>
+      </dialog> */}
       <Pagination
         totalItems={profiles.length}
         itemsPerPage={itemsPerPage}

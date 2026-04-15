@@ -21,6 +21,7 @@ import AuthProvider from "./utils/AuthProvider";
 import HealthConditionsProvider from "./utils/HealthConditionsProvider";
 import ProfileProvider from "./utils/profile/ProfileProvider";
 import UserProvider from "./utils/user/UserProvider";
+import ViewProfile from "./pages/profiling/ViewProfile";
 
 const App: React.FC = () => {
   return (
@@ -50,6 +51,7 @@ const App: React.FC = () => {
                     <Route index element={<Profiling />} />
                     <Route path="new" element={<NewProfile />} />
                     <Route path="edit/:id" element={<EditProfile />} />
+                    <Route path="view/:id" element={<ViewProfile />} />
                   </Route>
                   <Route path="/health-record" element={<HealthRecord />} />
                   <Route path="/reports" element={<Reports />} />

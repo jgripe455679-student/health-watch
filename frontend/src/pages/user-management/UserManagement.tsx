@@ -8,6 +8,7 @@ import { useAuth } from "../../hooks/useAuth";
 import useDebounce from "../../hooks/useDebounce";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import { useUserManagement } from "../../hooks/useUserManagement";
+import Dialog from "../../components/Dialog";
 
 export interface User {
   id: number;
@@ -70,7 +71,7 @@ const UserManagement: React.FC = () => {
 
 
   // Modal utilities
-  
+
   const openModal = () => {
     setIsOpen(true);
   };
@@ -318,9 +319,9 @@ const UserManagement: React.FC = () => {
                     <td>{user.updatedBy}</td>
                     <td>
                       {user.isAccountNonExpired &&
-                      user.isAccountNonLocked &&
-                      user.isCredentialsNonExpired &&
-                      user.isEnabled ? (
+                        user.isAccountNonLocked &&
+                        user.isCredentialsNonExpired &&
+                        user.isEnabled ? (
                         <span className="text-success">Active</span>
                       ) : (
                         <span className="text-error">Inactive</span>
@@ -333,7 +334,16 @@ const UserManagement: React.FC = () => {
           </tbody>
         </table>
       </div>
-      <dialog open={isOpen} className="modal">
+      <Dialog
+        isOpen={isOpen}
+        closeModal={closeModal}
+        titleText="Confirm Deactivate"
+        bodyMessage="Permanently deactivate"
+        selectedIds={selectedIds}
+        entity="user"
+        onPerformAction={deleteUser}
+      />
+      {/* <dialog open={isOpen} className="modal">
         <div className="modal-box rounded-none">
           <form method="dialog">
             <button
@@ -373,7 +383,7 @@ const UserManagement: React.FC = () => {
             </button>
           </div>
         </div>
-      </dialog>
+      </dialog> */}
       <Pagination
         totalItems={users.length}
         itemsPerPage={itemsPerPage}
