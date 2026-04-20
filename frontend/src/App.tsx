@@ -26,8 +26,8 @@ import ViewProfile from "./pages/profiling/ViewProfile";
 const App: React.FC = () => {
   return (
     <Router>
-      <AuthProvider>
-        <AppUtilityProvider>
+      <AppUtilityProvider>
+        <AuthProvider>
           <UserProvider>
             <ProfileProvider>
               <Routes>
@@ -63,8 +63,8 @@ const App: React.FC = () => {
               </Routes>
             </ProfileProvider>
           </UserProvider>
-        </AppUtilityProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </AppUtilityProvider>
     </Router>
   );
 };

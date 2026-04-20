@@ -43,6 +43,9 @@ const AppUtilityProvider: React.FC<{ children: React.ReactNode }> = ({
     return dob.toLocaleString("en-US", options);
   };
   const stripRolePrefix = (role: string): string => {
+    if (!role) {
+      return "";
+    }
     const role_str: string = role.replace("ROLE_", "");
     return role_str;
   };

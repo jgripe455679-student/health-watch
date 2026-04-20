@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 import { get } from "../api/apiClient";
 import authContext from "./authContext";
+import { useAppUtility } from "../hooks/useAppUtility";
 
-type AuthUser = {
-  isLogged: boolean;
+interface UserLogged {
+  username: string;
   role: string;
+  permissions: string[];
+}
+
+type AuthUser = UserLogged & {
+  isLogged: boolean;
 };
 
 export type AuthContextProps = {
@@ -20,6 +26,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [username, setUsername] = useState<string>("");
+  const [currentUser, setCurrentUser] = useState<UserLogged | null>(null);
+  const { stripRolePrefix } = useAppUtility();
 
   const login = (userData: AuthUser) => {
     setUser(userData);
@@ -27,6 +35,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
+    setCurrentUser(null);
     setUser(null);
     setUsername("");
     localStorage.removeItem("user");
@@ -36,27 +45,47 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const verifyAuthentication = async () => {
       try {
         const storedUser = localStorage.getItem("user");
+        if (storedUser == null) {
+          return;
+        }
         if (storedUser && storedUser !== "{}") {
-          const userData: AuthUser = JSON.parse(storedUser);
           const response = await get("auth/info");
           if (response.status === 200) {
-            const { role } = userData;
-            if (role !== "ADMIN") {
-              logout();
-            }
-            login(userData);
+            setCurrentUser(response.data as UserLogged);
           }
         } else {
           logout();
         }
       } catch (error) {
         logout();
-        console.error("Error fetching user authentication data1", error);
+        console.error("Error fetching user authentication data | ", error);
       }
     };
 
+    const isResourceOwner = () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser == null) {
+          return;
+        }
+        if (currentUser) {
+          const userData: AuthUser = JSON.parse(storedUser);
+          const { role } = userData;
+          if (role === stripRolePrefix(currentUser.role)) {
+            login(userData);
+          } else {
+            logout();
+          }
+        }
+      } catch (error) {
+        logout();
+        console.error("Error session mismatch detected: ", error);
+      }
+    }
+
     verifyAuthentication();
-  }, []);
+    isResourceOwner();
+  }, [currentUser, stripRolePrefix]);
 
   return (
     <authContext.Provider
