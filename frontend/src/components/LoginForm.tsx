@@ -93,24 +93,34 @@ const LoginForm: React.FC = () => {
       {errorMessage && (
         <div
           role="alert"
-          className="alert alert-error text-base-100 rounded-none max-sm:flex"
+          className="alert alert-error text-base-100 rounded-none max-sm:flex place-content-between"
         >
+          <>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 shrink-0 stroke-current"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="whitespace-pre-line text-left text-sm">
+              {errorMessage}
+            </span>
+          </>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 shrink-0 stroke-current"
-            fill="none"
-            viewBox="0 0 24 24"
+            className="h-3 w-3 shrink-0 stroke-current cursor-pointer fill-white"
+            viewBox="0 0 384 512"
+            onClick={() => setErrorMessage("")}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+            <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z" />
           </svg>
-          <span className="whitespace-pre-line text-left text-sm">
-            {errorMessage}
-          </span>
         </div>
       )}
       <div className="card-body items-center p-0">
@@ -167,7 +177,7 @@ const LoginForm: React.FC = () => {
               </span>
             </div>
           )}
-          <div className="card-actions w-full">
+          <div className="card-actions w-full my-2.5">
             <button className="btn btn-md btn-primary text-lg rounded-none w-full">
               Login
             </button>
