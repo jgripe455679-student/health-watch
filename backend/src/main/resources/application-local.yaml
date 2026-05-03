@@ -1,17 +1,19 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT}
 
 spring:
+  config:
+    import: "optional:file:.env[.properties]"
   datasource:
-    url: jdbc:mysql://localhost:3306/db_healthwatch
-    username: root
-    password: qL301[CE
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   data:
     redis:
-      host: localhost
-      port: 6379
-      username: default
-      password: adminpassword
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
   cache:
     type: redis
 
@@ -27,7 +29,13 @@ jwt:
 
 # RABBITMQ
 rabbitmq:
-  host: localhost
-  port: 5672
-  default_user: admin
-  default_password: adminpassword
+  host: ${RABBITMQ_HOST}
+  port: ${RABBITMQ_PORT}
+  default_user: ${RABBITMQ_USER}
+  default_password: ${RABBITMQ_PASSWORD}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

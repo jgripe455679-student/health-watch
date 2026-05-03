@@ -46,7 +46,9 @@ logging:
   level:
     root: INFO
     org:
+      springdoc: INFO
       springframework:
+        web: INFO
         data:
           jpa:
             repository: ERROR
@@ -60,6 +62,9 @@ logging:
     com:
       crawler:
         backend: INFO
+
+springdoc:
+  override-with-generic-response: false
 
 # management:
 #   endpoints:

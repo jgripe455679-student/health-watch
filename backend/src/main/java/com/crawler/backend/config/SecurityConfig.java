@@ -35,7 +35,7 @@ public class SecurityConfig {
         public static final String SWAGGER_UI_URL = "/swagger-ui/**";
         public static final String API_DOCS_URL = "/v3/api-docs/**";
         public static final String RABBITMQ_URL = "/rabbitmq/**";
-        public static final String[] ALLOWED_URLS = {
+        public static final String[] DEV_URLS = {
                         SWAGGER_UI_URL, API_DOCS_URL, RABBITMQ_URL
         };
 
@@ -45,10 +45,10 @@ public class SecurityConfig {
 
         // @Bean
         // public AuthenticationProvider authenticationProvider() {
-        //         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        //         provider.setPasswordEncoder(passwordEncoder());
-        //         provider.setUserDetailsService(userDetailsService);
-        //         return provider;
+        // DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        // provider.setPasswordEncoder(passwordEncoder());
+        // provider.setUserDetailsService(userDetailsService);
+        // return provider;
         // }
 
         @Bean
@@ -58,7 +58,8 @@ public class SecurityConfig {
                                 .cors(cors -> cors.configurationSource(req -> {
                                         CorsConfiguration config = new CorsConfiguration();
                                         config.setAllowedOrigins(Arrays.asList("http://localhost:5173",
-                                                        "http://localhost:5174"));
+                                                        "http://127.0.0.1:5173",
+                                                        "http://localhost:5174", "http://127.0.0.1:5174"));
                                         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
                                         config.setAllowCredentials(true);
                                         config.setAllowedHeaders(Collections.singletonList("*"));
@@ -66,9 +67,9 @@ public class SecurityConfig {
                                         return config;
                                 }))
                                 .authorizeHttpRequests(authorize -> {
-                                        authorize.requestMatchers(ALLOWED_URLS).permitAll();
                                         authorize.requestMatchers("/api/v1/auth/login").permitAll();
                                         authorize.requestMatchers("/api/v1/auth/refresh").permitAll();
+                                        authorize.requestMatchers(DEV_URLS).permitAll();
                                         authorize.requestMatchers(HttpMethod.GET, "/api/v1/users/**")
                                                         .hasAuthority(Permissions.USER_READ.getName());
                                         authorize.requestMatchers(HttpMethod.POST, "/api/v1/users/**")
