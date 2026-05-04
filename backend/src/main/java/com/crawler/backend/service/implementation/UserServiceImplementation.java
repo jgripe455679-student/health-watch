@@ -3,12 +3,17 @@ package com.crawler.backend.service.implementation;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.crawler.backend.dto.UserDto;
+import com.crawler.backend.enums.Roles;
 import com.crawler.backend.exception.AppException;
 import com.crawler.backend.exception.ResourceNotFoundException;
 import com.crawler.backend.mapper.UserMapper;
@@ -44,6 +49,17 @@ public class UserServiceImplementation implements UserService {
         user.setRole(role);
         user.setPassword(passwordEncoder.encode(userDto.password()));
         user.setCreatedBy(createdBy);
+        /**
+         * Extra access control in the business logic layer
+         */
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String auth_username = auth.getName();
+
+        if (!auth_username.equals(userDto.createdBy()))
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
+
+        if (!createdBy.getRole().getName().equals(Roles.ADMIN.toString()))
+            throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions.");
 
         return UserMapper.userToUserDto(userRepository.save(user));
     }
