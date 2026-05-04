@@ -3,11 +3,10 @@ package com.crawler.backend.service.implementation;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,6 +32,13 @@ public class UserServiceImplementation implements UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${SYSADMIN_USERNAME}")
+    private String sys_admin;
+
+    private Authentication getAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
     @Override
     public UserDto create(UserDto userDto) {
         User user = UserMapper.userDtoToUser(userDto);
@@ -52,25 +58,37 @@ public class UserServiceImplementation implements UserService {
         /**
          * Extra access control in the business logic layer
          */
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String auth_username = auth.getName();
+        Authentication authentication = getAuthentication();
 
-        if (!auth_username.equals(userDto.createdBy()))
+        if (!authentication.getName().equals(userDto.createdBy()))
             throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
 
-        if (!createdBy.getRole().getName().equals(Roles.ADMIN.toString()))
-            throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions.");
+        if (!createdBy.getRole().getName().equals(Roles.ADMIN.name()))
+            throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions");
 
         return UserMapper.userToUserDto(userRepository.save(user));
     }
 
     @Override
     public List<UserDto> getUsers(Sort sort) {
-        // TODO: Update the hardcoded string "sys_admin" when staging.
+        /**
+         * Extra access control in the business logic layer
+         */
+        Authentication authentication = getAuthentication();
+
+        if (!authentication.isAuthenticated())
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
+
+        User authenticated_user = userRepository.findByUsername(authentication.getName()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        if (!authenticated_user.getRole().getName().equals(Roles.ADMIN.name()))
+            throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions");
+
         return userRepository
                 .findAll(sort)
                 .stream()
-                .filter(user -> !"sys_admin".equals(user.getUsername()))
+                .filter(user -> !sys_admin.equals(user.getUsername()))
                 .map(UserMapper::userToUserDto)
                 .collect(Collectors.toList());
     }
