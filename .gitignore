@@ -24,3 +24,7 @@ venv/
 /rabbitmq_config/
 /rabbitmq_data/
 /rabbitmq_log/
+
+# Local SSL certificates
+*.pem
+*.p12

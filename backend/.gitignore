@@ -38,3 +38,6 @@ out/
 
 ### Environment Variable ###
 .env
+
+# Local SSL certificates
+*.p12
