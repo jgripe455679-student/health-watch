@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { useLogout } from "../hooks/useLogout";
 
-const BASE_URL = "http://localhost:8080/api/v1";
+const BASE_URL = "https://localhost:8443/api/v1";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

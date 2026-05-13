@@ -3,7 +3,7 @@ import React, { ChangeEvent, FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-const baseURL = "http://localhost:8080/api/v1/auth/login";
+const baseURL = "https://localhost:8443/api/v1/auth/login";
 
 interface FormValues {
   username: string;
