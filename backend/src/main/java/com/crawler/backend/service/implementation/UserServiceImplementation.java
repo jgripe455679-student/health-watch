@@ -95,6 +95,25 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public UserDto getUser(Long userId) {
+        /**
+         * Extra access control in the business logic layer
+         */
+        Authentication authentication = getAuthentication();
+
+        if (!authentication.isAuthenticated()) {
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
+        }
+
+        User authenticated_user = userRepository.findByUsername(authentication.getName()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        if (!authenticated_user.getRole().getName().equals(Roles.ADMIN.name())) {
+            if (!authenticated_user.getId().equals(userId)) {
+                throw new AppException(HttpStatus.FORBIDDEN,
+                        "Access is denied. You do not have the required permissions");
+            }
+        }
+
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
         return UserMapper.userToUserDto(user);
