@@ -55,7 +55,7 @@ public class UserServiceImplementation implements UserService {
         user.setRole(role);
         user.setPassword(passwordEncoder.encode(userDto.password()));
         user.setCreatedBy(createdBy);
-        /**
+        /*
          * Extra access control in the business logic layer
          */
         Authentication authentication = getAuthentication();
@@ -71,7 +71,7 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public List<UserDto> getUsers(Sort sort) {
-        /**
+        /*
          * Extra access control in the business logic layer
          */
         Authentication authentication = getAuthentication();
@@ -95,7 +95,7 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public UserDto getUser(Long userId) {
-        /**
+        /*
          * Extra access control in the business logic layer
          */
         Authentication authentication = getAuthentication();
@@ -121,8 +121,28 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public UserDto updateUser(Long userId, UserDto userDto) {
-        User user = userRepository.findById(userId).orElseThrow(
+        /*
+         * Extra access control in the business logic layer
+         */
+
+        Authentication authentication = getAuthentication();
+
+        if (!authentication.isAuthenticated()) {
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
+        }
+
+        User authenticated_user = userRepository.findByUsername(authentication.getName()).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
+
+        if (!authenticated_user.getRole().getName().equals(Roles.ADMIN.name())) {
+            if (!authenticated_user.getId().equals(userId)) {
+                throw new AppException(HttpStatus.FORBIDDEN,
+                        "Access is denied. You do not have the required permissions");
+            }
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ResourceNotFoundException("User not found1"));
 
         if (!userDto.username().equals(user.getUsername())) {
             if (userRepository.findByUsername(userDto.username()).isPresent())
@@ -133,7 +153,7 @@ public class UserServiceImplementation implements UserService {
                 () -> new ResourceNotFoundException("Role not found"));
 
         User updatedBy = userRepository.findByUsername(userDto.updatedBy()).orElseThrow(
-                () -> new ResourceNotFoundException("User not found"));
+                () -> new ResourceNotFoundException("User not found2"));
 
         user.setUsername(userDto.username());
         if (!userDto.password().isBlank() || !userDto.password().isEmpty()) {
@@ -147,6 +167,26 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public String disableUser(Long userId, String username) {
+        /*
+         * Extra access control in the business logic layer
+         */
+
+        Authentication authentication = getAuthentication();
+
+        if (!authentication.isAuthenticated()) {
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
+        }
+
+        User authenticated_user = userRepository.findByUsername(authentication.getName()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        if (!authenticated_user.getRole().getName().equals(Roles.ADMIN.name())) {
+            if (!authenticated_user.getId().equals(userId)) {
+                throw new AppException(HttpStatus.FORBIDDEN,
+                        "Access is denied. You do not have the required permissions");
+            }
+        }
+
         User userToDisable = userRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
 
@@ -166,12 +206,40 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public List<UserDto> searchByUsername(String username, Sort sort) {
+        /*
+         * Extra access control in the business logic layer
+         */
+        Authentication authentication = getAuthentication();
+
+        if (!authentication.isAuthenticated())
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
+
+        User authenticated_user = userRepository.findByUsername(authentication.getName()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        if (!authenticated_user.getRole().getName().equals(Roles.ADMIN.name()))
+            throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions");
+
         return userRepository.findByUsernameContaining(username, sort).stream().map(UserMapper::userToUserDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Long getUserCount() {
+        /*
+         * Extra access control in the business logic layer
+         */
+        Authentication authentication = getAuthentication();
+
+        if (!authentication.isAuthenticated())
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
+
+        User authenticated_user = userRepository.findByUsername(authentication.getName()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        if (!authenticated_user.getRole().getName().equals(Roles.ADMIN.name()))
+            throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions");
+
         return userRepository.count();
     }
 
