@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 
 import com.crawler.backend.dto.UserDto;
 import com.crawler.backend.dto.UserLoggedDto;
+import com.crawler.backend.dto.UserRequestDto;
 import com.crawler.backend.model.Permission;
 import com.crawler.backend.model.User;
 
@@ -25,9 +26,9 @@ public class UserMapper {
                 user.isEnabled());
     }
 
-    public static User userDtoToUser(UserDto userDto) {
+    public static User userDtoToUser(UserRequestDto userRequestDto) {
         User user = new User();
-        user.setUsername(userDto.username());
+        user.setUsername(userRequestDto.username());
         return user;
     }
 

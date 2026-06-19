@@ -22,6 +22,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,12 +45,15 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(unique = true, nullable = false)
+    @NotEmpty(message = "Username is required")
     private String username;
 
     @Column(nullable = false)
+    @NotEmpty(message = "Password is required")
     private String password;
 
     @ManyToOne
+    @NotNull(message = "Role is required")
     private Role role;
 
     @Column(nullable = false, updatable = false)

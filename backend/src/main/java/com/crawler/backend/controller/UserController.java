@@ -3,8 +3,10 @@ package com.crawler.backend.controller;
 import java.net.URI;
 import java.security.Principal;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.crawler.backend.dto.UserDto;
+import com.crawler.backend.dto.UserRequestDto;
+import com.crawler.backend.exception.AppException;
 import com.crawler.backend.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,9 +32,33 @@ public class UserController {
 
     private final UserService userService;
 
+    private static final Pattern PASSWORD_POLICY = Pattern.compile("^(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$");
+
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
-        UserDto response = userService.create(userDto);
+    public ResponseEntity<UserDto> createUser(@RequestBody UserRequestDto userRequestDto) {
+        /*
+         * Validate incoming web request
+         */
+        int minPasswordLength = 8;
+        int maxPasswordLength = 64;
+
+        if (userRequestDto.password().length() < minPasswordLength
+                || userRequestDto.password().length() > maxPasswordLength) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters long");
+        }
+
+        if (!PASSWORD_POLICY.matcher(userRequestDto.password()).matches()) {
+            throw new AppException(HttpStatus.BAD_REQUEST,
+                    "Password must include at least one digit, one uppercase letter, and one symbol");
+        }
+
+        if (!userRequestDto.password().equals(userRequestDto.confirmPassword())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Passwords do not match");
+        }
+        /*
+         * Proceed with the operation
+         */
+        UserDto response = userService.create(userRequestDto);
         return ResponseEntity.created(URI.create("/api/v1/users/" + response.id())).body(response);
     }
 

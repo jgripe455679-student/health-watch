@@ -5,11 +5,12 @@ import java.util.List;
 import org.springframework.data.domain.Sort;
 
 import com.crawler.backend.dto.UserDto;
+import com.crawler.backend.dto.UserRequestDto;
 
 public interface UserService {
     List<UserDto> getUsers(Sort sort);
 
-    UserDto create(UserDto userDto);
+    UserDto create(UserRequestDto userRequestDto);
 
     UserDto getUser(Long userId);
 

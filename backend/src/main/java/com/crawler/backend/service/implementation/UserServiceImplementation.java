@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.crawler.backend.dto.UserDto;
+import com.crawler.backend.dto.UserRequestDto;
 import com.crawler.backend.enums.Roles;
 import com.crawler.backend.exception.AppException;
 import com.crawler.backend.exception.ResourceNotFoundException;
@@ -40,27 +41,27 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDto create(UserDto userDto) {
-        User user = UserMapper.userDtoToUser(userDto);
+    public UserDto create(UserRequestDto userRequestDto) {
+        User user = UserMapper.userDtoToUser(userRequestDto);
 
-        if (userRepository.findByUsername(userDto.username()).isPresent())
+        if (userRepository.findByUsername(userRequestDto.username()).isPresent())
             throw new AppException(HttpStatus.CONFLICT, "Username already exist");
 
-        Role role = roleRepository.findByName(userDto.role()).orElseThrow(
+        Role role = roleRepository.findByName(userRequestDto.role()).orElseThrow(
                 () -> new ResourceNotFoundException("Role not found"));
 
-        User createdBy = userRepository.findByUsername(userDto.createdBy()).orElseThrow(
+        User createdBy = userRepository.findByUsername(userRequestDto.createdBy()).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
 
         user.setRole(role);
-        user.setPassword(passwordEncoder.encode(userDto.password()));
+        user.setPassword(passwordEncoder.encode(userRequestDto.password()));
         user.setCreatedBy(createdBy);
         /*
          * Extra access control in the business logic layer
          */
         Authentication authentication = getAuthentication();
 
-        if (!authentication.getName().equals(userDto.createdBy()))
+        if (!authentication.getName().equals(userRequestDto.createdBy()))
             throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
 
         if (!createdBy.getRole().getName().equals(Roles.ADMIN.name()))
