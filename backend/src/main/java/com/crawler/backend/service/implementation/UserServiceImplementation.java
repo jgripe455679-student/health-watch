@@ -12,7 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.crawler.backend.dto.UserDto;
-import com.crawler.backend.dto.UserRequestDto;
+import com.crawler.backend.dto.UserResponseDto;
 import com.crawler.backend.enums.Roles;
 import com.crawler.backend.exception.AppException;
 import com.crawler.backend.exception.ResourceNotFoundException;
@@ -41,37 +41,37 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDto create(UserRequestDto userRequestDto) {
-        User user = UserMapper.userDtoToUser(userRequestDto);
+    public UserResponseDto create(UserDto userDto) {
+        User user = UserMapper.userDtoToUser(userDto);
 
-        if (userRepository.findByUsername(userRequestDto.username()).isPresent())
+        if (userRepository.findByUsername(userDto.username()).isPresent())
             throw new AppException(HttpStatus.CONFLICT, "Username already exist");
 
-        Role role = roleRepository.findByName(userRequestDto.role()).orElseThrow(
+        Role role = roleRepository.findByName(userDto.role()).orElseThrow(
                 () -> new ResourceNotFoundException("Role not found"));
 
-        User createdBy = userRepository.findByUsername(userRequestDto.createdBy()).orElseThrow(
+        User createdBy = userRepository.findByUsername(userDto.createdBy()).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
 
         user.setRole(role);
-        user.setPassword(passwordEncoder.encode(userRequestDto.password()));
+        user.setPassword(passwordEncoder.encode(userDto.password()));
         user.setCreatedBy(createdBy);
         /*
          * Extra access control in the business logic layer
          */
         Authentication authentication = getAuthentication();
 
-        if (!authentication.getName().equals(userRequestDto.createdBy()))
+        if (!authentication.getName().equals(userDto.createdBy()))
             throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
 
         if (!createdBy.getRole().getName().equals(Roles.ADMIN.name()))
             throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions");
 
-        return UserMapper.userToUserDto(userRepository.save(user));
+        return UserMapper.userToUserResponseDto(userRepository.save(user));
     }
 
     @Override
-    public List<UserDto> getUsers(Sort sort) {
+    public List<UserResponseDto> getUsers(Sort sort) {
         /*
          * Extra access control in the business logic layer
          */
@@ -90,12 +90,12 @@ public class UserServiceImplementation implements UserService {
                 .findAll(sort)
                 .stream()
                 .filter(user -> !sys_admin.equals(user.getUsername()))
-                .map(UserMapper::userToUserDto)
+                .map(UserMapper::userToUserResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public UserDto getUser(Long userId) {
+    public UserResponseDto getUser(Long userId) {
         /*
          * Extra access control in the business logic layer
          */
@@ -117,11 +117,11 @@ public class UserServiceImplementation implements UserService {
 
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
-        return UserMapper.userToUserDto(user);
+        return UserMapper.userToUserResponseDto(user);
     }
 
     @Override
-    public UserDto updateUser(Long userId, UserDto userDto) {
+    public UserResponseDto updateUser(Long userId, UserDto userDto) {
         /*
          * Extra access control in the business logic layer
          */
@@ -163,7 +163,7 @@ public class UserServiceImplementation implements UserService {
         user.setRole(role);
         user.setUpdatedBy(updatedBy);
 
-        return UserMapper.userToUserDto(userRepository.save(user));
+        return UserMapper.userToUserResponseDto(userRepository.save(user));
     }
 
     @Override
@@ -206,7 +206,7 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public List<UserDto> searchByUsername(String username, Sort sort) {
+    public List<UserResponseDto> searchByUsername(String username, Sort sort) {
         /*
          * Extra access control in the business logic layer
          */
@@ -221,7 +221,7 @@ public class UserServiceImplementation implements UserService {
         if (!authenticated_user.getRole().getName().equals(Roles.ADMIN.name()))
             throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions");
 
-        return userRepository.findByUsernameContaining(username, sort).stream().map(UserMapper::userToUserDto)
+        return userRepository.findByUsernameContaining(username, sort).stream().map(UserMapper::userToUserResponseDto)
                 .collect(Collectors.toList());
     }
 
@@ -245,10 +245,10 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDto getUserByUsername(String username) {
+    public UserResponseDto getUserByUsername(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFoundException("Username not found"));
-        return UserMapper.userToUserDto(user);
+        return UserMapper.userToUserResponseDto(user);
     }
 
 }

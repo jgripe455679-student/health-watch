@@ -5,22 +5,22 @@ import java.util.List;
 import org.springframework.data.domain.Sort;
 
 import com.crawler.backend.dto.UserDto;
-import com.crawler.backend.dto.UserRequestDto;
+import com.crawler.backend.dto.UserResponseDto;
 
 public interface UserService {
-    List<UserDto> getUsers(Sort sort);
+    List<UserResponseDto> getUsers(Sort sort);
 
-    UserDto create(UserRequestDto userRequestDto);
+    UserResponseDto create(UserDto userDto);
 
-    UserDto getUser(Long userId);
+    UserResponseDto getUser(Long userId);
 
-    UserDto updateUser(Long userId, UserDto userDto);
+    UserResponseDto updateUser(Long userId, UserDto userDto);
 
     String disableUser(Long userId, String username);
 
-    List<UserDto> searchByUsername(String username, Sort sort);
+    List<UserResponseDto> searchByUsername(String username, Sort sort);
 
     Long getUserCount();
 
-    UserDto getUserByUsername(String username);
+    UserResponseDto getUserByUsername(String username);
 }
