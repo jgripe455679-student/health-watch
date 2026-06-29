@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deleteRequest, get } from "../../api/apiClient";
+import Dialog from "../../components/Dialog";
 import Pagination from "../../components/Pagination";
 import SearchInput from "../../components/SearchInput";
 import { useAppUtility } from "../../hooks/useAppUtility";
@@ -8,14 +9,11 @@ import { useAuth } from "../../hooks/useAuth";
 import useDebounce from "../../hooks/useDebounce";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import { useUserManagement } from "../../hooks/useUserManagement";
-import Dialog from "../../components/Dialog";
 
 export interface User {
   id: number;
   username: string;
-  password: string;
   role: string;
-  permissions: string[];
   createdAt: string;
   createdBy: string;
   updatedAt: string;
