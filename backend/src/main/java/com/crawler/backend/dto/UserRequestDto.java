@@ -1,13 +1,13 @@
 package com.crawler.backend.dto;
 
+import com.crawler.backend.annotation.PasswordMatch;
+import com.crawler.backend.annotation.ValidRole;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-
-import com.crawler.backend.annotation.PasswordMatch;
-import com.crawler.backend.annotation.ValidRole;
 
 @Getter
 @Setter
@@ -15,7 +15,7 @@ import com.crawler.backend.annotation.ValidRole;
 public class UserRequestDto {
         @NotNull
         @Size(min = 4, message = "Username must be at least 4 characters long")
-        @Pattern(regexp = "^[a-z]+$", message = "Username must contain only lowercase letters")
+        @Pattern(regexp = "^[a-z0-9\\W_]+$", message = "Username must contain only lowercase letters, digits, and symbols")
         private String username;
 
         @NotNull
@@ -34,11 +34,10 @@ public class UserRequestDto {
 
         @NotNull
         @Size(min = 4, message = "Username must be at least 4 characters long")
-        @Pattern(regexp = "^[a-z]+$", message = "Username must contain only lowercase letters")
+        @Pattern(regexp = "^[a-z0-9\\W_]+$", message = "Username must contain only lowercase letters, digits, and symbols")
         private String createdBy;
 
-        @NotNull
         @Size(min = 4, message = "Username must be at least 4 characters long")
-        @Pattern(regexp = "^[a-z]+$", message = "Username must contain only lowercase letters")
+        @Pattern(regexp = "^[a-z0-9\\W_]+$", message = "Username must contain only lowercase letters, digits, and symbols")
         private String updatedBy;
 }

@@ -23,6 +23,7 @@ import com.crawler.backend.dto.UserResponseDto;
 import com.crawler.backend.mapper.UserMapper;
 import com.crawler.backend.service.UserService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,7 +35,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@RequestBody UserRequestDto userRequestDto) {
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto userRequestDto) {
         UserDto userDto = UserMapper.userRequestDtoToUserDto(userRequestDto);
         UserResponseDto response = userService.create(userDto);
         return ResponseEntity.created(URI.create("/api/v1/users/" + response.id())).body(response);
