@@ -9,11 +9,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.crawler.backend.dto.LoginRequest;
-import com.crawler.backend.dto.LoginResponse;
+import com.crawler.backend.dto.LoginRequestDto;
+import com.crawler.backend.dto.LoginResponseDto;
 import com.crawler.backend.dto.UserLoggedDto;
 import com.crawler.backend.service.AuthService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -24,21 +25,21 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
+    public ResponseEntity<LoginResponseDto> login(
             @CookieValue(name = "access_token", required = false) String accessToken,
             @CookieValue(name = "refresh_token", required = false) String refreshToken,
-            @RequestBody LoginRequest loginRequest) {
-        return authService.login(loginRequest, accessToken, refreshToken);
+            @Valid @RequestBody LoginRequestDto loginRequestDto) {
+        return authService.login(loginRequestDto, accessToken, refreshToken);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refresh(
+    public ResponseEntity<LoginResponseDto> refresh(
             @CookieValue(name = "refresh_token", required = true) String refreshToken) {
         return authService.refresh(refreshToken);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<LoginResponse> logout(
+    public ResponseEntity<LoginResponseDto> logout(
             @CookieValue(name = "access_token", required = false) String accessToken,
             @CookieValue(name = "refresh_token", required = false) String refreshToken) {
         return authService.logout(accessToken, refreshToken);

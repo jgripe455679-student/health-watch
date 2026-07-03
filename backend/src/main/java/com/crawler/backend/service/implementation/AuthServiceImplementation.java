@@ -18,11 +18,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.crawler.backend.config.JwtProperties;
-import com.crawler.backend.dto.LoginRequest;
-import com.crawler.backend.dto.LoginResponse;
+import com.crawler.backend.dto.LoginDto;
+import com.crawler.backend.dto.LoginRequestDto;
+import com.crawler.backend.dto.LoginResponseDto;
 import com.crawler.backend.dto.UserLoggedDto;
 import com.crawler.backend.exception.AppException;
 import com.crawler.backend.exception.ResourceNotFoundException;
+import com.crawler.backend.mapper.AuthMapper;
 import com.crawler.backend.mapper.UserMapper;
 import com.crawler.backend.model.Token;
 import com.crawler.backend.model.User;
@@ -61,15 +63,18 @@ public class AuthServiceImplementation implements AuthService {
     private final CookieUtil cookieUtil;
 
     @Override
-    public ResponseEntity<LoginResponse> login(LoginRequest loginRequest, String accessToken, String refreshToken) {
+    public ResponseEntity<LoginResponseDto> login(LoginRequestDto loginRequestDto, String accessToken,
+            String refreshToken) {
 
-        Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginRequest.username(), loginRequest.password()));
-
-        String username = loginRequest.username();
+        String username = loginRequestDto.getUsername();
 
         User user = userRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFoundException("User not found"));
+
+        LoginDto loginDto = AuthMapper.loginRequestDtoToLoginDto(loginRequestDto);
+        
+        Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(
+                loginDto.username(), loginDto.password()));
 
         boolean accessTokenValid = jwtService.validateToken(accessToken);
         boolean refreshTokenValid = jwtService.validateToken(refreshToken);
@@ -131,13 +136,13 @@ public class AuthServiceImplementation implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        LoginResponse loginResponse = new LoginResponse(true, user.getRole().getName());
+        LoginResponseDto loginResponseDto = new LoginResponseDto(true, user.getRole().getName());
 
-        return ResponseEntity.ok().headers(responseHeaders).body(loginResponse);
+        return ResponseEntity.ok().headers(responseHeaders).body(loginResponseDto);
     }
 
     @Override
-    public ResponseEntity<LoginResponse> refresh(String refreshToken) {
+    public ResponseEntity<LoginResponseDto> refresh(String refreshToken) {
         boolean refreshTokenValid = jwtService.validateToken(refreshToken);
 
         if (!refreshTokenValid) {
@@ -154,13 +159,13 @@ public class AuthServiceImplementation implements AuthService {
         HttpHeaders responseHeaders = new HttpHeaders();
         addAccessTokenCookie(responseHeaders, newAccessToken);
 
-        LoginResponse loginResponse = new LoginResponse(true, user.getRole().getName());
+        LoginResponseDto loginResponseDto = new LoginResponseDto(true, user.getRole().getName());
 
-        return ResponseEntity.ok().headers(responseHeaders).body(loginResponse);
+        return ResponseEntity.ok().headers(responseHeaders).body(loginResponseDto);
     }
 
     @Override
-    public ResponseEntity<LoginResponse> logout(String accessToken, String refreshToken) {
+    public ResponseEntity<LoginResponseDto> logout(String accessToken, String refreshToken) {
         SecurityContextHolder.clearContext();
 
         String username = jwtService.extractUsername(accessToken);
@@ -174,8 +179,8 @@ public class AuthServiceImplementation implements AuthService {
         responseHeaders.add(HttpHeaders.SET_COOKIE, cookieUtil.deleteAccessTokenCookie().toString());
         responseHeaders.add(HttpHeaders.SET_COOKIE, cookieUtil.deleteRefreshTokenCookie().toString());
 
-        LoginResponse loginResponse = new LoginResponse(false, null);
-        return ResponseEntity.ok().headers(responseHeaders).body(loginResponse);
+        LoginResponseDto loginResponseDto = new LoginResponseDto(false, null);
+        return ResponseEntity.ok().headers(responseHeaders).body(loginResponseDto);
     }
 
     @Override

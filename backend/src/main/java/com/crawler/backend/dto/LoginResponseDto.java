@@ -1,6 +1,6 @@
 package com.crawler.backend.dto;
 
-public record LoginResponse(
+public record LoginResponseDto(
                 boolean isLogged,
                 String role) {
 }
