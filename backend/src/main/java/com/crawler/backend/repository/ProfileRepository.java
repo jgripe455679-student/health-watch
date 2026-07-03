@@ -8,12 +8,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import com.crawler.backend.model.Profile;
 import com.crawler.backend.model.User;
 
-@Repository
 public interface ProfileRepository extends JpaRepository<Profile, Long> {
         List<Profile> findByLastNameContaining(String lastName, Sort sort);
 
