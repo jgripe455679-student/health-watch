@@ -2,31 +2,29 @@ package com.crawler.backend.service.implementation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Optional;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.context.support.WithUserDetails;
 
 import com.crawler.backend.dto.UserDto;
 import com.crawler.backend.enums.Roles;
+import com.crawler.backend.exception.AppException;
 import com.crawler.backend.model.Role;
 import com.crawler.backend.model.User;
 import com.crawler.backend.repository.RoleRepository;
@@ -52,7 +50,6 @@ public class UserServiceImplementationTest {
     private User test_admin;
     private Role roleAdmin;
     private Role roleUser;
-    private Collection<User> existingUsers;
 
     @BeforeEach
     void setUp() {
@@ -92,10 +89,9 @@ public class UserServiceImplementationTest {
         this.test_user_dto = new UserDto("test_user_dto", "P@ssw0rd123", roleUser.getName(), "test_admin",
                 "test_admin");
 
-        existingUsers = new ArrayList<>();
-        existingUsers.add(this.test_user);
-        existingUsers.add(this.test_user1);
+    }
 
+    private void loginAsAdmin() {
         Authentication mockAuthentication = mock(Authentication.class);
         SecurityContext mockSecurityContext = mock(SecurityContext.class);
 
@@ -112,12 +108,21 @@ public class UserServiceImplementationTest {
 
     @Test
     void testCreateUser_Success() {
+        loginAsAdmin();
         when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
         when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
         when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         userServiceImplementation.create(test_user_dto);
         verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void testCreateUser_ThrowsException_WhenUsernameAlreadyExist() {
+        when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.of(test_user));
+        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                .isInstanceOf(AppException.class).hasMessage("Username already exist");
+        verify(userRepository, never()).save(any(User.class));
     }
 
 }
