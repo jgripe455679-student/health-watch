@@ -16,7 +16,7 @@ public class UserMapper {
                 user.getUsername(),
                 user.getRole().getName(),
                 user.getCreatedAt(),
-                user.getCreatedBy().getUsername(),
+                user.getCreatedBy() != null ? user.getCreatedBy().getUsername() : null,
                 user.getUpdatedAt(),
                 user.getUpdatedBy() != null ? user.getUpdatedBy().getUsername() : null,
                 user.isAccountNonExpired(),

@@ -89,7 +89,7 @@ public class UserServiceImplementation implements UserService {
         return userRepository
                 .findAll(sort)
                 .stream()
-                .filter(user -> !sys_admin.equals(user.getUsername()))
+                .filter(user -> user.getUsername() != null && !user.getUsername().equals(sys_admin))
                 .map(UserMapper::userToUserResponseDto)
                 .collect(Collectors.toList());
     }

@@ -1,12 +1,14 @@
 package com.crawler.backend.service.implementation;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
@@ -17,14 +19,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.crawler.backend.dto.UserDto;
+import com.crawler.backend.dto.UserResponseDto;
 import com.crawler.backend.enums.Roles;
 import com.crawler.backend.exception.AppException;
+import com.crawler.backend.exception.ResourceNotFoundException;
 import com.crawler.backend.model.Role;
 import com.crawler.backend.model.User;
 import com.crawler.backend.repository.RoleRepository;
@@ -91,11 +96,17 @@ public class UserServiceImplementationTest {
 
     }
 
-    private void loginAsAdmin() {
+    private void mockLogin(User user, boolean isAuthenticated, Boolean val) {
         Authentication mockAuthentication = mock(Authentication.class);
         SecurityContext mockSecurityContext = mock(SecurityContext.class);
 
-        when(mockAuthentication.getName()).thenReturn("test_admin");
+        if (user != null) {
+            when(mockAuthentication.getName()).thenReturn(user.getUsername());
+        }
+
+        if (isAuthenticated) {
+            when(mockAuthentication.isAuthenticated()).thenReturn(val);
+        }
         when(mockSecurityContext.getAuthentication()).thenReturn(mockAuthentication);
 
         SecurityContextHolder.setContext(mockSecurityContext);
@@ -104,17 +115,40 @@ public class UserServiceImplementationTest {
     @AfterEach
     void tearDown() throws Exception {
         this.autoCloseable.close();
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void testCreateUser_Success() {
-        loginAsAdmin();
+        mockLogin(test_admin, false, null);
         when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
         when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
         when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         userServiceImplementation.create(test_user_dto);
         verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void testCreateUser_ThrowsException_Forbidden() {
+        mockLogin(test_admin, false, null);
+        when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
+        when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(test_user_dto.createdBy())).thenReturn(Optional.of(test_user));
+        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                .isInstanceOf(AppException.class)
+                .hasMessage("Access is denied. You do not have the required permissions");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testGetUsers_Success() {
+        mockLogin(test_admin, true, true);
+        when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+        when(userRepository.findAll(Sort.unsorted())).thenReturn(List.of(test_user, test_user1));
+        List<UserResponseDto> users = userServiceImplementation.getUsers(Sort.unsorted());
+        Assertions.assertThat(users).isNotEmpty();
+        Assertions.assertThat(users.size()).isEqualTo(2);
     }
 
     @Test
@@ -125,7 +159,54 @@ public class UserServiceImplementationTest {
         verify(userRepository, never()).save(any(User.class));
     }
 
-}
+    @Test
+    void testCreateUser_ThrowsException_WhenRoleDoesNotExist() {
+        when(roleRepository.findByName(anyString())).thenReturn(Optional.empty());
+        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                .isInstanceOf(ResourceNotFoundException.class).hasMessage("Role not found");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testCreateUser_ThrowsException_WhenUserDoesNotExist() {
+        when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
+        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testCreateUser_ThrowsException_Unauthorized() {
+        mockLogin(test_user, false, null);
+        when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
+        when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(test_user_dto.createdBy())).thenReturn(Optional.of(test_admin));
+        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                .isInstanceOf(AppException.class)
+                .hasMessage("Full authentication is required to access this resource");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testGetUsers_ThrowsException_Unauthorized() {
+        mockLogin(null, false, null);
+        Assertions.assertThatThrownBy(() -> userServiceImplementation.getUsers(Sort.unsorted()))
+                .isInstanceOf(AppException.class).hasMessage("Full authentication is required to access this resource");
+        verify(userRepository, never()).findAll(any(Sort.class));
+    }
+
+    @Test
+    void testGetUsers_ThrowsException_Forbidden() {
+        mockLogin(test_user, true, true);
+        when(userRepository.findByUsername(test_user.getUsername())).thenReturn(Optional.of(test_user));
+        Assertions.assertThatThrownBy(() -> userServiceImplementation.getUsers(Sort.unsorted()))
+                .isInstanceOf(AppException.class)
+                .hasMessage("Access is denied. You do not have the required permissions");
+        verify(userRepository, never()).findAll(any(Sort.class));
+    }
+
+}                               
 
 // package com.crawler.backend.service.implementation;
 
