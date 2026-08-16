@@ -143,7 +143,7 @@ public class UserServiceImplementation implements UserService {
         }
 
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ResourceNotFoundException("User not found1"));
+                () -> new ResourceNotFoundException("User not found"));
 
         if (!userDto.username().equals(user.getUsername())) {
             if (userRepository.findByUsername(userDto.username()).isPresent())
@@ -154,7 +154,7 @@ public class UserServiceImplementation implements UserService {
                 () -> new ResourceNotFoundException("Role not found"));
 
         User updatedBy = userRepository.findByUsername(userDto.updatedBy()).orElseThrow(
-                () -> new ResourceNotFoundException("User not found2"));
+                () -> new ResourceNotFoundException("User not found"));
 
         user.setUsername(userDto.username());
         if (!userDto.password().isBlank() || !userDto.password().isEmpty()) {

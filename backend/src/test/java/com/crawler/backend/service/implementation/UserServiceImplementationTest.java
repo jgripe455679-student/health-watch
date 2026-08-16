@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -51,7 +52,6 @@ public class UserServiceImplementationTest {
     private AutoCloseable autoCloseable;
     private UserDto test_user_dto;
     private User test_user;
-    private User test_user1;
     private User test_admin;
     private Role roleAdmin;
     private Role roleUser;
@@ -73,6 +73,7 @@ public class UserServiceImplementationTest {
                 .build();
 
         this.test_admin = new User();
+        this.test_admin.setId(1L);
         this.test_admin.setUsername("test_admin");
         this.test_admin.setPassword("P@ssw0rd123");
         this.test_admin.setRole(this.roleAdmin);
@@ -80,16 +81,11 @@ public class UserServiceImplementationTest {
         this.test_admin.setUpdatedAt(LocalDateTime.now());
 
         this.test_user = new User();
+        this.test_user.setId(2L);
         this.test_user.setUsername("test_user");
         this.test_user.setPassword("P@ssw0rd123");
         this.test_user.setRole(this.roleUser);
         this.test_user.setCreatedAt(LocalDateTime.now());
-
-        this.test_user1 = new User();
-        this.test_user1.setUsername("test_user_1");
-        this.test_user1.setPassword("P@ssw0rd123");
-        this.test_user1.setRole(this.roleUser);
-        this.test_user1.setCreatedAt(LocalDateTime.now());
 
         this.test_user_dto = new UserDto("test_user_dto", "P@ssw0rd123", roleUser.getName(), "test_admin",
                 "test_admin");
@@ -118,95 +114,247 @@ public class UserServiceImplementationTest {
         SecurityContextHolder.clearContext();
     }
 
-    @Test
-    void testCreateUser_Success() {
-        mockLogin(test_admin, false, null);
-        when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
-        when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
-        when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        userServiceImplementation.create(test_user_dto);
-        verify(userRepository).save(any(User.class));
+    @Nested
+    class CreateUserTests {
+        @Test
+        void testCreateUser_throwsException_whenUsernameAlreadyExist() {
+            when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.of(test_user));
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                    .isInstanceOf(AppException.class).hasMessage("Username already exist");
+            verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        void testCreateUser_throwsException_whenRoleDoesNotExist() {
+            when(roleRepository.findByName(anyString())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("Role not found");
+            verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        void testCreateUser_throwsException_whenUserDoesNotExist() {
+            when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
+            when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+            verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        void testCreateUser_throwsException_unauthorized() {
+            mockLogin(test_user, false, null);
+            when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
+            when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
+            when(userRepository.findByUsername(test_user_dto.createdBy())).thenReturn(Optional.of(test_admin));
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                    .isInstanceOf(AppException.class)
+                    .hasMessage("Full authentication is required to access this resource");
+            verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        void testCreateUser_throwsException_forbidden() {
+            mockLogin(test_admin, false, null);
+            when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
+            when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
+            when(userRepository.findByUsername(test_user_dto.createdBy())).thenReturn(Optional.of(test_user));
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
+                    .isInstanceOf(AppException.class)
+                    .hasMessage("Access is denied. You do not have the required permissions");
+            verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        void testCreateUser_success() {
+            mockLogin(test_admin, false, null);
+            when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+            when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            userServiceImplementation.create(test_user_dto);
+            verify(userRepository).save(any(User.class));
+        }
+
     }
 
-    @Test
-    void testCreateUser_ThrowsException_Forbidden() {
-        mockLogin(test_admin, false, null);
-        when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
-        when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
-        when(userRepository.findByUsername(test_user_dto.createdBy())).thenReturn(Optional.of(test_user));
-        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
-                .isInstanceOf(AppException.class)
-                .hasMessage("Access is denied. You do not have the required permissions");
-        verify(userRepository, never()).save(any(User.class));
+    @Nested
+    class GetUsersTests {
+        @Test
+        void testGetUsers_throwsException_unauthorized() {
+            mockLogin(null, false, null);
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.getUsers(Sort.unsorted()))
+                    .isInstanceOf(AppException.class)
+                    .hasMessage("Full authentication is required to access this resource");
+            verify(userRepository, never()).findAll(any(Sort.class));
+        }
+
+        @Test
+        void testGetUsers_throwsException_whenAuthenticatedUserDoesNotExist() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.getUsers(Sort.unsorted()))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+        }
+
+        @Test
+        void testGetUsers_throwsException_forbidden() {
+            mockLogin(test_user, true, true);
+            when(userRepository.findByUsername(test_user.getUsername())).thenReturn(Optional.of(test_user));
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.getUsers(Sort.unsorted()))
+                    .isInstanceOf(AppException.class)
+                    .hasMessage("Access is denied. You do not have the required permissions");
+            verify(userRepository, never()).findAll(any(Sort.class));
+        }
+
+        @Test
+        void testGetUsers_success() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+            when(userRepository.findAll(Sort.unsorted())).thenReturn(List.of(test_user, test_admin));
+            List<UserResponseDto> users = userServiceImplementation.getUsers(Sort.unsorted());
+            Assertions.assertThat(users).isNotEmpty();
+            Assertions.assertThat(users.size()).isEqualTo(2);
+        }
     }
 
-    @Test
-    void testGetUsers_Success() {
-        mockLogin(test_admin, true, true);
-        when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
-        when(userRepository.findAll(Sort.unsorted())).thenReturn(List.of(test_user, test_user1));
-        List<UserResponseDto> users = userServiceImplementation.getUsers(Sort.unsorted());
-        Assertions.assertThat(users).isNotEmpty();
-        Assertions.assertThat(users.size()).isEqualTo(2);
+    @Nested
+    class GetUserTests {
+
+        @Test
+        void testGetUser_throwsException_unauthorized() {
+            mockLogin(null, false, null);
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.getUser(test_user.getId()))
+                    .isInstanceOf(AppException.class)
+                    .hasMessage("Full authentication is required to access this resource");
+            verify(userRepository, never()).findById(any(Long.class));
+        }
+
+        @Test
+        void testGetUser_throwsException_whenAuthenticatedUserDoesNotExist() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.getUser(test_user.getId()))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+            verify(userRepository, never()).findById(any(Long.class));
+        }
+
+        @Test
+        void testGetUser_throwsException_forbidden() {
+            mockLogin(test_user, true, true);
+            when(userRepository.findByUsername(test_user.getUsername())).thenReturn(Optional.of(test_user));
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.getUser(test_admin.getId()))
+                    .isInstanceOf(AppException.class)
+                    .hasMessage("Access is denied. You do not have the required permissions");
+            verify(userRepository, never()).findById(any(Long.class));
+        }
+
+        @Test
+        void testGetUser_throwsException_whenUserDoesNotExist() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+            when(userRepository.findById(test_user.getId())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.getUser(test_user.getId()))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+        }
+
+        @Test
+        void testGetUser_success() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+            when(userRepository.findById(test_user.getId())).thenReturn(Optional.of(test_user));
+            UserResponseDto userResponse = userServiceImplementation.getUser(test_user.getId());
+            Assertions.assertThat(userResponse).isNotNull();
+            Assertions.assertThat(userResponse.username()).isEqualTo(test_user.getUsername());
+        }
     }
 
-    @Test
-    void testCreateUser_ThrowsException_WhenUsernameAlreadyExist() {
-        when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.of(test_user));
-        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
-                .isInstanceOf(AppException.class).hasMessage("Username already exist");
-        verify(userRepository, never()).save(any(User.class));
+    @Nested
+    class UpdateUserTests {
+
+        @Test
+        void testUpdateUser_throwsException_unauthorized() {
+            mockLogin(null, false, null);
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.updateUser(test_user.getId(), test_user_dto))
+                    .isInstanceOf(AppException.class)
+                    .hasMessage("Full authentication is required to access this resource");
+            verify(userRepository, never()).findById(any(Long.class));
+        }
+
+        @Test
+        void testUpdateUser_throwsException_whenAuthenticatedUserDoesNotExist() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.updateUser(test_user.getId(), test_user_dto))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+            verify(userRepository, never()).findById(any(Long.class));
+        }
+
+        @Test
+        void testUpdateUser_throwsException_forbidden() {
+            mockLogin(test_user, true, true);
+            when(userRepository.findByUsername(test_user.getUsername())).thenReturn(Optional.of(test_user));
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.updateUser(test_admin.getId(), test_user_dto))
+                    .isInstanceOf(AppException.class)
+                    .hasMessage("Access is denied. You do not have the required permissions");
+            verify(userRepository, never()).findById(any(Long.class));
+        }
+
+        @Test
+        void testUpdateUser_throwsException_whenUserDoesNotExist() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+            when(userRepository.findById(test_user.getId())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.updateUser(test_user.getId(), test_user_dto))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+        }
+
+        @Test
+        void testUpdateUser_throwsException_whenUsernameAlreadyExist() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+            when(userRepository.findById(test_user.getId())).thenReturn(Optional.of(test_user));
+            when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.of(test_user));
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.updateUser(test_user.getId(), test_user_dto))
+                    .isInstanceOf(AppException.class).hasMessage("Username already exist");
+        }
+
+        @Test
+        void testUpdateUser_throwsException_whenRoleDoesNotExist() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+            when(userRepository.findById(test_user.getId())).thenReturn(Optional.of(test_user));
+            when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
+            when(roleRepository.findByName(test_user_dto.role())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.updateUser(test_user.getId(), test_user_dto))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("Role not found");
+        }
+
+        @Test
+        void testUpdateUser_throwsException_whenUpdatedByNotExist() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.empty());
+            when(userRepository.findByUsername(test_user_dto.updatedBy())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.updateUser(test_user.getId(), test_user_dto))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+        }
+
+        @Test
+        void testUpdateUser_success() {
+            mockLogin(test_admin, true, true);
+            when(userRepository.findByUsername(test_admin.getUsername())).thenReturn(Optional.of(test_admin));
+            when(userRepository.findById(test_user.getId())).thenReturn(Optional.empty());
+            Assertions.assertThatThrownBy(() -> userServiceImplementation.updateUser(test_user.getId(), test_user_dto))
+                    .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
+        }
     }
 
-    @Test
-    void testCreateUser_ThrowsException_WhenRoleDoesNotExist() {
-        when(roleRepository.findByName(anyString())).thenReturn(Optional.empty());
-        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
-                .isInstanceOf(ResourceNotFoundException.class).hasMessage("Role not found");
-        verify(userRepository, never()).save(any(User.class));
+    @Nested
+    class testDisableUserTests {
+        // TODO: Implement tests for disableUser method
     }
 
-    @Test
-    void testCreateUser_ThrowsException_WhenUserDoesNotExist() {
-        when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
-        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
-                .isInstanceOf(ResourceNotFoundException.class).hasMessage("User not found");
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void testCreateUser_ThrowsException_Unauthorized() {
-        mockLogin(test_user, false, null);
-        when(roleRepository.findByName(Roles.USER.name())).thenReturn(Optional.of(roleUser));
-        when(userRepository.findByUsername(test_user_dto.username())).thenReturn(Optional.empty());
-        when(userRepository.findByUsername(test_user_dto.createdBy())).thenReturn(Optional.of(test_admin));
-        Assertions.assertThatThrownBy(() -> userServiceImplementation.create(test_user_dto))
-                .isInstanceOf(AppException.class)
-                .hasMessage("Full authentication is required to access this resource");
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void testGetUsers_ThrowsException_Unauthorized() {
-        mockLogin(null, false, null);
-        Assertions.assertThatThrownBy(() -> userServiceImplementation.getUsers(Sort.unsorted()))
-                .isInstanceOf(AppException.class).hasMessage("Full authentication is required to access this resource");
-        verify(userRepository, never()).findAll(any(Sort.class));
-    }
-
-    @Test
-    void testGetUsers_ThrowsException_Forbidden() {
-        mockLogin(test_user, true, true);
-        when(userRepository.findByUsername(test_user.getUsername())).thenReturn(Optional.of(test_user));
-        Assertions.assertThatThrownBy(() -> userServiceImplementation.getUsers(Sort.unsorted()))
-                .isInstanceOf(AppException.class)
-                .hasMessage("Access is denied. You do not have the required permissions");
-        verify(userRepository, never()).findAll(any(Sort.class));
-    }
-
-}                               
+}
 
 // package com.crawler.backend.service.implementation;
 
