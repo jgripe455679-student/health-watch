@@ -42,6 +42,20 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public UserResponseDto create(UserDto userDto) {
+        /*
+         * Extra access control in the business logic layer
+         */
+        Authentication authentication = getAuthentication();
+
+        if (!authentication.isAuthenticated())
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
+
+        User authenticated_user = userRepository.findByUsername(authentication.getName()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found"));
+
+        if (!authenticated_user.getRole().getName().equals(Roles.ADMIN.name()))
+            throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions");
+
         User user = UserMapper.userDtoToUser(userDto);
 
         if (userRepository.findByUsername(userDto.username()).isPresent())
@@ -56,16 +70,6 @@ public class UserServiceImplementation implements UserService {
         user.setRole(role);
         user.setPassword(passwordEncoder.encode(userDto.password()));
         user.setCreatedBy(createdBy);
-        /*
-         * Extra access control in the business logic layer
-         */
-        Authentication authentication = getAuthentication();
-
-        if (!authentication.getName().equals(userDto.createdBy()))
-            throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
-
-        if (!createdBy.getRole().getName().equals(Roles.ADMIN.name()))
-            throw new AppException(HttpStatus.FORBIDDEN, "Access is denied. You do not have the required permissions");
 
         return UserMapper.userToUserResponseDto(userRepository.save(user));
     }
@@ -247,7 +251,7 @@ public class UserServiceImplementation implements UserService {
     @Override
     public UserResponseDto getUserByUsername(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(
-                () -> new ResourceNotFoundException("Username not found"));
+                () -> new ResourceNotFoundException("User not found"));
         return UserMapper.userToUserResponseDto(user);
     }
 
