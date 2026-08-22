@@ -19,14 +19,17 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.crawler.backend.enums.Roles;
 import com.crawler.backend.model.Role;
 import com.crawler.backend.model.User;
+import com.crawler.test.TestApplication;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@ContextConfiguration(classes = TestApplication.class)
 // @ActiveProfiles("test")
 // @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 // @EntityScan(basePackages = "com.crawler.backend.model")

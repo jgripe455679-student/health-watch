@@ -34,6 +34,11 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/test")
+    public String greetingHelloWorld() {
+        return "Hello, world!";
+    }
+
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto userRequestDto) {
         UserDto userDto = UserMapper.userRequestDtoToUserDto(userRequestDto);

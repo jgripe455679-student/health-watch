@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.crawler.backend.repository.TestApplication;
+import com.crawler.test.TestApplication;
 
 @SpringBootTest(classes = TestApplication.class)
 @ActiveProfiles("test")

@@ -1,4 +1,4 @@
-package com.crawler.backend.repository;
+package com.crawler.test;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
