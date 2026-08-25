@@ -22,6 +22,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,6 +35,7 @@ import com.crawler.backend.exception.AppExceptionHandler;
 import com.crawler.backend.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@ActiveProfiles("test")
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes = UserController.class)
