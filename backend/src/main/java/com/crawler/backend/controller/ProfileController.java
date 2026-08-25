@@ -33,7 +33,7 @@ public class ProfileController {
     @PostMapping
     public ResponseEntity<ProfileDto> createProfile(@Validated @RequestBody ProfileDto profileDto) {
         ProfileDto response = profileService.create(profileDto);
-        return ResponseEntity.created(URI.create("/api/v1/profiles" + response.id())).body(response);
+        return ResponseEntity.created(URI.create("/api/v1/profiles/" + response.id())).body(response);
     }
 
     @GetMapping

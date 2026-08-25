@@ -1,20 +1,18 @@
 package com.crawler.backend.service.implementation;
 
-import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalUnit;
-import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.crawler.backend.config.JwtProperties;
 import com.crawler.backend.enums.TokenType;
 import com.crawler.backend.model.Token;
 import com.crawler.backend.service.JWTService;
@@ -24,17 +22,13 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class JWTServiceImplementation implements JWTService {
 
-    private String secretKey = "";
-
-    public JWTServiceImplementation() throws NoSuchAlgorithmException {
-        KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-        SecretKey sk = keyGen.generateKey();
-        secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
-    }
+    private final JwtProperties jwtProperties;
 
     @Override
     public Token generateAccessToken(Map<String, Object> extraClaims, long duration, TemporalUnit durationType,
@@ -131,7 +125,7 @@ public class JWTServiceImplementation implements JWTService {
     // }
 
     private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretKey());
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

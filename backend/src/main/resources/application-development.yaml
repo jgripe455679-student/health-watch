@@ -9,6 +9,7 @@ spring:
 
 # JWT
 jwt:
+  secret-key: ${JWT_SECRET_KEY}
   access-token-duration-minute: 5
   access-token-duration-second: 300
   refresh-token-duration-day: 7

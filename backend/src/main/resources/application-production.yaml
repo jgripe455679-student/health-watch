@@ -4,11 +4,25 @@ server:
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL}
-    username: ${MYSQL_ROOT_USER}
-    password: ${MYSQL_ROOT_PASSWORD}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      username: ${REDIS_USERNAME:}
+      password: ${REDIS_PASSWORD}
+  cache:
+    type: redis
 
 # JWT
 jwt:
+  secret-key: ${JWT_SECRET_KEY}
   access-token-duration-minute: 5
   access-token-duration-second: 300
   refresh-token-duration-day: 7
@@ -23,3 +37,14 @@ rabbitmq:
   port: ${RABBITMQ_PORT}
   default_user: ${RABBITMQ_DEFAULT_USER}
   default_password: ${RABBITMQ_DEFAULT_PASS}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never

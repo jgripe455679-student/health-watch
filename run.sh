@@ -1,7 +1,7 @@
 #! /bin/bash
 
 cd backend
-./gradlew clean build -x test
+./gradlew clean build
 cd ..
-docker compose build --build-arg JAR_FILE=build/libs/\*.jar
+docker compose build
 docker compose up

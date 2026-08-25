@@ -9,3 +9,6 @@ spring:
         hibernate:
             ddl-auto: create-drop
         database-platform: org.hibernate.dialect.H2Dialect
+
+jwt:
+    secret-key: VGhpcyBpcyBhIHRlc3Qga2V5IHRoYXQgaXMgYXQgbGVhc3QgMzIge

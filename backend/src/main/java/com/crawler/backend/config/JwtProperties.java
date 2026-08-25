@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperties {
 
+    private final String secretKey;
     private final long accessTokenDurationMinute;
     private final long accessTokenDurationSecond;
     private final long refreshTokenDurationDay;
