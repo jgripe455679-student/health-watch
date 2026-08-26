@@ -61,3 +61,22 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+  
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [backend, admin-ui, user-ui]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build backend image
+        run:  docker build --tag health-watch-api:test ./backend
+      
+      - name: Build worker image
+        run:  docker build --tag health-watch-worker:test ./scripts
+
+      - name: Build admin UI image
+        run: docker build --tag health-watch-admin-ui:test ./frontend
+
+      - name: Build user UI image
+        run: docker build --tag health-watch-user-ui:test ./frontend-user
