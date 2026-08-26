@@ -23,3 +23,14 @@ jobs:
 
       - run: chmod +x gradlew
       - run: ./gradlew clean test
+  
+  admin-ui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    
+    steps:
+      - uses: actions/checkout@v5
+      
+      - uses: actions/setup-node@v5
