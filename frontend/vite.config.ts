@@ -1,17 +1,26 @@
 import react from "@vitejs/plugin-react";
-import mkcert from "vite-plugin-mkcert";
+import { PluginOption } from "vite";
 import { defineConfig } from "vitest/config";
-// https://vitejs.dev/config/
-export default defineConfig(({ command }) => ({
-  plugins: [react(), ...(command === "serve" ? [mkcert()] : [])],
-  test: {
-    globals: true,
-    environment: "jsdom",
-    setupFiles: ["./src/setupTests.ts"],
-  },
+
+export default defineConfig(async ({ command }) => {
+  const plugins: PluginOption[] = [react()];
+
+  if (command === "serve") {
+    const { default: mkcert } = await import("vite-plugin-mkcert");
+    plugins.push(mkcert());
+  }
+
+  return {
+    plugins,
+    test: {
+      globals: true,
+      environment: "jsdom",
+      setupFiles: ["./src/setupTests.ts"],
+    },
+  };
+});
   // css: {
   //   postcss: {
   //     plugins: [tailwindcss()],
   //   },
   // },
-}));
