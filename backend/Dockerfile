@@ -1,11 +1,10 @@
 FROM eclipse-temurin:17-jdk-jammy AS builder
 WORKDIR /app
-COPY gradlew gradlew.bat build.gradle settings.gradle ./
 COPY gradlew build.gradle settings.gradle ./
 COPY gradle ./gradle
 COPY src ./src
 RUN chmod +x gradlew
-RUN ./gradlew --no-daemon --offline bootJar -x test
+RUN ./gradlew --no-daemon bootJar -x test
 
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
