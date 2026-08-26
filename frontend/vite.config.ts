@@ -1,9 +1,9 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
 import mkcert from "vite-plugin-mkcert";
+import { defineConfig } from "vitest/config";
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), mkcert()],
+export default defineConfig(({ command }) => ({
+  plugins: [react(), ...(command === "serve" ? [mkcert()] : [])],
   test: {
     globals: true,
     environment: "jsdom",
@@ -14,4 +14,4 @@ export default defineConfig({
   //     plugins: [tailwindcss()],
   //   },
   // },
-});
+}));
