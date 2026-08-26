@@ -7,7 +7,7 @@ import Pagination from "../components/Pagination";
 import { useAppUtility } from "../hooks/useAppUtility";
 import useDateRange from "../hooks/useDateRange";
 import useDocumentTitle from "../hooks/useDocumentTitle";
-import { Profile } from "./Profiling";
+import { Profile } from "./profiling/Profiling";
 
 export interface Record {
   id: number;
@@ -83,12 +83,12 @@ const HealthRecord: React.FC = () => {
 
   const fetchFilteredRecords = async (
     startDate: string,
-    endDate: string
+    endDate: string,
   ): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await get(
-        `/records/filter?startDate=${startDate}&endDate=${endDate}`
+        `/records/filter?startDate=${startDate}&endDate=${endDate}`,
       );
       setRecords(response.data as Record[]);
     } catch (error) {
@@ -121,13 +121,13 @@ const HealthRecord: React.FC = () => {
   };
 
   const handleStartDateOnChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     updateDateRange({ startDate: event.target.value });
   };
 
   const handleEndDateOnChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     updateDateRange({ endDate: event.target.value });
   };
@@ -147,7 +147,7 @@ const HealthRecord: React.FC = () => {
         setRecordDetails(recordDetailsResult);
         if (recordDetailsResult.profileId) {
           const profileResponse = await get(
-            "/profiles/" + recordDetailsResult.profileId
+            "/profiles/" + recordDetailsResult.profileId,
           );
           setProfileDetails(profileResponse.data as Profile);
         }
@@ -168,7 +168,7 @@ const HealthRecord: React.FC = () => {
         setRecordDetails(recordDetailsResult);
         if (recordDetailsResult.profileId) {
           const profileResponse = await get(
-            "/profiles/" + recordDetailsResult.profileId
+            "/profiles/" + recordDetailsResult.profileId,
           );
           setProfileDetails(profileResponse.data as Profile);
         }
@@ -414,8 +414,8 @@ const HealthRecord: React.FC = () => {
             {currentHealthRecordView === "editRecord" && isEditing
               ? "Edit Record"
               : currentHealthRecordView === "viewRecord" && !isEditing
-              ? "View Record"
-              : "New Record"}
+                ? "View Record"
+                : "New Record"}
           </span>
           {currentHealthRecordView === "viewRecord" ? (
             <HealthRecordView

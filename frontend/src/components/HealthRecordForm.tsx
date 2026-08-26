@@ -4,7 +4,7 @@ import { get, post, put } from "../api/apiClient";
 import { useAppUtility } from "../hooks/useAppUtility";
 import { useAuth } from "../hooks/useAuth";
 import { Record } from "../pages/HealthRecord";
-import { Profile } from "../pages/Profiling";
+import { Profile } from "../pages/profiling/Profiling";
 import getEmptyProfileFormValues, { ProfileFormValues } from "../utils/profile";
 
 type ProfileType = {
@@ -86,20 +86,20 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
       lastName: profileDetails?.lastName || "",
       suffix: profileDetails?.suffix || "",
       dateOfBirth: profileDetails?.dateOfBirth || "",
+      age: profileDetails?.age || "",
       gender: profileDetails?.gender || "",
       maritalStatus: profileDetails?.maritalStatus || "",
       address: profileDetails?.address || "",
+      emailAddress: profileDetails?.emailAddress || "",
       mobileNumber: profileDetails?.mobileNumber || "",
       occupation: profileDetails?.occupation || "",
       educationalBackground: profileDetails?.educationalBackground || "",
-      householdSize: profileDetails?.householdSize || null,
-      incomeBracket: profileDetails?.incomeBracket || "",
-    }
+    },
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { isMobileNumberValid } = useAppUtility();
   const [profileFormErrors, setProfileFormErrors] = useState<ProfileFormValues>(
-    getEmptyProfileFormValues()
+    getEmptyProfileFormValues(),
   );
   const [recordFormErrors, setRecordFormErrors] =
     useState<HealthRecordFormValues>(initialHealthRecordFormValues);
@@ -125,7 +125,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
   const handleOnChange = (
     event: ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = event.target;
     const formPrefix = "form_";
@@ -288,7 +288,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
         } catch (error) {
           if (axios.isAxiosError(error)) {
             setGlobalError(
-              "Oops, something went wrong. Please contact your system administrator."
+              "Oops, something went wrong. Please contact your system administrator.",
             );
             resetRecordAndProfileFormValues();
             resetRecordAndProfileFormErrors();
@@ -324,7 +324,7 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
         } catch (error) {
           if (axios.isAxiosError(error)) {
             setGlobalError(
-              "Oops, something went wrong. Please contact your system administrator."
+              "Oops, something went wrong. Please contact your system administrator.",
             );
             resetRecordAndProfileFormValues();
             resetRecordAndProfileFormErrors();
@@ -838,53 +838,6 @@ const HealthRecordForm: React.FC<HealthRecordProps> = ({
                 <option value="POSTGRADUATE STUDIES">
                   POSTGRADUATE STUDIES
                 </option>
-              </select>
-            </label>
-            <label className="form-control w-72">
-              <div className="label">
-                <span className="label-text">Household Size (Optional)</span>
-              </div>
-              <input
-                id="profile_householdSize"
-                name="profile_householdSize"
-                type="number"
-                min={0}
-                className="input input-sm input-bordered rounded-none w-72 py-1.5 px-3"
-                value={profileFormValues.householdSize ?? 0}
-                onChange={handleOnChange}
-              />
-            </label>
-            <label className="form-control w-72">
-              <div className="label">
-                <span className="label-text">
-                  Household Income Bracket (Optional)
-                </span>
-              </div>
-              <select
-                id="profile_incomeBracket"
-                name="profile_incomeBracket"
-                className="input input-sm input-bordered rounded-none w-72 px-3"
-                value={profileFormValues.incomeBracket}
-                onChange={handleOnChange}
-              >
-                <option value="">Select household income bracket</option>
-                <option value="POOR">Below ₱10,957 monthly income</option>
-                <option value="LOW INCOME (BUT NOT POOR)">
-                  ₱10,957 to ₱21,914 monthly income
-                </option>
-                <option value="LOWER MIDDLE CLASS">
-                  ₱21,914 to ₱43,828 monthly income
-                </option>
-                <option value="MIDDLE CLASS">
-                  ₱43,828 to ₱76,66 monthly income
-                </option>
-                <option value="UPPER MIDDLE INCOME">
-                  ₱76,669 to ₱131,484 monthly income
-                </option>
-                <option value="HIGH INCOME (BUT NOT RICH)">
-                  ₱131,483 to ₱219,140 monthly income
-                </option>
-                <option value="RICH">₱ 219,140 and above monthly income</option>
               </select>
             </label>
           </div>

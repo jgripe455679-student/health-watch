@@ -1,7 +1,7 @@
 import React from "react";
 import { useAppUtility } from "../hooks/useAppUtility";
 import { Record } from "../pages/HealthRecord";
-import { Profile } from "../pages/Profiling";
+import { Profile } from "../pages/profiling/Profiling";
 
 type HealthRecordViewProps = {
   setCurrentHealthRecordView: (view: string) => void;
@@ -103,18 +103,6 @@ const HealthRecordView: React.FC<HealthRecordViewProps> = ({
           </div>
           <div className="font-semibold col-span-5 flex items-end">
             {profileDetails?.educationalBackground}
-          </div>
-          <div className="col-span-2 flex justify-end items-start">
-            <span className="text-right">Household Size:</span>
-          </div>
-          <div className="font-semibold col-span-5 flex items-end">
-            {profileDetails?.householdSize}
-          </div>
-          <div className="col-span-2 flex justify-end items-start">
-            <span className="text-right">Household Income Bracket:</span>
-          </div>
-          <div className="font-semibold col-span-5 flex items-end">
-            {profileDetails?.incomeBracket}
           </div>
           <hr className="col-span-7 my-4 border-t-2 border-dashed border-gray-800" />
           <div className="col-span-2 flex justify-end items-start">
