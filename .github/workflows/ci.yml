@@ -86,7 +86,7 @@ jobs:
         run: docker build --tag health-watch-user-ui:test ./frontend-user
 
       - name: Scan backend image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: health-watch-api:test
           format: json
