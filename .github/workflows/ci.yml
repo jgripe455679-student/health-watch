@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches-ignore:
+      - 'RMgulane-patch-1'
 
 permissions:
   contents: read
