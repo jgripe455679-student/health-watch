@@ -53,7 +53,6 @@
 | mount | CVE-2026-27456 | MEDIUM | 2.37.2-4ubuntu3.5 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
 | ncurses-base | CVE-2023-50495 | LOW | 6.3-2ubuntu0.2 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
 | ncurses-bin | CVE-2023-50495 | LOW | 6.3-2ubuntu0.2 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
-
 | openssl | CVE-2026-63072 | MEDIUM | 3.0.2-0ubuntu1.26 | 3.0.2-0ubuntu1.29 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
 | openssl | CVE-2026-63076 | MEDIUM | 3.0.2-0ubuntu1.26 | 3.0.2-0ubuntu1.29 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
 | openssl | CVE-2026-54874 | LOW | 3.0.2-0ubuntu1.26 | 3.0.2-0ubuntu1.29 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
