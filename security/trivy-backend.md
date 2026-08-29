@@ -58,6 +58,7 @@
 | openssl | CVE-2026-63076 | MEDIUM | 3.0.2-0ubuntu1.26 | 3.0.2-0ubuntu1.29 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
 | openssl | CVE-2026-54874 | LOW | 3.0.2-0ubuntu1.26 | 3.0.2-0ubuntu1.29 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
 | openssl | CVE-2026-63074 | LOW | 3.0.2-0ubuntu1.26 | 3.0.2-0ubuntu1.29 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
+
 | openssl | CVE-2026-75803 | LOW | 3.0.2-0ubuntu1.26 | 3.0.2-0ubuntu1.29 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
 | p11-kit | CVE-2026-13757 | MEDIUM | 0.24.0-6build1 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
 | p11-kit-modules | CVE-2026-13757 | MEDIUM | 0.24.0-6build1 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
@@ -264,7 +265,7 @@
 
 ### <CVE-2026-63072>: <An out-of-bounds heap write vulnerability (CWE-787) exists in OpenSSL's CMS decryption. The CMS_decrypt() function sizes its key-unwrap output buffer based on the reported key size, but the AES-WRAP-PAD primitive can write 8 additional bytes during a failed unwrap operation. An attacker can exploit this by modifying a single OID byte in a legitimate CMS message to force the padded variant. When processed, this triggers a deterministic, 8-byte zero-value heap overflow, causing heap corruption and a Denial of Service. FIPS modules are unaffected.>
 
-- Package: <libssl3>
+- Package: <libssl3, openssl>
 - Severity: <MEDIUM>
 - Installed version: <3.0.2-0ubuntu1.26>
 - Fixed version: <3.0.2-0ubuntu1.29>
@@ -280,7 +281,7 @@
 
 ### <CVE-2026-63076>: <OpenSSL CMP password based protection verification only\nchecks whether the protectionAlg parameter was not NULL and not its\nASN.1 type, before treating it as a PBMParameter.>
 
-- Package: <libssl3>
+- Package: <libssl3, openssl>
 - Severity: <MEDIUM>
 - Installed version: <3.0.2-0ubuntu1.26>
 - Fixed version: <3.0.2-0ubuntu1.29>
@@ -296,7 +297,7 @@
 
 ### <CVE-2026-54874>: <Receiving a DTLS record for a future epoch while a handshake\nis in progress causes OpenSSL to buffer far more memory than the record\nitself requires.>
 
-- Package: <libssl3>
+- Package: <libssl3, openssl>
 - Severity: <LOW>
 - Installed version: <3.0.2-0ubuntu1.26>
 - Fixed version: <3.0.2-0ubuntu1.29>
@@ -312,7 +313,7 @@
 
 ### <CVE-2026-63074>: <The OpenSSL Certificate Management Protocol (CMP) caches\nadditional certificates (extraCerts) sent in a CMP message, but never expunges\nthem (for instance if they are invalid).>
 
-- Package: <libssl3>
+- Package: <libssl3, openssl>
 - Severity: <LOW>
 - Installed version: <3.0.2-0ubuntu1.26>
 - Fixed version: <3.0.2-0ubuntu1.29>
@@ -328,7 +329,7 @@
 
 ### <CVE-2026-75803>: <The EVP_Cipher() API call for AEAD ciphers behaves like a one\nshot encryption and decryption call. It also verifies the AEAD tag after the\ndecryption operation. However for AES-OCB and ChaCha20-Poly1305 ciphers\nit skipped the AEAD tag verification when an empty ciphertext was passed to\nthe function. The callers of this function might believe that a successful\nreturn indicates a valid AEAD tag for these ciphers, even when that has not\ntruly been validated in this case.>
 
-- Package: <libssl3>
+- Package: <libssl3, openssl>
 - Severity: <LOW>
 - Installed version: <3.0.2-0ubuntu1.26>
 - Fixed version: <3.0.2-0ubuntu1.29>
@@ -405,6 +406,41 @@
 - Tracking issue: <>
 - Exception expiry: 
 - Notes: <>
+
+### <CVE-2026-12087 >: <Socket versions before 2.041 for Perl have an out-of-bounds heap read.\n\nIn Socket.xs, pack_ip_mreq_source() checks the length of its source argument before the argument is read, so the check tests the byte length carried over from the preceding multiaddr argument instead. Both addresses occupy a 4-byte field, so a valid multiaddr lets a source of any length pass the check, and the source is then copied into the 4-byte imr_sourceaddr field with a fixed-size copy. A source shorter than 4 bytes is not rejected, and the copy reads up to 3 bytes past the end of its buffer.\n\nCalling pack_ip_mreq_source() with a source value shorter than 4 bytes copies adjacent heap memory into the returned packed structure.>
+          
+
+- Package: <perl-base>
+- Severity: <MEDIUM>
+- Installed version: <5.34.0-3ubuntu1.7>
+- Fixed version: <5.34.0-3ubuntu1.8>
+- Location: <Ubuntu 22.04 runtime>
+- Exploitability: <known>
+- Reachable at runtime: <no>
+- Trivy Status: <fixed>
+- Security Disposition: <open>
+- Remediation: <upgrade, rebuild base image, and investigate>
+- Tracking issue: <>
+- Exception expiry: 
+- Notes: <>
+
+### <CVE-2026-12087 >: <Socket versions before 2.041 for Perl have an out-of-bounds heap read.\n\nIn Socket.xs, pack_ip_mreq_source() checks the length of its source argument before the argument is read, so the check tests the byte length carried over from the preceding multiaddr argument instead. Both addresses occupy a 4-byte field, so a valid multiaddr lets a source of any length pass the check, and the source is then copied into the 4-byte imr_sourceaddr field with a fixed-size copy. A source shorter than 4 bytes is not rejected, and the copy reads up to 3 bytes past the end of its buffer.\n\nCalling pack_ip_mreq_source() with a source value shorter than 4 bytes copies adjacent heap memory into the returned packed structure.>
+          
+
+- Package: <perl-base>
+- Severity: <MEDIUM>
+- Installed version: <5.34.0-3ubuntu1.7>
+- Fixed version: <5.34.0-3ubuntu1.8>
+- Location: <Ubuntu 22.04 runtime>
+- Exploitability: <known>
+- Reachable at runtime: <no>
+- Trivy Status: <fixed>
+- Security Disposition: <open>
+- Remediation: <upgrade, rebuild base image, and investigate>
+- Tracking issue: <>
+- Exception expiry: 
+- Notes: <>
+
 
 ## Remediation Log
 
