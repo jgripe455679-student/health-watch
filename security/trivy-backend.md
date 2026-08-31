@@ -123,9 +123,9 @@
 | org.springframework:spring-expression | CVE-2026-41851 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-expression | CVE-2026-41852 | LOW | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-web | CVE-2026-41854 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
+
 | org.springframework:spring-webmvc | CVE-2026-41842 | HIGH | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41845 | HIGH | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
-
 | org.springframework:spring-webmvc | CVE-2026-41841 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41843 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41844 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
@@ -144,6 +144,22 @@
 - Exploitability: known
 - Reachable at runtime: no
 - Trivy Status: <>
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-41842: Spring MVC and WebFlux applications are vulnerable to Denial of Service (DoS) attacks when resolving static resources.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-webmvc
+- Severity: HIGH
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
 - Security Disposition: open
 - Remediation: 
 - Tracking issue: 
@@ -652,6 +668,7 @@
 
 | Date | Finding | Change made | Validation | Result |
 |---|---|---|---|---|
+| 2026-08-31 | org.apache.tomcat.embed:tomcat-embed-core | dependency change | <test or scan command> | <passed/failed> |
 | YYYY-MM-DD | <CVE-ID or package> | <dependency/image/package change> | <test or scan command> | <passed/failed> |
 
 ## Release Decision

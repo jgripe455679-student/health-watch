@@ -1,0 +1,106 @@
+Target,Class,Type,Vulnerability ID,Package,Installed Version,Fixed Version,Severity,Status
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-27456,bsdutils,1:2.37.2-4ubuntu3.5,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2022-27943,gcc-12-base,12.3.0-1ubuntu1~22.04.3,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-54371,libattr1,1:2.5.1-1build1,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-27456,libblkid1,2.37.2-4ubuntu3.5,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2025-66382,libexpat1,2.4.7-1ubuntu0.7,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2022-27943,libgcc-s1,12.3.0-1ubuntu1~22.04.3,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2024-2236,libgcrypt20,1.9.4-3ubuntu3.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-27456,libmount1,2.37.2-4ubuntu3.5,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2023-50495,libncurses6,6.3-2ubuntu0.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2023-50495,libncursesw6,6.3-2ubuntu0.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-13757,libp11-kit0,0.24.0-6build1,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2022-41409,libpcre2-8-0,10.39-3ubuntu0.1,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-27456,libsmartcols1,2.37.2-4ubuntu3.5,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-63072,libssl3,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,MEDIUM,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-63076,libssl3,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,MEDIUM,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-54874,libssl3,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,LOW,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-63074,libssl3,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,LOW,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-75803,libssl3,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,LOW,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2022-27943,libstdc++6,12.3.0-1ubuntu1~22.04.3,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-40228,libsystemd0,249.11-0ubuntu3.22,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2023-50495,libtinfo6,6.3-2ubuntu0.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-40228,libudev1,249.11-0ubuntu3.22,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-27456,libuuid1,2.37.2-4ubuntu3.5,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2022-4899,libzstd1,1.4.8+dfsg-3build1,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2023-29383,login,1:4.8.1-2ubuntu2.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2024-56433,login,1:4.8.1-2ubuntu2.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-27456,mount,2.37.2-4ubuntu3.5,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2023-50495,ncurses-base,6.3-2ubuntu0.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2023-50495,ncurses-bin,6.3-2ubuntu0.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-63072,openssl,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,MEDIUM,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-63076,openssl,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,MEDIUM,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-54874,openssl,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,LOW,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-63074,openssl,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,LOW,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-75803,openssl,3.0.2-0ubuntu1.26,3.0.2-0ubuntu1.29,LOW,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-13757,p11-kit,0.24.0-6build1,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-13757,p11-kit-modules,0.24.0-6build1,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2023-29383,passwd,1:4.8.1-2ubuntu2.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2024-56433,passwd,1:4.8.1-2ubuntu2.2,,LOW,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-12087,perl-base,5.34.0-3ubuntu1.7,5.34.0-3ubuntu1.8,MEDIUM,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-13221,perl-base,5.34.0-3ubuntu1.7,5.34.0-3ubuntu1.8,MEDIUM,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-57432,perl-base,5.34.0-3ubuntu1.7,5.34.0-3ubuntu1.8,MEDIUM,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-57433,perl-base,5.34.0-3ubuntu1.7,5.34.0-3ubuntu1.8,MEDIUM,fixed
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-18477,tar,1.34+dfsg-1ubuntu0.1.22.04.6,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-18508,tar,1.34+dfsg-1ubuntu0.1.22.04.6,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2026-27456,util-linux,2.37.2-4ubuntu3.5,,MEDIUM,affected
+health-watch-api:test (ubuntu 22.04),os-pkgs,ubuntu,CVE-2021-31879,wget,1.21.2-2ubuntu1.5,,MEDIUM,affected
+Java,lang-pkgs,jar,CVE-2026-10532,ch.qos.logback:logback-core,1.5.32,1.5.34,LOW,fixed
+Java,lang-pkgs,jar,CVE-2026-9828,ch.qos.logback:logback-core,1.5.32,1.5.33,LOW,fixed
+Java,lang-pkgs,jar,GHSA-r7wm-3cxj-wff9,com.fasterxml.jackson.core:jackson-core,2.21.2,"2.18.8, 2.21.4",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-54512,com.fasterxml.jackson.core:jackson-databind,2.15.2,"2.18.8, 3.1.4, 2.21.4",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-54513,com.fasterxml.jackson.core:jackson-databind,2.15.2,"2.18.8, 2.21.4, 3.1.4",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-54514,com.fasterxml.jackson.core:jackson-databind,2.15.2,"2.18.8, 2.21.4, 3.1.4",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-54515,com.fasterxml.jackson.core:jackson-databind,2.15.2,"3.1.4, 2.18.9, 2.21.5, 2.22.1",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-59888,com.fasterxml.jackson.core:jackson-databind,2.15.2,"2.18.8, 2.21.4",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2021-22569,com.google.protobuf:protobuf-java,3.11.4,"3.16.1, 3.18.2, 3.19.2",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2022-3509,com.google.protobuf:protobuf-java,3.11.4,"3.16.3, 3.19.6, 3.20.3, 3.21.7",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2022-3510,com.google.protobuf:protobuf-java,3.11.4,"3.16.3, 3.19.6, 3.20.3, 3.21.7",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2024-7254,com.google.protobuf:protobuf-java,3.11.4,"3.25.5, 4.27.5, 4.28.2",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2022-3171,com.google.protobuf:protobuf-java,3.11.4,"3.21.7, 3.20.3, 3.19.6, 3.16.3",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-63337,com.rabbitmq:amqp-client,5.25.0,5.33.0,HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-69219,com.rabbitmq:amqp-client,5.25.0,5.33.1,HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-69220,com.rabbitmq:amqp-client,5.25.0,5.33.1,HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-63335,com.rabbitmq:amqp-client,5.25.0,5.31.0,MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-63336,com.rabbitmq:amqp-client,5.25.0,5.33.0,MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-61634,com.rabbitmq:amqp-client,5.25.0,5.33.0,LOW,fixed
+Java,lang-pkgs,jar,CVE-2026-40983,io.micrometer:micrometer-core,1.15.11,"1.16.6, 1.15.12",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-40984,io.micrometer:micrometer-core,1.15.11,"1.16.6, 1.15.12",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-42583,io.netty:netty-codec,4.1.132.Final,4.1.133.Final,HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-59901,io.netty:netty-codec,4.1.132.Final,4.1.136.Final,HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-44249,io.netty:netty-handler,4.1.132.Final,"4.2.15.Final, 4.1.135.Final",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-45416,io.netty:netty-handler,4.1.132.Final,"4.2.15.Final, 4.1.135.Final",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-50010,io.netty:netty-handler,4.1.132.Final,"4.2.15.Final, 4.1.135.Final",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2023-22102,mysql:mysql-connector-java,8.0.28,,HIGH,affected
+Java,lang-pkgs,jar,CVE-2025-48924,org.apache.commons:commons-lang3,3.17.0,3.18.0,MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-49844,org.apache.logging.log4j:log4j-api,2.24.3,"2.25.5, 2.26.1",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41293,org.apache.tomcat.embed:tomcat-embed-core,10.1.54,"9.0.118, 10.1.55, 11.0.22",CRITICAL,fixed
+Java,lang-pkgs,jar,CVE-2026-43512,org.apache.tomcat.embed:tomcat-embed-core,10.1.54,"9.0.118, 10.1.55, 11.0.22",CRITICAL,fixed
+Java,lang-pkgs,jar,CVE-2026-43515,org.apache.tomcat.embed:tomcat-embed-core,10.1.54,"9.0.118, 10.1.55, 11.0.22",CRITICAL,fixed
+Java,lang-pkgs,jar,CVE-2026-41284,org.apache.tomcat.embed:tomcat-embed-core,10.1.54,"9.0.118, 10.1.55, 11.0.22",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-42498,org.apache.tomcat.embed:tomcat-embed-core,10.1.54,"9.0.118, 10.1.55, 11.0.22",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-43513,org.apache.tomcat.embed:tomcat-embed-core,10.1.54,"9.0.118, 10.1.55, 11.0.22",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-43514,org.apache.tomcat.embed:tomcat-embed-core,10.1.54,"9.0.118, 10.1.55, 11.0.22",LOW,fixed
+Java,lang-pkgs,jar,CVE-2026-41701,org.springframework.amqp:spring-amqp,3.2.10,"4.0.4, 3.2.11",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41714,org.springframework.amqp:spring-amqp,3.2.10,"4.0.4, 3.2.11",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41001,org.springframework.boot:spring-boot-autoconfigure,3.5.14,"4.0.7, 3.5.15",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41695,org.springframework.data:spring-data-commons,3.5.11,"4.0.6, 3.5.12",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-41716,org.springframework.data:spring-data-commons,3.5.11,"4.0.6, 3.5.12",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-41711,org.springframework.data:spring-data-commons,3.5.11,"4.0.6, 3.5.12",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41721,org.springframework.data:spring-data-commons,3.5.11,"4.0.6, 3.5.12",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41719,org.springframework.data:spring-data-keyvalue,3.5.11,"4.0.6, 3.5.12",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41710,org.springframework.retry:spring-retry,2.0.12,2.0.13,MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41706,org.springframework.security:spring-security-web,6.5.10,"7.0.6, 6.5.11",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-47838,org.springframework.security:spring-security-web,6.5.10,6.5.11,MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41848,org.springframework:spring-core,6.2.18,"7.0.8, 6.2.19",LOW,fixed
+Java,lang-pkgs,jar,CVE-2026-41850,org.springframework:spring-expression,6.2.18,"7.0.8, 6.2.19",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-41851,org.springframework:spring-expression,6.2.18,"7.0.8, 6.2.19",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41852,org.springframework:spring-expression,6.2.18,"7.0.8, 6.2.19",LOW,fixed
+Java,lang-pkgs,jar,CVE-2026-41854,org.springframework:spring-web,6.2.18,"7.0.8, 6.2.19",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41842,org.springframework:spring-webmvc,6.2.18,"7.0.8, 6.2.19",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-41845,org.springframework:spring-webmvc,6.2.18,"7.0.8, 6.2.19",HIGH,fixed
+Java,lang-pkgs,jar,CVE-2026-41841,org.springframework:spring-webmvc,6.2.18,"7.0.8, 6.2.19",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41843,org.springframework:spring-webmvc,6.2.18,"7.0.8, 6.2.19",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41844,org.springframework:spring-webmvc,6.2.18,"7.0.8, 6.2.19",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41846,org.springframework:spring-webmvc,6.2.18,"7.0.8, 6.2.19",MEDIUM,fixed
+Java,lang-pkgs,jar,CVE-2026-41853,org.springframework:spring-webmvc,6.2.18,"7.0.8, 6.2.19",MEDIUM,fixed
