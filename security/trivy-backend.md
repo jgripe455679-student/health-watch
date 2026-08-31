@@ -668,7 +668,7 @@
 
 | Date | Finding | Change made | Validation | Result |
 |---|---|---|---|---|
-| 2026-08-31 | org.apache.tomcat.embed:tomcat-embed-core | dependency change | <test or scan command> | <passed/failed> |
+| 2026-08-31 | GHSA-r7wm-3cxj-wff9, CVE-2026-40983, CVE-2026-40984, CVE-2026-42583, CVE-2026-44249, CVE-2026-45416, CVE-2026-50010, CVE-2026-41293, CVE-2026-43512, CVE-2026-43515, CVE-2026-41284, CVE-2026-42498, CVE-2026-43513, CVE-2026-41695, CVE-2026-41716, CVE-2026-41850, CVE-2026-41842, CVE-2026-41845 | dependency change | .\gradlew clean test, CI Trivy scan of health-watch-api:test | passed |
 | YYYY-MM-DD | <CVE-ID or package> | <dependency/image/package change> | <test or scan command> | <passed/failed> |
 
 ## Release Decision
