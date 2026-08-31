@@ -67,10 +67,10 @@
 | perl-base | CVE-2026-57432 | MEDIUM | 5.34.0-3ubuntu1.7 | 5.34.0-3ubuntu1.8 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
 | perl-base | CVE-2026-57433 | MEDIUM | 5.34.0-3ubuntu1.7 | 5.34.0-3ubuntu1.8 | Ubuntu 22.04 runtime layer | fixed | Unassigned | TBD |
 | tar | CVE-2026-18477 | MEDIUM | 1.34+dfsg-1ubuntu0.1.22.04.6 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
-
 | tar | CVE-2026-18508 | MEDIUM | 1.34+dfsg-1ubuntu0.1.22.04.6 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
 | util-linux | CVE-2026-27456 | MEDIUM | 2.37.2-4ubuntu3.5 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
 | wget | CVE-2021-31879 | MEDIUM | 1.21.2-2ubuntu1.5 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
+
 | ch.qos.logback:logback-core | CVE-2026-10532 | LOW | 1.5.32 | 1.5.34 | Java application layer | fixed | Unassigned | TBD |
 | ch.qos.logback:logback-core | CVE-2026-9828 | LOW | 1.5.32 | 1.5.33 | Java application layer | fixed | Unassigned | TBD |
 | com.fasterxml.jackson.core:jackson-core | GHSA-r7wm-3cxj-wff9 | HIGH | 2.21.2 | 2.18.8, 2.21.4 | Java application layer | fixed | Unassigned | TBD |
@@ -125,18 +125,132 @@
 | org.springframework:spring-web | CVE-2026-41854 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41842 | HIGH | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41845 | HIGH | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
+
 | org.springframework:spring-webmvc | CVE-2026-41841 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41843 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41844 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41846 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 | org.springframework:spring-webmvc | CVE-2026-41853 | MEDIUM | 6.2.18 | 7.0.8, 6.2.19 | Java application layer | fixed | Unassigned | TBD |
 
+## Finding Details (Java application layer)
 
-## Finding Details
+### <CVE-ID>: <short description>
+          
+- Package: <PkgName>
+- Severity: <Severity>
+- Installed version: <InstalledVersion>
+- Fixed version: <FixedVersion or none>
+- Location: Java application
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: <>
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2026-41845: Due to incorrect escaping, the use of JavaScriptUtils.javaScriptEscape() may lead to JavaScript code injection in the browser, potentially resulting in a cross-site scripting (XSS) vulnerability.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-webmvc
+- Severity: HIGH
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2026-41841: Spring MVC and WebFlux applications are vulnerable to Information Disclosure attacks when resolving static resources.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-webmvc
+- Severity: MEDIUM
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2026-41843: Spring MVC and WebFlux applications are vulnerable to Path Traversal attacks when resolving static resources.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-webmvc
+- Severity: MEDIUM
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2026-41844: A Spring MVC or Spring WebFlux application which configures a mapping for \"/**\" where the view name is not explicitly specified allows an attacker to craft a link resulting in a 302 redirect to an arbitrary external host via the redirect: prefix.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-webmvc
+- Severity: MEDIUM
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2026-41846: Spring MVC applications which accept user-supplied values in the cssClass, cssErrorClass, or cssStyle attributes of JSP form tags allow arbitrary HTML/JavaScript code injection, potentially resulting in a cross-site scripting (XSS) vulnerability.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-webmvc
+- Severity: MEDIUM
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2026-41853: Spring MVC and WebFlux applications are vulnerable to Multipart request smuggling attacks.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-webmvc
+- Severity: MEDIUM
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+## Finding Details (Ubuntu 22.04 runtime)
 
 ### CVE-2026-27456: A TOCTOU race condition vulnerability exists in the SUID binary /usr/bin/mount from util-linux prior to version 2.41.4. When setting up loop devices, the binary validates a file path using user privileges but later opens it as root without ensuring the path has not changed. A local, unprivileged attacker with write access to an /etc/fstab user,loop target directory can exploit this by replacing the source file with a symlink. This allows them to mount and gain unauthorized read access to root-protected files, disk volumes, and block devices. The issue is resolved in version 2.41.4.
 
-- Package: bsdutils, libblkid1, libmount1, libsmartcols1, libuuid1, mount
+- Package: bsdutils, libblkid1, libmount1, libsmartcols1, libuuid1, mount, util-linux
 - Severity: MEDIUM
 - Installed version: 1:2.37.2-4ubuntu3.5, 2.37.2-4ubuntu3.5
 - Fixed version: none, 2.41.4?
@@ -480,6 +594,38 @@
 - Exploitability: known
 - Reachable at runtime: no
 - Trivy Status: <>
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2026-18508: A flaw was found in GNU tar. When extracting an archive with the --one-top-level option, hardlink targets are not confined to the designated top-level directory and may resolve relative to the extraction working directory. A crafted archive can create hardlinks that escape the intended boundary and, when combined with a preexisting symbolic link under the working directory, may allow writing outside that boundary during a single extraction.
+          
+- Package: tar
+- Severity: MEDIUM
+- Installed version: 1.34+dfsg-1ubuntu0.1.22.04.6
+- Fixed version: none
+- Location: Ubuntu 22.04 runtime
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: affected
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2021-31879: GNU Wget through 1.21.1 does not omit the Authorization header upon a redirect to a different origin, a related issue to CVE-2018-1000007.
+          
+- Package: wget
+- Severity: MEDIUM
+- Installed version: 1.21.2-2ubuntu1.5
+- Fixed version: none
+- Location: Ubuntu 22.04 runtime
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: affected
 - Security Disposition: open
 - Remediation: 
 - Tracking issue: 
