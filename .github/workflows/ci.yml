@@ -122,9 +122,9 @@ jobs:
           exit-code: "1"
       - name: Upload SARIF report
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: trivy-woker.sarif
+          sarif_file: trivy-worker.sarif
 
       - name: Scan backend image
         uses: aquasecurity/trivy-action@0.35.0
@@ -152,7 +152,7 @@ jobs:
           exit-code: "1"
       - name: Upload SARIF report
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-backend.sarif
       
