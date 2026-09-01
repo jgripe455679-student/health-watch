@@ -100,7 +100,6 @@
 | org.apache.commons:commons-lang3 | CVE-2025-48924 | MEDIUM | 3.17.0 | 3.18.0 | Java application layer | fixed | Unassigned | TBD |
 | org.apache.logging.log4j:log4j-api | CVE-2026-49844 | MEDIUM | 2.24.3 | 2.25.5, 2.26.1 | Java application layer | fixed | Unassigned | TBD |
 | org.apache.tomcat.embed:tomcat-embed-core | CVE-2026-41293 | CRITICAL | 10.1.54 | 9.0.118, 10.1.55, 11.0.22 | Java application layer | fixed | Unassigned | TBD |
-
 | org.apache.tomcat.embed:tomcat-embed-core | CVE-2026-43512 | CRITICAL | 10.1.54 | 9.0.118, 10.1.55, 11.0.22 | Java application layer | fixed | Unassigned | TBD |
 | org.apache.tomcat.embed:tomcat-embed-core | CVE-2026-43515 | CRITICAL | 10.1.54 | 9.0.118, 10.1.55, 11.0.22 | Java application layer | fixed | Unassigned | TBD |
 | org.apache.tomcat.embed:tomcat-embed-core | CVE-2026-41284 | HIGH | 10.1.54 | 9.0.118, 10.1.55, 11.0.22 | Java application layer | fixed | Unassigned | TBD |
@@ -1128,7 +1127,360 @@
 - Exception expiry: 
 - Notes:
 
-  ### <CVE-ID>: <short description>
+  ### CVE-2026-43512: DEPRECATED: Authentication Bypass Issues vulnerability in digest authentication in Apache Tomcat.\n\nThis issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.21, from 10.1.0-M1 through 10.1.54, from 9.0.0.M1 through 9.0.117, from 8.5.0 through 8.5.100, from before 7.0.0.\nOlder unsupported versions any also be affect\n\nUsers are recommended to upgrade to version 11.0.22, 10.1.55 or 9.0.118 which fix the issue.
+          
+- Package: org.apache.tomcat.embed:tomcat-embed-core
+- Severity: CRITICAL
+- Installed version: 10.1.54
+- Fixed version: 9.0.118, 10.1.55, 11.0.22
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-43515: Improper Authorization vulnerability when multiple method constraints define an HTTP method for the same extension in Apache Tomcat.\n\nThis issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.21, from 10.1.0-M1 through 10.1.54, from 9.0.0.M1 through 9.0.117, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109.\n\nUsers are recommended to upgrade to version 11.0.22, 10.1.55 or 9.0.118 which fix the issue.
+          
+- Package: org.apache.tomcat.embed:tomcat-embed-core
+- Severity: CRITICAL
+- Installed version: 10.1.54
+- Fixed version: 9.0.118, 10.1.55, 11.0.22
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41284: Allocation of Resources Without Limits or Throttling vulnerability in Apache Tomcat.\n\nThis issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.21, from 10.1.0-M1 through 10.1.54, from 9.0.0.M1 through 9.0.117.\nOlder, unsupported versions may also be affected.\n\nUsers are recommended to upgrade to version [FIXED_VERSION], which fixes the issue.
+          
+- Package: org.apache.tomcat.embed:tomcat-embed-core
+- Severity: HIGH
+- Installed version: 10.1.54
+- Fixed version: 9.0.118, 10.1.55, 11.0.22
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+   ### CVE-2026-42498: Exposure of HTTP Authentication Header to unexpected hosts during WebSocket authentication vulnerability in Apache Tomcat.\n\nThis issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.21, from 10.1.0-M1 through 10.1.54, from 9.0.2 through 9.0.117, from 8.5.24 through 8.5.100, from 7.0.83 through 7.0.109.\n\nUsers are recommended to upgrade to version 11.0.22, 10.1.55 or 9.0.118, which fix the issue.
+          
+- Package: org.apache.tomcat.embed:tomcat-embed-core
+- Severity: HIGH
+- Installed version: 10.1.54
+- Fixed version: 9.0.118, 10.1.55, 11.0.22
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-43513: Improper Handling of Case Sensitivity vulnerability in LockOutRealm in Apache Tomcat.\n\nThis issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.21, from 10.1.0-M1 through 10.1.54, from 9.0.0.M1 through 9.0.117, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109.\nOlder unsupported versions may also be affected.\n\nUsers are recommended to upgrade to version 11.0.22, 10.1.55 or 9.0.118 which fix the issue.
+          
+- Package: org.apache.tomcat.embed:tomcat-embed-core
+- Severity: HIGH
+- Installed version: 10.1.54
+- Fixed version: 9.0.118, 10.1.55, 11.0.22
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+   ### CVE-2026-43514: Observable Timing Discrepancy vulnerability when comparing AJP secret in Apache Tomcat.\n\nThis issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.21, from 10.1.0-M1 through 10.1.54, from 9.0.0.M1 through 9.0.117, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109.\nOlder unsupported versions may also be affected.\n\nUsers are recommended to upgrade to version 11.0.22, 10.1.55 or 9.0.118 which fix the issue.
+          
+- Package: org.apache.tomcat.embed:tomcat-embed-core
+- Severity: LOW
+- Installed version: 10.1.54
+- Fixed version: 9.0.118, 10.1.55, 11.0.22
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41701: Correlation IDs for replies in the RabbitTemplate.sendAndReceive() with the fixed reply queue are predictable due to internal simple counter.\n\nAffected versions:\nSpring AMQP 4.0.0 through 4.0.3; 3.2.0 through 3.2.10; 3.1.0 through 3.1.15; 2.4.0 through 2.4.17.
+          
+- Package: org.springframework.amqp:spring-amqp
+- Severity: MEDIUM
+- Installed version: 3.2.10
+- Fixed version: 4.0.4, 3.2.11
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41714: Applications that configure their broker connection via RabbitConnectionFactoryBean.setUri(\"amqps://...\") without also calling setUseSSL(true) get TLS encryption with no certificate validation and no hostname verification.\n\nAffected versions:\nSpring AMQP 4.0.0 through 4.0.3; 3.2.0 through 3.2.10; 3.1.0 through 3.1.15; 2.4.0 through 2.4.17.
+          
+- Package: org.springframework.amqp:spring-amqp
+- Severity: MEDIUM
+- Installed version: 3.2.10
+- Fixed version: 4.0.4, 3.2.11
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41001: Spring Boot's ArtemisEmbeddedConfigurationFactory uses a fixed, static path for the embedded Artemis message broker's data directory when no explicit path is configured. A local attacker on the same host can pre-create this predictable directory or place a symlink before the application starts.\n\nAffected versions:\nSpring Boot 4.0.0 through 4.0.6; 3.5.0 through 3.5.14; 3.4.0 through 3.4.16; 3.3.0 through 3.3.19; 2.7.0 through 2.7.33.
+          
+- Package: org.springframework.boot:spring-boot-autoconfigure
+- Severity: MEDIUM
+- Installed version: 3.5.14
+- Fixed version: 4.0.7, 3.5.15
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41695: Spring Data Commons applications may be vulnerable to denial of service through resource exhaustion when attacker-controlled property path strings are passed to MappingContext property path resolution.\n\nAffected versions:\nSpring Data Commons 4.0.0 through 4.0.5; 3.5.0 through 3.5.11; 3.4.0 through 3.4.14.
+          
+- Package: org.springframework.data:spring-data-commons
+- Severity: HIGH
+- Installed version: 3.5.11
+- Fixed version: 4.0.6, 3.5.12
+- Location:  Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: HIGH
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41716: Spring Data's internal property-lookup cache accepts and permanently retains attacker-supplied strings as cache keys, allowing heap exhaustion through repeated requests.\n\nAffected versions:\nSpring Data Commons 2.7.0 through 2.7.19; 3.3.0 through 3.3.16; 3.4.0 through 3.4.14; 3.5.0 through 3.5.11; 4.0.0 through 4.0.5.
+          
+- Package: org.springframework.data:spring-data-commons
+- Severity: HIGH
+- Installed version: 3.5.11
+- Fixed version: 4.0.6, 3.5.12
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-41711: Applications using Spring Data Commons may be vulnerable to a Denial of Service (DoS) attack leading to a StackOverflowException when parsing Sort parameters.\n\nAffected versions:\nSpring Data Commons 4.0.0 through 4.0.5; 3.5.0 through 3.5.11; 3.4.0 through 3.4.14; 3.3.0 through 3.3.16; 3.2.0 through 3.2.15; 3.1.0 through 3.1.14; 3.0.0 through 3.0.15; 2.7.0 through 2.7.19.
+          
+- Package: org.springframework.data:spring-data-commons
+- Severity: MEDIUM
+- Installed version: 3.5.11
+- Fixed version: 4.0.6, 3.5.12
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-41721 : Spring Data Commons contains a vulnerability that can lead to a Denial of Service (DoS) condition if Spring Data Web Support is enabled in conjunction with a Controller method using @ProjectedPayload, when an attacker sends a specially crafted HTTP request that causes the application to allocate lots of memory.\n\nAffected versions:\nSpring Data Commons 4.0.0 through 4.0.5; 3.5.0 through 3.5.11; 3.4.0 through 3.4.14; 3.3.0 through 3.3.16; 3.2.0 through 3.2.15; 3.1.0 through 3.1.14; 3.0.0 through 3.0.15; 2.7.0 through 2.7.19.
+          
+- Package: org.springframework.data:spring-data-commons
+- Severity: MEDIUM
+- Installed version: 3.5.11
+- Fixed version: 4.0.6, 3.5.12
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-41719: A SpEL Injection vulnerability exists in the Spring Data KeyValue if unsanitized user input is passed as Sort into a repository query method that delegates evaluation to the SpelPropertyComparator.\n\nAffected versions:\nSpring Data KeyValue / Spring Data Redis 4.0.0 through 4.0.5; 3.5.0 through 3.5.11; 3.4.0 through 3.4.14; 3.3.0 through 3.3.16; 3.2.0 through 3.2.15; 3.1.0 through 3.1.14; 3.0.0 through 3.0.15; 2.7.0 through 2.7.19.
+          
+- Package: org.springframework.data:spring-data-keyvalue
+- Severity: MEDIUM
+- Installed version: 3.5.11
+- Fixed version: 4.0.6, 3.5.12
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-41710: An attacker can craft a large number of unique requests that trigger a failure, exhausting the capacity of the application-wide stateful retry cache. Once the cache is full, it permanently rejects any further updates, causing all later stateful retries and circuit breakers in the application to fail.\n\nAffected versions:\nSpring Retry 2.0.0 through 2.0.12; 1.3.0 through 1.3.4.
+          
+- Package: org.springframework.retry:spring-retry
+- Severity: MEDIUM
+- Installed version: 2.0.12
+- Fixed version: 2.0.13
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-41706: Spring Security's CookieRequestCache and CookieServerRequestCache store the pre-authentication request URL in a browser cookie so that users can be redirected back to their intended destination after a successful login. In affected versions, the full absolute URL is stored in the cookie and is used without validation as the post-login redirect target.\n\nAffected versions:\nSpring Security 5.7.0 through 5.7.23; 5.8.0 through 5.8.25; 6.3.0 through 6.3.16; 6.4.0 through 6.4.16; 6.5.0 through 6.5.10; 7.0.0 through 7.0.5.
+          
+- Package: org.springframework.security:spring-security-web
+- Severity: MEDIUM
+- Installed version: 6.5.10
+- Fixed version: 7.0.6, 6.5.11
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-47838: SubjectDnX509PrincipalExtractor does not correctly handle certain malformed X.509 certificate CN values, which can lead to reading the wrong value for the username. In a carefully crafted certificate, this can lead to an attacker impersonating another user.\n\nAffected versions:\nSpring Security 5.7.0 through 5.7.24; 5.8.0 through 5.8.26; 6.3.0 through 6.3.17; 6.4.0 through 6.4.17; 6.5.0 through 6.5.10.
+          
+- Package: org.springframework.security:spring-security-web
+- Severity: MEDIUM
+- Installed version: 6.5.10
+- Fixed version: 6.5.11
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+
+  ### CVE-2026-41848: Applications may be vulnerable to a Regular Expression Denial of Service (ReDoS) attack if an attacker is able to provide a pattern which is then directly or indirectly supplied to one of the following methods in AntPathMatcher: match(String pattern, String path), matchStart(String pattern, String path), extractUriTemplateVariables(String pattern, String path).\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-core
+- Severity: LOW
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### CVE-2026-41850: Applications that evaluate user-supplied Spring Expression Language (SpEL) expressions are vulnerable to an Algorithmic Denial of Service (DoS). By providing a specially crafted expression, an attacker can trigger excessive resource consumption during evaluation, leading to application degradation or unavailability.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-expression
+- Severity: HIGH
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41851: Applications which accept user-supplied Spring Expression Language (SpEL) expressions may be vulnerable to a Denial of Service (DoS) attack if the evaluation of a SpEL expression triggers unbounded cache growth.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-expression
+- Severity: MEDIUM
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application layer 
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41852 : A vulnerability in Spring Expression Language (SpEL) evaluation logic allows for arbitrary zero-argument method invocation, even within restricted or read-only contexts, which may allow an attacker to invoke unintended application logic.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18; 6.1.0 through 6.1.27; 5.3.0 through 5.3.48.
+          
+- Package: org.springframework:spring-expression
+- Severity: LOW
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+  ### CVE-2026-41854: Due to incorrect host parsing, applications that rely on UriComponentsBuilder to parse and validate an externally provided URL string may be exposed to a server-side request forgery (SSRF) attack.\n\nAffected versions:\nSpring Framework 7.0.0 through 7.0.7; 6.2.0 through 6.2.18.
+          
+- Package: org.springframework:spring-web
+- Severity: MEDIUM
+- Installed version: 6.2.18
+- Fixed version: 7.0.8, 6.2.19
+- Location: Java application layer
+- Exploitability: known
+- Reachable at runtime: no
+- Trivy Status: fixed
+- Security Disposition: open
+- Remediation: 
+- Tracking issue: 
+- Exception expiry: 
+- Notes:
+
+### <CVE-ID>: <short description>
           
 - Package: <PkgName>
 - Severity: <Severity>
@@ -1146,7 +1498,7 @@
 
 
 
-
+  
 ## Remediation Log
 
 | Date | Finding | Change made | Validation | Result |
