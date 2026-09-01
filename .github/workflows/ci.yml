@@ -115,7 +115,7 @@ jobs:
       - name: Scan worker image for GitHub Code Scanning
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: health-watch-api:worker
+          image-ref: health-watch-worker:test
           format: sarif
           output: trivy-worker.sarif
           severity: CRITICAL,HIGH
