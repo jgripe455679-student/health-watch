@@ -78,14 +78,14 @@ jobs:
       - name: Build backend image
         run:  docker build --tag health-watch-api:test ./backend
 
-      - name: Verify Trivy vulnerabilities
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: health-watch-api:test
-          format: table
-          severity: CRITICAL,HIGH
-          ignore-unfixed: false
-          exit-code: "0"
+      # - name: Verify Trivy vulnerabilities
+      #   uses: aquasecurity/trivy-action@0.35.0
+      #   with:
+      #     image-ref: health-watch-api:test
+      #     format: table
+      #     severity: CRITICAL,HIGH
+      #     ignore-unfixed: false
+      #     exit-code: "0"
       
       - name: Build worker image
         run:  docker build --tag health-watch-worker:test ./scripts
@@ -95,6 +95,36 @@ jobs:
 
       - name: Build user UI image
         run: docker build --tag health-watch-user-ui:test ./frontend-user
+      
+      - name: Scan worker image
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: health-watch-worker:test
+          format: json
+          output: trivy-worker.json
+          severity: CRITICAL,HIGH,MEDIUM,LOW
+          ignore-unfixed: false
+          exit-code: "0"
+      
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-worker-report
+          path: trivy-worker.json
+      
+      - name: Scan worker image for GitHub Code Scanning
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: health-watch-api:worker
+          format: sarif
+          output: trivy-worker.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+      - name: Upload SARIF report
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-woker.sarif
 
       - name: Scan backend image
         uses: aquasecurity/trivy-action@0.35.0
