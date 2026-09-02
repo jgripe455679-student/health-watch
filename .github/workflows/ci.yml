@@ -1,11 +1,18 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches-ignore:
-      - 'RMgulane-patch-1'
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Job to run"
+        required: true
+        type: choice
+        options:
+          - backend
+          - worker
+          - admin-ui
+          - user-ui
+          - docker-build
 
 permissions:
   contents: read
@@ -13,6 +20,9 @@ permissions:
 
 jobs:
   backend:
+    # if: |
+    #   (github.event_name == 'push' && github.actor != 'RMgulane') ||
+    #   (github.event_name == 'pull_request' && github.event.pull_request.user.login != 'RMgulane')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,8 +39,36 @@ jobs:
 
       - run: chmod +x gradlew
       - run: ./gradlew clean test
+      
+  worker:
+    # if: |
+    #   (github.event_name == 'push' && github.actor != 'RMgulane') ||
+    #   (github.event_name == 'pull_request' && github.event.pull_request.user.login != 'RMgulane')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scripts
+    steps:
+      - uses: actions/checkout@v5
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - run: python -m compileall messaging
+      - run: python -m compileall utils
+      - run: python -m py_compile messaging/*.py
+      - run: python -m py_compile utils/*.py
+
+    
   admin-ui:
+    # if: |
+    #   (github.event_name == 'push' && github.actor != 'RMgulane') ||
+    #   (github.event_name == 'pull_request' && github.event.pull_request.user.login != 'RMgulane')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,6 +88,9 @@ jobs:
       - run: npm run build
 
   user-ui:
+    # if: |
+    #   (github.event_name == 'push' && github.actor != 'RMgulane') ||
+    #   (github.event_name == 'pull_request' && github.event.pull_request.user.login != 'RMgulane')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -70,7 +111,7 @@ jobs:
   
   docker-build:
     runs-on: ubuntu-latest
-    needs: [backend, admin-ui, user-ui]
+    needs: [backend, worker, admin-ui, user-ui]
 
     steps:
       - uses: actions/checkout@v5
