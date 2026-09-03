@@ -1,18 +1,25 @@
 name: CI
 
 on:
-  workflow_dispatch:
-    inputs:
-      job:
-        description: "Job to run"
-        required: true
-        type: choice
-        options:
-          - backend
-          - worker
-          - admin-ui
-          - user-ui
-          - docker-build
+  push:
+    branches: [main]
+  pull_request:
+    branches-ignore:
+      - 'RMgulane-patch-*'
+
+
+  # workflow_dispatch:
+  #   inputs:
+  #     job:
+  #       description: "Job to run"
+  #       required: true
+  #       type: choice
+  #       options:
+  #         - backend
+  #         - worker
+  #         - admin-ui
+  #         - user-ui
+  #         - docker-build
 
 permissions:
   contents: read
@@ -20,9 +27,6 @@ permissions:
 
 jobs:
   backend:
-    # if: |
-    #   (github.event_name == 'push' && github.actor != 'RMgulane') ||
-    #   (github.event_name == 'pull_request' && github.event.pull_request.user.login != 'RMgulane')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -41,9 +45,6 @@ jobs:
       - run: ./gradlew clean test
       
   worker:
-    # if: |
-    #   (github.event_name == 'push' && github.actor != 'RMgulane') ||
-    #   (github.event_name == 'pull_request' && github.event.pull_request.user.login != 'RMgulane')
     runs-on: ubuntu-latest
     defaults:
       run:
