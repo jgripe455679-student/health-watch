@@ -13,11 +13,11 @@
 ## Summary
 
 - Critical findings: 0
-- High findings: 18
+- High findings: 28
 - Medium findings: 0
 - Low findings: 0
-- Fixed findings: 5
-- Unfixed findings: 11
+- Fixed findings: 12
+- Unfixed findings: 13
 - Fix deferred findings: 2
 - Release decision: Pending review
 
@@ -41,6 +41,16 @@
 | perl-base | CVE-2026-57432 | HIGH | 5.40.1-6 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | perl-base | CVE-2026-57433 | HIGH | 5.40.1-6 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | perl-base | CVE-2026-9538 | HIGH | 5.40.1-6 | none | Debian 13.6 runtime layer | fix_deferred | Unassigned | TBD |
-| jaraco.context | CVE-2026-23949 | HIGH | 5.3.0 | 6.1.0 | Debian 13.6 runtime layer | fixed | Unassigned | TBD |
-| nltk | CVE-2025-71408 | HIGH | 3.9.1 | 3.9.3 | Debian 13.6 runtime layer | fixed | Unassigned | TBD |
+| jaraco.context | CVE-2026-23949 | HIGH | 5.3.0 | 6.1.0 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2025-71408 | HIGH | 3.9.1 | 3.9.3 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-0846 | HIGH | 3.9.1 | 3.9.3 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-0847 | HIGH | 3.9.1 | none | Python application layer | affected | Unassigned | TBD |
+| nltk | CVE-2026-12061 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-12072 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-12074 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-12075 | HIGH> | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-33231 | HIGH | 3.9.1 | 3.9.4 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-33236 | HIGH | 3.9.1 | none | Python application layer | affected | Unassigned | TBD |
+| nltk | CVE-2026-54293 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
+| wheel | CVE-2026-24049 | HIGH | 0.45.1 | 0.46.2 | Python application layer | fixed | Unassigned | TBD |
 | <PkgName> | <VulnerabilityID> | <Severity> | <InstalledVersion> | <FixedVersion or none> | <> | affected | Unassigned | TBD |

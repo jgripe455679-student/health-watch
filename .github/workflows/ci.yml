@@ -1,25 +1,25 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches-ignore:
-      - 'RMgulane-patch-*'
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Job to run"
+        required: true
+        type: choice
+        options:
+          - backend
+          - worker
+          - admin-ui
+          - user-ui
+          - docker-build
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches-ignore:
+  #     - 'RMgulane-patch-*'
 
 
-  # workflow_dispatch:
-  #   inputs:
-  #     job:
-  #       description: "Job to run"
-  #       required: true
-  #       type: choice
-  #       options:
-  #         - backend
-  #         - worker
-  #         - admin-ui
-  #         - user-ui
-  #         - docker-build
 
 permissions:
   contents: read
@@ -120,7 +120,7 @@ jobs:
       - name: Build backend image
         run:  docker build --tag health-watch-api:test ./backend
 
-      # - name: Verify Trivy vulnerabilities
+      # - name: Verify Trivy vulnerabilities (backend)
       #   uses: aquasecurity/trivy-action@0.35.0
       #   with:
       #     image-ref: health-watch-api:test
@@ -131,6 +131,15 @@ jobs:
       
       - name: Build worker image
         run:  docker build --tag health-watch-worker:test ./scripts
+
+      - name: Verify Trivy vulnerabilities (worker)
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: health-watch-worker:test
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: false
+          exit-code: "0"
 
       - name: Build admin UI image
         run: docker build --tag health-watch-admin-ui:test ./frontend
