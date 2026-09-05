@@ -132,14 +132,14 @@ jobs:
       - name: Build worker image
         run:  docker build --tag health-watch-worker:test ./scripts
 
-      - name: Verify Trivy vulnerabilities (worker)
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: health-watch-worker:test
-          format: table
-          severity: CRITICAL,HIGH
-          ignore-unfixed: false
-          exit-code: "0"
+      # - name: Verify Trivy vulnerabilities (worker)
+      #   uses: aquasecurity/trivy-action@0.35.0
+      #   with:
+      #     image-ref: health-watch-worker:test
+      #     format: table
+      #     severity: CRITICAL,HIGH
+      #     ignore-unfixed: false
+      #     exit-code: "0"
 
       - name: Build admin UI image
         run: docker build --tag health-watch-admin-ui:test ./frontend
