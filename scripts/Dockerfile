@@ -5,13 +5,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/* && \
+# RUN apt-get update \
+#     && apt-get install -y --no-install-recommends \
+#     && rm -rf /var/lib/apt/lists/* && \
     # For better security in production, consider running as a non-root user.
     # Uncomment the following lines if you want to create and switch to a non-root user.
     # RUN addgroup --system app && adduser --system --ingroup app app && chown -R app:app /app
-    groupadd --system app && \
+RUN groupadd --system app && \
     useradd --system --gid app --create-home --home-dir /home/app app && \
     chown -R app:app /app
 
