@@ -165,6 +165,7 @@ health-watch-worker:test (debian 13.6),os-pkgs,debian,CVE-2026-78410,util-linux,
 health-watch-worker:test (debian 13.6),os-pkgs,debian,CVE-2026-3184,util-linux,2.41.5-0+deb13u1,,MEDIUM,affected
 health-watch-worker:test (debian 13.6),os-pkgs,debian,CVE-2022-0563,util-linux,2.41.5-0+deb13u1,,LOW,affected
 health-watch-worker:test (debian 13.6),os-pkgs,debian,CVE-2026-27171,zlib1g,1:1.3.dfsg+really1.3.1-1+b1,,MEDIUM,affected
+health-watch-worker:test (debian 13.6),os-pkgs,debian,CVE-2026-85091,zlib1g,1:1.3.dfsg+really1.3.1-1+b1,,MEDIUM,affected
 Python,lang-pkgs,python-pkg,CVE-2025-43859,h11,0.14.0,0.16.0,CRITICAL,fixed
 Python,lang-pkgs,python-pkg,CVE-2026-45409,idna,3.10,3.15,MEDIUM,fixed
 Python,lang-pkgs,python-pkg,CVE-2026-23949,jaraco.context,5.3.0,6.1.0,HIGH,fixed

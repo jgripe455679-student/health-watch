@@ -2,22 +2,21 @@
 
 ## Scan Information
 
-- Scan date: 2026-09-01
+- Scan date: 2026-09-05
 - Repository: health-watch
 - Image: health-watch-worker:test
-- Image digest: sha256:3b6720855527dfee14c197423b48ca8c12a7d06c400e669e0b0b2968e222b3e6
-- Git commit: Feat(CI Foundation): fix deprecated CodeQL Action and a typo
+- Image digest: sha256:cf2c8a0d35921231639314092a0e0a332dbebc891621be0c696697a28599330b
+- Git commit: Feat(CI Foundation): temporary update to scripts directory container image
 - Trivy version: 0.69.3
-- Scanner command or workflow run: https://github.com/jgripe455679-student/health-watch/actions/runs/33457324451
-
+- Scanner command or workflow run: https://github.com/jgripe455679-student/health-watch/actions/runs/33982550430
 ## Summary
 
 - Critical findings: 0
-- High findings: 28
+- High findings: 31
 - Medium findings: 0
 - Low findings: 0
 - Fixed findings: 12
-- Unfixed findings: 13
+- Unfixed findings: 16
 - Fix deferred findings: 2
 - Release decision: Pending review
 
@@ -25,6 +24,10 @@
 
 | Package | CVE | Severity | Installed version | Fixed version | Location | Status | Owner | Due date |
 |---|---|---|---|---|---|---|---|---|
+| bsdutils | CVE-2026-76642 | HIGH | 1:2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
+| bsdutils | CVE-2026-78408 | HIGH | 1:2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
+| bsdutils | CVE-2026-78409 | HIGH | 1:2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
+| <PkgName> | <VulnerabilityID> | <Severity> | <InstalledVersion> | <FixedVersion or none> | <> | affected | Unassigned | TBD |
 | gzip | CVE-2026-41992 | HIGH | 1.13-1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | libacl1 | CVE-2026-54369 | HIGH | 2.3.2-2+b1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | libncursesw6 | CVE-2025-69720 | HIGH | 6.5+20250216-2 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
