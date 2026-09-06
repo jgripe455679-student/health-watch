@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.15'
+	id 'org.springframework.boot' version '3.5.16'
 	id 'io.spring.dependency-management' version '1.1.6'
 }
 
@@ -37,11 +37,7 @@ dependencies {
 	implementation 'com.mysql:mysql-connector-j:8.2.0'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	constraints {
-		implementation('org.apache.tomcat.embed:tomcat-embed-core:11.0.25') {
-			because 'CVE-2026-65182: Fixes a critical security vulnerability'
-		}
-	}
+	implementation 'org.flywaydb:flyway-core:12.10.0'
 	testImplementation ('it.ozimov:embedded-redis:0.7.3') {
 		exclude module: 'commons-logging'
 		exclude module: 'slf4j-simple'
