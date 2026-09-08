@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig(async ({ command }) => {
   const plugins: PluginOption[] = [react()];
 
-  if (command === "serve") {
+  if (command === "serve" && !process.env.VITEST) {
     const { default: mkcert } = await import("vite-plugin-mkcert");
     plugins.push(mkcert());
   }
