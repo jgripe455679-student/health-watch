@@ -22,10 +22,10 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-# COPY --chown=app:app entrypoint.sh /app/entrypoint.sh
-# RUN chmod +x /app/entrypoint.sh
+COPY --chown=app:app entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 USER app
 
-# ENTRYPOINT [ "/app/entrypoint.sh" ]
+ENTRYPOINT [ "/app/entrypoint.sh" ]
 

@@ -38,6 +38,7 @@ out/
 
 ### Environment Variable ###
 .env
+.env.test
 
 # Local SSL certificates
 *.p12

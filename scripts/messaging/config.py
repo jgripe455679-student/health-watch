@@ -1,8 +1,4 @@
 import os
-# from dotenv import load_dotenv # type: ignore
-
-### for Local Environment
-# load_dotenv("../../.env.development") 
 
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
 RABBITMQ_PORT = os.getenv("RABBITMQ_PORT", 5672)

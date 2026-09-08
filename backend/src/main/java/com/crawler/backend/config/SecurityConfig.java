@@ -55,18 +55,16 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 return http
-                                .headers(headers ->
-                                        headers.xssProtection(
-                                                xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
-                                ).contentSecurityPolicy(
-                                        cps -> cps.policyDirectives("script-src 'self' .....")
-                                ))
+                                .headers(headers -> headers.xssProtection(
+                                                xss -> xss.headerValue(
+                                                                XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                                                .contentSecurityPolicy(
+                                                                cps -> cps.policyDirectives("script-src 'self' .....")))
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .cors(cors -> cors.configurationSource(req -> {
                                         CorsConfiguration config = new CorsConfiguration();
-                                        config.setAllowedOrigins(Arrays.asList("https://localhost:5173",
-                                                        "https://127.0.0.1:5173",
-                                                        "https://localhost:5174", "https://127.0.0.1:5174"));
+                                        config.setAllowedOrigins(Arrays.asList("https://admin.healthwatch.com",
+                                                        "https://app.healthwatch.com"));
                                         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
                                         config.setAllowCredentials(true);
                                         config.setAllowedHeaders(Collections.singletonList("*"));
@@ -74,6 +72,7 @@ public class SecurityConfig {
                                         return config;
                                 }))
                                 .authorizeHttpRequests(authorize -> {
+                                        authorize.requestMatchers("/actuator/health/**").permitAll();
                                         authorize.requestMatchers("/api/v1/auth/login").permitAll();
                                         authorize.requestMatchers("/api/v1/auth/refresh").permitAll();
                                         authorize.requestMatchers(DEV_URLS).permitAll();

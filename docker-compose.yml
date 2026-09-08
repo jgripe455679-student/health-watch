@@ -1,4 +1,22 @@
 services:
+    redis:
+        image: redis:6.0-alpine
+        container_name: redis_${ENVIRONMENT}
+        environment:
+            - REDIS_HOST=${REDIS_HOST}
+            - REDIS_PORT=${REDIS_PORT}
+            - REDIS_USERNAME=${REDIS_USERNAME}
+            - REDIS_PASSWORD=${REDIS_PASSWORD} 
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis_data:/data
+        command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
+        healthcheck:
+            test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
     rabbitmq:
         image: rabbitmq:4.0.5-management
         container_name: rabbitmq_${ENVIRONMENT}
@@ -12,6 +30,12 @@ services:
             - ./rabbitmq_config:/etc/rabbitmq
             - ./rabbitmq_data:/var/lib/rabbitmq
             - ./rabbitmq_log:/var/log/rabbitmq
+        healthcheck:
+            test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
     worker:
         build:
             context: ./scripts/
@@ -23,8 +47,9 @@ services:
             - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
             - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
         depends_on:
-            - rabbitmq
-    
+            rabbitmq:
+                condition: service_healthy
+
     api:
         build:
             context: ./backend/
@@ -43,11 +68,18 @@ services:
             - RABBITMQ_PORT=${RABBITMQ_PORT}
             - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
             - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
-            - MYSQL_HOST=${MYSQL_HOST}
-            - MYSQL_PORT=${MYSQL_PORT}
+            - REDIS_HOST=${REDIS_HOST}
+            - REDIS_PORT=${REDIS_PORT}
+            - REDIS_USERNAME=${REDIS_USERNAME}
+            - REDIS_PASSWORD=${REDIS_PASSWORD}
+            - SYSADMIN_USERNAME=${SYSADMIN_USERNAME}
         depends_on:
-            - database
-            - rabbitmq
+            database:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            rabbitmq:
+                condition: service_healthy
     
     database:
         image: mysql:8.0.41-debian
@@ -61,16 +93,21 @@ services:
         volumes:
             - ./mysql_data:/var/lib/mysql
         healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+            test:
+                [
+                    "CMD-SHELL",
+                    "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}"
+                ]
             interval: 10s
             timeout: 5s
-            retries: 5
+            retries: 10
+            start_period: 30s
     
     user_ui:
         build:
             context: ./frontend-user/
             dockerfile: Dockerfile
-        container_name: user_id_${ENVIRONMENT}
+        container_name: user_ui_${ENVIRONMENT}
         ports:
             - "3000:80"
         depends_on:
@@ -88,6 +125,8 @@ services:
 
 
 volumes:
+    redis_data:
+        driver: local
     rabbitmq_config:
     rabbitmq_data:
     rabbitmq_log:

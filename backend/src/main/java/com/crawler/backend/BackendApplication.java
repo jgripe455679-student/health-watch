@@ -55,35 +55,36 @@ public class BackendApplication implements CommandLineRunner {
                 userRepository.save(sys_user);
         }
 
+        public void createRoles() {
+                if (!roleRepository.findAll().isEmpty()) {
+                        return;
+                }
+                roleRepository.saveAll(List.of(
+                                Role.builder()
+                                                .name(Roles.ADMIN.name())
+                                                .build(),
+                                Role.builder()
+                                                .name(Roles.USER.name())
+                                                .build()));
+        }
+
         public void createUsers() {
                 if (!userRepository.findAll().isEmpty())
                         return;
 
-                if (roleRepository.findAll().isEmpty()) {
-                        Role.builder()
-                                        .id(0L)
-                                        .name(Roles.ADMIN.name())
-                                        .build();
-
-                        Role.builder()
-                                        .id(0L)
-                                        .name(Roles.ADMIN.name())
-                                        .build();
-                }
+                createRoles();
 
                 Role roleAdmin = roleRepository.findByName(Roles.ADMIN.name()).get();
                 Role roleUser = roleRepository.findByName(Roles.USER.name()).get();
 
                 User admin = User.builder()
-                                .id(0L)
-                                .username("admin")
+                                .username("sys_admin")
                                 .password(passwordEncoder.encode("admin"))
                                 .role(roleAdmin)
                                 .build();
 
                 User user = User.builder()
-                                .id(0L)
-                                .username("user")
+                                .username("sys_user")
                                 .password(passwordEncoder.encode("user"))
                                 .role(roleUser)
                                 .build();

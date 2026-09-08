@@ -9,9 +9,9 @@ README.md
 /tmp/
 /db/
 
-dev.env
-.env.development
-.env.production
+.env.stag
+.env.dev
+.env.prod
 
 # Ignore Python bytecode cache directories
 __pycache__/

@@ -4,6 +4,7 @@ import java.time.ZonedDateTime;
 
 import com.crawler.backend.enums.TokenType;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,6 +29,7 @@ public class Token {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private TokenType type;
+    @Column(name = "`value`")
     private String value;
     private ZonedDateTime expiryUtc;
     private boolean disabled;

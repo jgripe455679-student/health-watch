@@ -4,8 +4,8 @@ server:
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    username: ${MYSQL_ROOT_USER}
+    password: ${MYSQL_ROOT_PASSWORD}
 
   jpa:
     hibernate:
@@ -15,7 +15,7 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-      username: ${REDIS_USERNAME:}
+      username: ${REDIS_USERNAME}
       password: ${REDIS_PASSWORD}
   cache:
     type: redis
