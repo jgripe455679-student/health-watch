@@ -27,12 +27,14 @@
 | bsdutils | CVE-2026-76642 | HIGH | 1:2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | bsdutils | CVE-2026-78408 | HIGH | 1:2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | bsdutils | CVE-2026-78409 | HIGH | 1:2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
+| bsdutils | CVE-2026-78410 | HIGH | 1:2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | <PkgName> | <VulnerabilityID> | <Severity> | <InstalledVersion> | <FixedVersion or none> | <> | affected | Unassigned | TBD |
 | gzip | CVE-2026-41992 | HIGH | 1.13-1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | libacl1 | CVE-2026-54369 | HIGH | 2.3.2-2+b1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | libncursesw6 | CVE-2025-69720 | HIGH | 6.5+20250216-2 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | libsqlite3-0 | CVE-2026-11822 | HIGH | 3.46.1-7+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | libsqlite3-0 | CVE-2026-11824 | HIGH> | 3.46.1-7+deb13u1 | none> | Debian 13.6 runtime layer | affected | Unassigned | TBD |
+| libsystemd0 | CVE-2026-16742 | HIGH | 257.13-1~deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | libssl3t64 | CVE-2026-14456 | HIGH | 3.5.6-1~deb13u2 | 3.5.7-1~deb13u2 | Debian 13.6 runtime layer | fixed | Unassigned | TBD |
 | libtinfo6 | CVE-2025-69720 | HIGH | 6.5+20250216-2 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | ncurses-base | CVE-2025-69720 | HIGH | 6.5+20250216-2 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
