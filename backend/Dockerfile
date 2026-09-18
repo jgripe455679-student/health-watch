@@ -5,7 +5,7 @@ COPY gradle ./gradle
 COPY src ./src
 RUN sed -i 's/\r$//' gradlew \
     && chmod +x gradlew \
-    && ./gradlew --no-daemon bootJar -x test
+    && ./gradlew --no-daemon bootJar
 
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app

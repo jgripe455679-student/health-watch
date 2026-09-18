@@ -1,0 +1,2 @@
+ALTER TABLE tbl_records
+ADD COLUMN status VARCHAR(255) NULL;

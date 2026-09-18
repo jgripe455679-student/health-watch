@@ -2,6 +2,7 @@ package com.crawler.backend;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -31,6 +32,15 @@ public class BackendApplication implements CommandLineRunner {
         private final RoleRepository roleRepository;
         private final PasswordEncoder passwordEncoder;
 
+        @Value("${SYSADMIN_USERNAME}")
+        private String sys_admin;
+        @Value("${SYSADMIN_PASSWORD}")
+        private String sys_admin_password;
+        @Value("${SYSUSER_USERNAME}")
+        private String sys_user;
+        @Value("${SYSUSER_PASSWORD}")
+        private String sys_user_password;
+
         public static void main(String[] args) {
                 SpringApplication.run(BackendApplication.class, args);
         }
@@ -38,21 +48,21 @@ public class BackendApplication implements CommandLineRunner {
         @Override
         public void run(String... args) {
                 createUsers();
-                User sys_admin = userRepository.findByUsername("sys_admin").orElseThrow(
+                User system_administrator = userRepository.findByUsername(sys_admin).orElseThrow(
                                 () -> new ResourceNotFoundException("Username not found"));
-                sys_admin.setAccountNonExpired(true);
-                sys_admin.setAccountNonLocked(true);
-                sys_admin.setCredentialsNonExpired(true);
-                sys_admin.setEnabled(true);
-                userRepository.save(sys_admin);
+                system_administrator.setAccountNonExpired(true);
+                system_administrator.setAccountNonLocked(true);
+                system_administrator.setCredentialsNonExpired(true);
+                system_administrator.setEnabled(true);
+                userRepository.save(system_administrator);
 
-                User sys_user = userRepository.findByUsername("sys_user").orElseThrow(
+                User system_user = userRepository.findByUsername(sys_user).orElseThrow(
                                 () -> new ResourceNotFoundException("Username not found"));
-                sys_user.setAccountNonExpired(true);
-                sys_user.setAccountNonLocked(true);
-                sys_user.setCredentialsNonExpired(true);
-                sys_user.setEnabled(true);
-                userRepository.save(sys_user);
+                system_user.setAccountNonExpired(true);
+                system_user.setAccountNonLocked(true);
+                system_user.setCredentialsNonExpired(true);
+                system_user.setEnabled(true);
+                userRepository.save(system_user);
         }
 
         public void createRoles() {
@@ -78,14 +88,14 @@ public class BackendApplication implements CommandLineRunner {
                 Role roleUser = roleRepository.findByName(Roles.USER.name()).get();
 
                 User admin = User.builder()
-                                .username("sys_admin")
-                                .password(passwordEncoder.encode("admin"))
+                                .username(sys_admin)
+                                .password(passwordEncoder.encode(sys_admin_password))
                                 .role(roleAdmin)
                                 .build();
 
                 User user = User.builder()
-                                .username("sys_user")
-                                .password(passwordEncoder.encode("user"))
+                                .username(sys_user)
+                                .password(passwordEncoder.encode(sys_user_password))
                                 .role(roleUser)
                                 .build();
 

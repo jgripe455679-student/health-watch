@@ -2,7 +2,9 @@ package com.crawler.backend.config;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -43,6 +45,8 @@ public class SecurityConfig {
         // private final UserDetailsService userDetailsService;
         private final JwtFilter jwtFilter;
         private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+        @Value("${CORS_ALLOWED_ORIGINS}")
+        List<String> corsAllowedOrigins;
 
         // @Bean
         // public AuthenticationProvider authenticationProvider() {
@@ -63,15 +67,16 @@ public class SecurityConfig {
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .cors(cors -> cors.configurationSource(req -> {
                                         CorsConfiguration config = new CorsConfiguration();
-                                        config.setAllowedOrigins(Arrays.asList("https://admin.healthwatch.com",
-                                                        "https://app.healthwatch.com"));
-                                        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+                                        config.setAllowedOrigins(corsAllowedOrigins);
+                                        config.setAllowedMethods(
+                                                        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                                         config.setAllowCredentials(true);
                                         config.setAllowedHeaders(Collections.singletonList("*"));
                                         config.setMaxAge(3600L);
                                         return config;
                                 }))
                                 .authorizeHttpRequests(authorize -> {
+                                        authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                                         authorize.requestMatchers("/actuator/health/**").permitAll();
                                         authorize.requestMatchers("/api/v1/auth/login").permitAll();
                                         authorize.requestMatchers("/api/v1/auth/refresh").permitAll();

@@ -28,3 +28,4 @@ venv/
 # Local SSL certificates
 *.pem
 *.p12
+/nginx/certs/

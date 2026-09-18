@@ -15,7 +15,7 @@ public class CookieUtil {
     // private String accessTokenCookieName;
     // @Value("${JWT_REFRESH_COOKIE_NAME}")
     // private String refreshTokenCookieName;
-    
+
     private final JwtProperties jwtProperties;
 
     public HttpCookie createAccessTokenCookie(String accessToken, long duration) {
@@ -23,6 +23,7 @@ public class CookieUtil {
                 .maxAge(duration)
                 .httpOnly(true)
                 .secure(true)
+                .sameSite("None")
                 .path("/")
                 .build();
     }
@@ -32,6 +33,7 @@ public class CookieUtil {
                 .maxAge(duration)
                 .httpOnly(true)
                 .secure(true)
+                .sameSite("None")
                 .path("/")
                 .build();
     }
