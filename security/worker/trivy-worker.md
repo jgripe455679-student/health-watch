@@ -80,8 +80,22 @@
 | util-linux | CVE-2026-76642 | HIGH | 2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | util-linux | CVE-2026-78408 | HIGH | 2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
 | util-linux | CVE-2026-78409 | HIGH | 2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
+| util-linux | CVE-2026-78410 | HIGH | 2.41.5-0+deb13u1 | none | Debian 13.6 runtime layer | affected | Unassigned | TBD |
+| jaraco.context | CVE-2026-23949 | HIGH | jaraco.context | none | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2025-71408 | HIGH | 3.9.1 | 3.9.3 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-0846 | HIGH | 3.9.1 | 3.9.3 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-0847 | HIGH | 3.9.1 | none | Python application layer | affected | Unassigned | TBD |
+| nltk | CVE-2026-12061 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
 | <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
 | <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
+| <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
+| <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
+| <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
+| <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
+| <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
+| <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
+
+
 
 
 
