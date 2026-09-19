@@ -89,11 +89,17 @@
 | nltk | CVE-2026-12072 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
 | nltk | CVE-2026-12074 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
 | nltk | CVE-2026-12075 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-33231 | HIGH | 3.9.1 | 3.9.4 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-33236 | HIGH | 3.9.1 | none | Python application layer | affected | Unassigned | TBD |
+| nltk | CVE-2026-54293 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-62388 | HIGH | 3.9.1 | 3.10.0 | Python application layer | fixed | Unassigned | TBD |
+| nltk | CVE-2026-72818 | HIGH | 3.9.1 | 3.10.1 | Python application layer | fixed | Unassigned | TBD |
 | <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
 | <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
 | <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
-| <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
-| <PkgName> | <VulnerabilityID> | <Severity> | installed version | <FixedVersion or none> | <> | affected | Unassigned | TBD |
+
+
+
 
 
 
