@@ -236,6 +236,9 @@ public class UserServiceImplementation implements UserService {
          */
         Authentication authentication = getAuthentication();
 
+        System.out.println("Hello, world");
+        System.out.println(authentication.isAuthenticated());
+
         if (!authentication.isAuthenticated())
             throw new AppException(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource");
 

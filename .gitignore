@@ -9,9 +9,8 @@ README.md
 /tmp/
 /db/
 
-.env.stag
-.env.dev
-.env.prod
+# Environment Variables
+.env.*
 
 # Ignore Python bytecode cache directories
 __pycache__/
@@ -20,10 +19,10 @@ __pycache__/
 venv/
 
 # Excluding docker volumes
-/mysql_data/
-/rabbitmq_config/
-/rabbitmq_data/
-/rabbitmq_log/
+/mysql_data*
+/rabbitmq_config*
+/rabbitmq_data*
+/rabbitmq_log*
 
 # Local SSL certificates
 *.pem

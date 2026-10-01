@@ -37,7 +37,6 @@ out/
 .vscode/
 
 ### Environment Variable ###
-.env
 .env.test
 
 # Local SSL certificates

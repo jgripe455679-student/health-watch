@@ -10,8 +10,11 @@ export default defineConfig(async ({ command }) => {
     plugins.push(mkcert());
   }
 
+  const isContainer: boolean = process.env.IS_DOCKER === "true";
+
   return {
     plugins,
+    envDir: isContainer ? "./" : "../",
     test: {
       globals: true,
       environment: "jsdom",
@@ -19,8 +22,8 @@ export default defineConfig(async ({ command }) => {
     },
   };
 });
-  // css: {
-  //   postcss: {
-  //     plugins: [tailwindcss()],
-  //   },
-  // },
+// css: {
+//   postcss: {
+//     plugins: [tailwindcss()],
+//   },
+// },
