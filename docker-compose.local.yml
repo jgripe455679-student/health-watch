@@ -1,0 +1,46 @@
+services:
+  redis:
+    image: redis:6.0-alpine
+    container_name: redis_${ENVIRONMENT}
+    hostname: redis_${ENVIRONMENT}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_local:/data
+    command: [redis-server]
+
+  rabbitmq:
+    image: rabbitmq:4.0.5-management
+    container_name: rabbitmq_${ENVIRONMENT}
+    hostname: rabbitmq_${ENVIRONMENT}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - ./rabbitmq_config_local:/etc/rabbitmq
+      - ./rabbitmq_data_local:/var/lib/rabbimq
+      - ./rabbitmq_log_local:/var/log/rabbitmq
+
+  mysql:
+    image: mysql:8.0.41-debian
+    container_name: mysql_${ENVIRONMENT}
+    hostname: mysql_${ENVIRONMENT}
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_USER=${DB_USERNAME}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    volumes:
+      - ./mysql_data_local:/var/lib/mysql
+
+volumes:
+  redis_data_local:
+    driver: local
+  rabbitmq_config_local:
+  rabbitmq_data_local:
+  rabbitmq_log_local:
+  mysql_data_local:
