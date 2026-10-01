@@ -2,7 +2,7 @@ spring:
   application:
     name: backend
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:production}
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
   flyway:
     baseline-on-migrate: true
@@ -29,8 +29,7 @@ spring:
   data:
     redis:
       host: ${spring.data.redis.host}
-      port: ${spring.data.redis.port} 
-      username: ${spring.data.redis.username}
+      port: ${spring.data.redis.port}
       password: ${spring.data.redis.password}
   cache:
     type: ${spring.cache.type}

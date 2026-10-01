@@ -5,13 +5,16 @@ import { defineConfig } from "vitest/config";
 export default defineConfig(async ({ command }) => {
   const plugins: PluginOption[] = [react()];
 
-  if (command === "serve") {
+  if (command === "serve" && !process.env.VITEST) {
     const { default: mkcert } = await import("vite-plugin-mkcert");
     plugins.push(mkcert());
   }
 
+  const isContainer: boolean = process.env.IS_DOCKER === "true";
+
   return {
     plugins,
+    envDir: isContainer ? "./" : "../",
     test: {
       globals: true,
       environment: "jsdom",
@@ -19,8 +22,8 @@ export default defineConfig(async ({ command }) => {
     },
   };
 });
-  // css: {
-  //   postcss: {
-  //     plugins: [tailwindcss()],
-  //   },
-  // },
+// css: {
+//   postcss: {
+//     plugins: [tailwindcss()],
+//   },
+// },

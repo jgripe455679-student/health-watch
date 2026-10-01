@@ -4,37 +4,30 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches-ignore:
-      - "RMgulane-patch-*"
-
-        # workflow_dispatch:
-        #   inputs:
-        #     job:
-        #       description: "Job to run"
-        #       required: true
-        #       type: choice
-        #       options:
-        #         - backend
-        #         - worker
-        #         - admin-ui
-        #         - user-ui
-        #         - docker-build
+    branches: [main]
 
 permissions:
   contents: read
   security-events: write
 
+env:
+  REGISTRY: docker.io
+  IMAGE_PREFIX: docker.io/jgripe455679
+
 jobs:
   backend:
+    name: Build and Test (backend)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout backend source code
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v5
+      - name: Set up Java
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -44,14 +37,18 @@ jobs:
       - run: ./gradlew clean test
 
   worker:
+    name: Build and Test (worker)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: scripts
-    steps:
-      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+    steps:
+      - name: Checkout worker source code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: pip
@@ -65,20 +62,20 @@ jobs:
       - run: python -m py_compile utils/*.py
 
   admin-ui:
-    # if: |
-    #   (github.event_name == 'push' && github.actor != 'RMgulane') ||
-    #   (github.event_name == 'pull_request' && github.event.pull_request.user.login != 'RMgulane')
+    name: Build and Test (admin-ui)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout admin-ui source code
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "22.19.0"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -88,20 +85,20 @@ jobs:
       - run: npm run build
 
   user-ui:
-    # if: |
-    #   (github.event_name == 'push' && github.actor != 'RMgulane') ||
-    #   (github.event_name == 'pull_request' && github.event.pull_request.user.login != 'RMgulane')
+    name: Build and Test (user-ui)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend-user
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout user-ui source code
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "22.19.0"
           cache: npm
           cache-dependency-path: frontend-user/package-lock.json
 
@@ -110,14 +107,245 @@ jobs:
       - run: npm run build
 
   docker-build:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [backend, worker, admin-ui, user-ui]
+
+    outputs:
+      backend-digest: ${{ steps.backend.outputs.digest }}
+      worker-digest: ${{ steps.worker.outputs.digest }}
+      admin-digest: ${{ steps.admin_ui.outputs.digest }}
+      user-digest: ${{ steps.user_ui.outputs.digest }}
 
     steps:
       - uses: actions/checkout@v5
 
-      - name: Build backend image
-        run: docker build --tag health-watch-api:test ./backend
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push (backend)
+        id: backend
+        run: |
+          docker buildx build \
+          --push \
+          --tag "${IMAGE_PREFIX}/health-watch-api:${GITHUB_SHA}" \
+          --metadata-file backend-metadata.json \
+          ./backend
+
+          digest=$(jq -r '."containerimage.digest"' backend-metadata.json)
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and Push (worker)
+        id: worker
+        run: |
+          docker buildx build \
+          --push \
+          --tag "${IMAGE_PREFIX}/health-watch-worker:${GITHUB_SHA}" \
+          --metadata-file worker-metadata.json \
+          ./scripts
+
+          digest=$(jq -r '."containerimage.digest"' worker-metadata.json)
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and Push (admin-ui)
+        id: admin_ui
+        run: |
+          docker buildx build \
+          --push \
+          --tag "${IMAGE_PREFIX}/health-watch-admin-ui:${GITHUB_SHA}" \
+          --metadata-file admin-ui-metadata.json \
+          ./frontend
+
+          digest=$(jq -r '."containerimage.digest"' admin-ui-metadata.json)
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and Push (user-ui)
+        id: user_ui
+        run: |
+          docker buildx build \
+          --push \
+          --tag "${IMAGE_PREFIX}/health-watch-user-ui:${GITHUB_SHA}" \
+          --metadata-file user-ui-metadata.json \
+          ./frontend-user
+
+          digest=$(jq -r '."containerimage.digest"' user-ui-metadata.json)
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+
+      # ============================================================
+      # Trivy - Backend - SARIF
+      # ============================================================
+
+      - name: Scan Image (backend) - SARIF
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/health-watch-api@${{ steps.backend.outputs.digest }}
+          format: sarif
+          output: trivy-backend.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: false
+          exit-code: "1"
+
+      - name: Upload Trivy report (backend) - SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-backend.sarif
+          category: trivy-backend
+
+      # ============================================================
+      # Trivy - Backend - JSON
+      # ============================================================
+
+      - name: Scan Image (backend) - JSON
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/health-watch-api@${{ steps.backend.outputs.digest }}
+          format: json
+          output: trivy-backend.json
+          severity: CRITICAL,HIGH,MEDIUM,LOW
+          ignore-unfixed: false
+          exit-code: "1"
+
+      - name: Upload Trivy report (backend) - JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-report
+          path: trivy-backend.json
+          retention-days: 30
+
+      # ============================================================
+      # Trivy - Worker - SARIF
+      # ============================================================
+
+      - name: Scan Image (worker) - SARIF
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/health-watch-worker@${{ steps.worker.outputs.digest }}
+          format: sarif
+          output: trivy-worker.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: false
+          exit-code: "1"
+
+      - name: Upload Trivy report (worker) - SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-worker.sarif
+          category: trivy-worker
+
+      # ============================================================
+      # Trivy - Worker - JSON
+      # ============================================================
+
+      - name: Scan Image (worker) - JSON
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/health-watch-worker@${{ steps.worker.outputs.digest }}
+          format: json
+          output: trivy-worker.json
+          severity: CRITICAL,HIGH,MEDIUM,LOW
+          ignore-unfixed: false
+          exit-code: "1"
+
+      - name: Upload Trivy report (worker) - JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-worker-report
+          path: trivy-worker.json
+          retention-days: 30
+
+      # ============================================================
+      # Trivy - Admin-UI - SARIF
+      # ============================================================
+
+      - name: Scan Image (admin-ui) - SARIF
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/health-watch-admin-ui@${{ steps.admin_ui.outputs.digest }}
+          format: sarif
+          output: trivy-admin-ui.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: false
+          exit-code: "1"
+
+      - name: Upload Trivy report (admin-ui) - SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-admin-ui.sarif
+          category: trivy-admin-ui
+
+      # ============================================================
+      # Trivy - Admin-UI - JSON
+      # ============================================================
+
+      - name: Scan Image (admin-ui) - JSON
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/health-watch-admin-ui@${{ steps.admin_ui.outputs.digest }}
+          format: json
+          output: trivy-admin-ui.json
+          severity: CRITICAL,HIGH,MEDIUM,LOW
+          ignore-unfixed: false
+          exit-code: "1"
+
+      - name: Upload Trivy report (admin-ui) - JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-admin-ui-report
+          path: trivy-admin-ui.json
+          retention-days: 30
+
+      # ============================================================
+      # Trivy - User-UI - SARIF
+      # ============================================================
+
+      - name: Scan Image (user-ui) - SARIF
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/health-watch-user-ui@${{ steps.user_ui.outputs.digest }}
+          format: sarif
+          output: trivy-user-ui.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: false
+          exit-code: "1"
+
+      - name: Upload Trivy report (user-ui) - SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-user-ui.sarif
+          category: trivy-user-ui
+
+      # ============================================================
+      # Trivy - User-UI - JSON
+      # ============================================================
+
+      - name: Scan Image (user-ui) - JSON
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/health-watch-user-ui@${{ steps.user_ui.outputs.digest }}
+          format: json
+          output: trivy-user-ui.json
+          severity: CRITICAL,HIGH,MEDIUM,LOW
+          ignore-unfixed: false
+          exit-code: "1"
+
+      - name: Upload Trivy report (user-ui) - JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-user-ui-report
+          path: trivy-user-ui.json
+          retention-days: 30
 
       # - name: Verify Trivy vulnerabilities (backend)
       #   uses: aquasecurity/trivy-action@0.35.0
@@ -128,8 +356,8 @@ jobs:
       #     ignore-unfixed: false
       #     exit-code: "0"
 
-      - name: Build worker image
-        run: docker build --tag health-watch-worker:test ./scripts
+      # - name: Build worker image
+      #   run: docker build --tag health-watch-worker:test ./scripts
 
       # - name: Verify Trivy vulnerabilities (worker)
       #   uses: aquasecurity/trivy-action@0.35.0
@@ -140,21 +368,21 @@ jobs:
       #     ignore-unfixed: false
       #     exit-code: "0"
 
-      - name: Build admin UI image
-        run: docker build --tag health-watch-admin-ui:test ./frontend
+      # - name: Build admin UI image
+      #   run: docker build --tag health-watch-admin-ui:test ./frontend
 
-      - name: Build user UI image
-        run: docker build --tag health-watch-user-ui:test ./frontend-user
+      # - name: Build user UI image
+      #   run: docker build --tag health-watch-user-ui:test ./frontend-user
 
-      - name: Scan worker image
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: health-watch-worker:test
-          format: json
-          output: trivy-worker.json
-          severity: CRITICAL,HIGH,MEDIUM,LOW
-          ignore-unfixed: false
-          exit-code: "0"
+      # - name: Scan worker image
+      #   uses: aquasecurity/trivy-action@0.35.0
+      #   with:
+      #     image-ref: health-watch-worker:test
+      #     format: json
+      #     output: trivy-worker.json
+      #     severity: CRITICAL,HIGH,MEDIUM,LOW
+      #     ignore-unfixed: false
+      #     exit-code: "0"
 
       # - name: Upload Trivy report
       #   uses: actions/upload-artifact@v4
@@ -162,30 +390,30 @@ jobs:
       #     name: trivy-worker-report
       #     path: trivy-worker.json
 
-      - name: Scan worker image for GitHub Code Scanning
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: health-watch-worker:test
-          format: sarif
-          output: trivy-worker.sarif
-          severity: CRITICAL,HIGH
-          exit-code: "1"
+      # - name: Scan worker image for GitHub Code Scanning
+      #   uses: aquasecurity/trivy-action@0.35.0
+      #   with:
+      #     image-ref: health-watch-worker:test
+      #     format: sarif
+      #     output: trivy-worker.sarif
+      #     severity: CRITICAL,HIGH
+      #     exit-code: "1"
 
-      - name: Upload SARIF report
-        if: always()
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: trivy-worker.sarif
+      # - name: Upload SARIF report
+      #   if: always()
+      #   uses: github/codeql-action/upload-sarif@v4
+      #   with:
+      #     sarif_file: trivy-worker.sarif
 
-      - name: Scan backend image
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: health-watch-api:test
-          format: json
-          output: trivy-backend.json
-          severity: CRITICAL,HIGH,MEDIUM,LOW
-          ignore-unfixed: false
-          exit-code: "0"
+      # - name: Scan backend image
+      #   uses: aquasecurity/trivy-action@0.35.0
+      #   with:
+      #     image-ref: health-watch-api:test
+      #     format: json
+      #     output: trivy-backend.json
+      #     severity: CRITICAL,HIGH,MEDIUM,LOW
+      #     ignore-unfixed: false
+      #     exit-code: "0"
 
       # - name: Upload Trivy report
       #   uses: actions/upload-artifact@v4
@@ -193,16 +421,16 @@ jobs:
       #     name: trivy-backend-report
       #     path: trivy-backend.json
 
-      - name: Scan backend image for GitHub Code Scanning
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: health-watch-api:test
-          format: sarif
-          output: trivy-backend.sarif
-          severity: CRITICAL,HIGH
-          exit-code: "1"
-      - name: Upload SARIF report
-        if: always()
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: trivy-backend.sarif
+      # - name: Scan backend image for GitHub Code Scanning
+      #   uses: aquasecurity/trivy-action@0.35.0
+      #   with:
+      #     image-ref: health-watch-api:test
+      #     format: sarif
+      #     output: trivy-backend.sarif
+      #     severity: CRITICAL,HIGH
+      #     exit-code: "1"
+      # - name: Upload SARIF report
+      #   if: always()
+      #   uses: github/codeql-action/upload-sarif@v4
+      #   with:
+      #     sarif_file: trivy-backend.sarif

@@ -68,6 +68,9 @@ public class Record {
     @Column(nullable = true)
     private String notes;
 
+    @Column(nullable = true)
+    private String status;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

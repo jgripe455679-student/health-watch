@@ -48,6 +48,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<UserResponseDto>> getUsers() {
+        System.out.println("Hello, world!");
         return ResponseEntity.ok(userService.getUsers(Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 

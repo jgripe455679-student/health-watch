@@ -9,7 +9,7 @@ server:
 
 spring:
   config:
-    import: "optional:file:.env[.properties]"
+    import: optional:file:${user.dir}/../.env.local[.properties]
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -18,7 +18,6 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-      username: ${REDIS_USERNAME}
       password: ${REDIS_PASSWORD}
   cache:
     type: redis
@@ -38,8 +37,8 @@ jwt:
 rabbitmq:
   host: ${RABBITMQ_HOST}
   port: ${RABBITMQ_PORT}
-  default_user: ${RABBITMQ_USER}
-  default_password: ${RABBITMQ_PASSWORD}
+  default_user: ${RABBITMQ_DEFAULT_USER}
+  default_password: ${RABBITMQ_DEFAULT_PASS}
 
 springdoc:
   api-docs:
