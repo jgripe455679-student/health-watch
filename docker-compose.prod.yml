@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
-      - RABBIT_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
     volumes:
       - ./rabbitmq_config:/etc/rabbitmq
       - ./rabbitmq_data:/var/lib/rabbitmq
