@@ -1,0 +1,33 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: [self-hosted, linux, x64]
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Update Production config
+        run: |
+          install -D -m 644 docker-compose.prod.yml /opt/health-watch/docker-compose.prod.yml
+          install -D -m 644 nginx/nginx.conf /opt/health-watch/nginx/nginx.conf
+
+      - name: Deploy Images from the CI commit
+        env:
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          cd /opt/health-watch
+          docker compose --env-file .env.prod -f docker-compose.prod.yml config -q
+          docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --pull always

@@ -3,11 +3,10 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 permissions:
   contents: read
+  actions: read
   security-events: write
 
 env:
@@ -107,7 +106,6 @@ jobs:
       - run: npm run build
 
   docker-build:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [backend, worker, admin-ui, user-ui]
     env:
@@ -353,27 +351,6 @@ jobs:
           name: trivy-user-ui-report
           path: trivy-user-ui.json
           retention-days: 30
-  
-  deploy:
-    name: Deploy Production
-    needs: docker-build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, linux, x64]
-    # environment: production
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Update Production config
-        run: |
-          install -D -m 644 docker-compose.prod.yml /opt/health-watch/docker-compose.prod.yml
-          install -D -m 644 nginx/nginx.conf /opt/health-watch/nginx/nginx.conf
-      
-      - name: Deploy Images
-        run: |
-          cd /opt/health-watch
-          IMAGE_TAG="$GITHUB_SHA" docker compose --env-file .env.prod -f docker-compose.prod.yml config -q
-          IMAGE_TAG="$GITHUB_SHA" docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --pull always
 
       # - name: Verify Trivy vulnerabilities (backend)
       #   uses: aquasecurity/trivy-action@0.35.0
